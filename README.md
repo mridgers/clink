@@ -20,7 +20,7 @@ Downloads for the latest release of Clink can be found [here](https://github.com
     - Incremental history search (**Ctrl-R/Ctrl-S**).
     - Powerful completion (**TAB**).
     - Undo (**Ctrl-Z**).
-    - Automatic "cd .." (**Ctrl-Alt-U**).
+    - Automatic `cd ..` (**Ctrl-Alt-U**).
     - Environment variable expansion (**Ctrl-Alt-E**).
     - (press **Alt-H** for many more...)
 - Scriptable completion with Lua.
@@ -31,9 +31,9 @@ Downloads for the latest release of Clink can be found [here](https://github.com
 
 There are a variety of ways to start Clink;
 
-1. If you installed the auto-run, just start **cmd.exe**. Run **clink autorun --help** for more info.
+1. If you installed the auto-run, just start **cmd.exe**. Run `clink autorun --help` for more info.
 2. To manually start, run the Clink shortcut from the Start menu (or the clink.bat located in the install directory).
-3. To establish Clink to an existing cmd.exe process, use "&lt;install_dir&gt;\clink.exe inject"
+3. To establish Clink to an existing cmd.exe process, use `<install_dir>\clink.exe inject`
 
 ### Extending Clink
 
@@ -44,9 +44,9 @@ Clink can be extended through its Lua API which allows easy creation context sen
 Clink's solution and/or makefiles are generated using [Premake](http://industriousone.com/premake).
 
 1. Cd to your clone of Clink.
-2. Run "premake &lt;toolchain&gt;" (where "&lt;toolchain&gt;" is one of Premake's actions - see "premake --help")
-3. Build scripts will be generated in ".build\\&lt;toolchain&gt;\". For example; .build\vs2012\clink.sln.
-4. Call your toolchain of choice (VS, mingw32-make.exe, msbuild.exe, etc). GNU makefiles have a **help** target for more info.
+2. Run `premake <toolchain>` (where `<toolchain>` is one of Premake's actions - see `premake --help`)
+3. Build scripts will be generated in `.build\<toolchain>\`. For example; `.build\vs2012\clink.sln`.
+4. Call your toolchain of choice (VS, mingw32-make.exe, msbuild.exe, etc). GNU makefiles have a `help` target for more info.
 
 N.B. There is a bug in Premake 4.3 that generates corrupt .vcxproj files. Please use 4.4 (or newer).
 
