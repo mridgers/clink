@@ -145,4 +145,20 @@ end
 --------------------------------------------------------------------------------
 clink.register_match_generator(exec_match_generator, 50)
 
+
+local function history_match_generator(text, first, last)
+    leading = rl_state.line_buffer:sub(1, last):lower()
+    if not leading:find("^!") then
+        return false
+    end
+
+    idx = tonumber(leading:sub(2))
+    line = clink.get_history_at(idx)
+    clink.add_match(line)
+
+    return true
+end
+--------------------------------------------------------------------------------
+clink.register_match_generator(history_match_generator, 1)
+
 -- vim: expandtab

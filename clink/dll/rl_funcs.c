@@ -25,6 +25,7 @@
 //------------------------------------------------------------------------------
 void                enter_scroll_mode(int);
 int                 show_rl_help(int, int);
+int                 show_rl_history(int, int);
 int                 get_clink_setting_int(const char*);
 
 //------------------------------------------------------------------------------
@@ -254,6 +255,7 @@ void clink_register_rl_funcs()
     rl_add_funmap_entry("page-up", page_up);
     rl_add_funmap_entry("up-directory", up_directory);
     rl_add_funmap_entry("show-rl-help", show_rl_help);
+    rl_add_funmap_entry("show-rl-history", show_rl_history);
     rl_add_funmap_entry("copy-line-to-clipboard", copy_line_to_clipboard);
     rl_add_funmap_entry("expand-env-vars", expand_env_vars);
 }
