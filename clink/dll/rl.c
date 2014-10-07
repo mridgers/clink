@@ -1,5 +1,5 @@
 /* Copyright (c) 2012 Martin Ridgers
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -46,6 +46,7 @@ void                add_to_history(const char*);
 int                 expand_from_history(const char*, char**);
 int                 history_expand_control(char*, int);
 void                initialise_fwrite();
+void                prepare_env_for_inputrc();
 
 int                 g_slash_translation             = 0;
 extern int          rl_visible_stats;
@@ -302,7 +303,7 @@ char** match_display_filter(char** matches, int match_count)
         int is_dir = 0;
         int len;
         char* base = NULL;
-        
+
         // If matches are files then strip off the path and establish if they
         // are directories.
         if (rl_filename_completion_desired)
@@ -476,7 +477,13 @@ static int initialise_hook()
     clink_register_rl_funcs();
     initialise_rl_scroller();
 
-    rl_re_read_init_file(0, 0);
+    if(rl_re_read_init_file(0, 0))
+    {
+        // Failed to read an inputrc file, so set things up to use the clink
+        // default
+        prepare_env_for_inputrc();
+        rl_re_read_init_file(0, 0);
+    }
     rl_visible_stats = 0;               // serves no purpose under win32.
 
     rl_startup_hook = NULL;

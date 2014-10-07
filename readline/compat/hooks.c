@@ -21,6 +21,7 @@
 
 #include <Windows.h>
 
+#include <errno.h>
 #include <stdio.h>
 #include <wchar.h>
 #include <sys/stat.h>
@@ -141,7 +142,7 @@ int hooked_stat(const char* path, struct hooked_stat* out)
     }
     else
     {
-        // Set errno...
+        errno = ENOENT;
     }
 
     return ret;

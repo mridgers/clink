@@ -165,7 +165,7 @@ Returns true if **path** resolves to a directory.
 
 ##### clink.is_rl_variable_true(readline_var_name)
 
-Returns the boolean value of a Readline variable. These can be set with the clink_inputrc file, more details of which can be found in the [Readline manual](http://tinyurl.com/oum26rp).
+Returns the boolean value of a Readline variable. These can be set with the inputrc file, more details of which can be found in the [Readline manual](http://tinyurl.com/oum26rp).
 
 ##### clink.lower(text)
 
