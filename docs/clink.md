@@ -60,7 +60,12 @@ Configuring Clink by and large involves configuring Readline by creating a [Read
 - a file named `.inputrc` in the directory specified by the HOME environment variable
 - a file named `/etc/inputrc`, i.e. the inputrc file in the etc folder at the root of the current drive letter when clink is started
 
-If Readline is unable to find an inputrc file, then Clink will configure Readline using some default settings, and also look for a file named `clink_inputrc` in the Clink profile directory described above.  You can put any additional Readline configuration into `clink_inputrc`.
+Clink's default Readline configuration can be found in the `inputrc` file located in the same directory as Clink's core files.  You can include Clink's default inputrc into your own inputrc file in order to use it as a starting point (recommended):
+```
+$include <path/to/clink/dir>/inputrc
+```
+
+If Readline is unable to find an inputrc file, then Clink will configure Readline using the inputrc found in Clink's installation directory, and also look for a file named `clink_inputrc` in the Clink profile directory described above.  You can put any additional Readline configuration into `clink_inputrc`.
 
 #### Clink-Specific Settings
 
