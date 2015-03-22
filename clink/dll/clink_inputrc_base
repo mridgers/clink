@@ -23,6 +23,7 @@ C-v:                paste-from-clipboard
 C-q:                reload-lua-state
 C-z:                undo
 M-h:                show-rl-help
+M-C-h:              show-rl-history
 M-C-c:              copy-line-to-clipboard
 C-c:                ctrl-c
 M-a:                "..\\"

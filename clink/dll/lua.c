@@ -332,6 +332,30 @@ static int get_env(lua_State* state)
 }
 
 //------------------------------------------------------------------------------
+static int get_history_at(lua_State* state)
+{
+    char* buffer;
+
+    if (lua_gettop(state) == 0)
+    {
+        return 0;
+    }
+
+    if (lua_isnil(state, 1))
+    {
+        return 0;
+    }
+
+    unsigned idx = lua_tonumber(state, 1);
+    HIST_ENTRY * hist = history_get(idx);
+    buffer = strdup(hist->line);
+    lua_pushstring(state, buffer);
+    free(buffer);
+    
+    return 1;
+}
+
+//------------------------------------------------------------------------------
 static int get_env_var_names(lua_State* state)
 {
     char* env_strings;
@@ -662,6 +686,7 @@ lua_State* initialise_lua()
         { "get_console_aliases", get_console_aliases },
         { "get_cwd", get_cwd },
         { "get_env", get_env },
+        { "get_history_at", get_history_at },
         { "get_env_var_names", get_env_var_names },
         { "get_host_process", get_host_process },
         { "get_rl_variable", get_rl_variable },

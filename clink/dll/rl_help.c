@@ -192,3 +192,32 @@ int show_rl_help(int count, int invoking_key)
     free(collector);
     return 0;
 }
+
+#define MAX_HIST_LENGTH 1000
+//------------------------------------------------------------------------------
+int show_rl_history(int count, int invoking_key)
+{
+  HISTORY_STATE *hist = history_get_history_state();
+  int max = 16;
+  int length = min(hist->length, MAX_HIST_LENGTH);
+  char* collector[MAX_HIST_LENGTH];
+
+  int longest = 1;
+  for (int i = 0; i < length; ++i) {
+    HIST_ENTRY* h = hist->entries[i];
+    size_t line_len = strlen(h->line) + strlen("1000: ") + 1;
+    char * line = malloc(line_len);
+    sprintf_s(line, line_len, "%4d: %s", i + 1, h->line);
+    collector[i] = line;
+    longest = max(longest, strlen(h->line));
+  }
+
+  // Display the matches.
+  rl_display_match_list(collector, length - 1, longest);
+  rl_forced_update_display();
+
+  for (int i = 0; i < length; ++i) {
+    free(collector[i]);
+  }
+  return 0;
+}
