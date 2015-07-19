@@ -105,6 +105,17 @@ local function get_target_dir(nightly)
 end
 
 --------------------------------------------------------------------------------
+local function find_msbuild()
+    local output = io.popen('reg query "HKLM\\SOFTWARE\\Microsoft\\MSBuild\\ToolsVersions\\4.0" /v MSBuildToolsPath 2>nul')
+    for line in output:lines() do
+        local msbuild_path = line:match("^%s*MSBuildToolsPath%s*REG_SZ%s*(.*)")
+        if msbuild_path then return msbuild_path.."msbuild" end
+    end
+    -- msbuild not found
+    return nil
+end
+
+--------------------------------------------------------------------------------
 newaction {
     trigger = "clink_release",
     description = "Creates a release of Clink.",
@@ -116,7 +127,12 @@ newaction {
         clink_ver = clink_ver:upper()
 
         -- Check we have the tools we need.
-        local have_msbuild = have_required_tool("msbuild")
+        local msbuild = "msbuild"
+        local have_msbuild = have_required_tool(msbuild)
+        if not have_msbuild then
+            msbuild = find_msbuild()
+            have_msbuild = msbuild and true or false
+        end
         local have_mingw = have_required_tool("mingw32-make")
         local have_nsis = have_required_tool("makensis")
         local have_7z = have_required_tool("7z")
@@ -148,12 +164,12 @@ newaction {
             toolchain = _OPTIONS["clink_vs_ver"] or "vs2013"
             exec(premake .. " --clink_ver=" .. clink_ver .. " " .. toolchain)
 
-            ret = exec("msbuild /m /v:q /p:configuration=release /p:platform=win32 .build/" .. toolchain .. "/clink.sln")
+            ret = exec(msbuild.." /m /v:q /p:configuration=release /p:platform=win32 .build/" .. toolchain .. "/clink.sln")
             if ret ~= 0 then
                 x86_ok = false
             end
 
-            ret = exec("msbuild /m /v:q /p:configuration=release /p:platform=x64 .build/" .. toolchain .. "/clink.sln")
+            ret = exec(msbuild.." /m /v:q /p:configuration=release /p:platform=x64 .build/" .. toolchain .. "/clink.sln")
             if ret ~= 0 then
                 x64_ok = false
             end
