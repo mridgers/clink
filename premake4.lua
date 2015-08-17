@@ -179,6 +179,7 @@ project("clink_dll")
     links("lua")
     links("readline")
     links("clink_shared")
+    links("minhook")
     includedirs("lua/src")
     includedirs("clink")
     defines("CLINK_DLL_BUILD")
@@ -234,6 +235,13 @@ project("clink_shared")
     configuration("vs*")
         pchsource("clink/shared/pch.c")
         pchheader("pch.h")
+
+--------------------------------------------------------------------------------
+project("minhook")
+    language("c")
+    kind("staticlib")
+    files("clink/modules/minhook/src/*")
+    files("clink/modules/minhook.c")
 
 --------------------------------------------------------------------------------
 project("clink_test")

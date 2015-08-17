@@ -23,6 +23,7 @@
 #include "shell.h"
 #include "dll_hooks.h"
 #include "shared/util.h"
+#include "../modules/minhook/include/MinHook.h"
 
 //------------------------------------------------------------------------------
 int                     get_clink_setting_int(const char*);
@@ -459,6 +460,8 @@ static int cmd_initialise(void* base)
 //------------------------------------------------------------------------------
 static void cmd_shutdown()
 {
+    MH_STATUS status;
+    status = MH_Uninitialize();
 }
 
 // vim: expandtab
