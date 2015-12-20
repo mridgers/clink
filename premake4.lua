@@ -186,11 +186,11 @@ project("clink_dll")
     files("clink/version.rc")
 
     configuration("release")
-        build_postbuild("clink/dll/clink_inputrc_base", "release")
+        build_postbuild("clink/dll/inputrc", "release")
         build_postbuild("clink/lua/*.lua", "release")
 
     configuration("debug")
-        build_postbuild("clink/dll/clink_inputrc_base", "debug")
+        build_postbuild("clink/dll/inputrc", "debug")
         build_postbuild("clink/lua/*.lua", "debug")
 
     configuration("vs*")

@@ -115,6 +115,7 @@ Section "!Application files" app_files_id
     File ${CLINK_BUILD}\LICENSE
     File ${CLINK_BUILD}\clink_x*.exe
     File ${CLINK_BUILD}\clink.bat
+    File ${CLINK_BUILD}\inputrc
     File ${CLINK_BUILD}\clink_inputrc_base
     File ${CLINK_BUILD}\clink.html
 

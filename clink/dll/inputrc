@@ -67,4 +67,3 @@ set keymap emacs
 # "\t": clink-menu-completion-shim
 # "\e`Z": clink-backward-menu-completion-shim
 
-$include ~/clink_inputrc

@@ -41,9 +41,9 @@ When running Clink via the methods above, Clink checks the parent process is sup
 
 The easiest way to configure Clink is to use Clink's **set** command line option.  This can list, query, and set Clink's settings. Run **clink set --help** from a Clink-installed cmd.exe process to learn more both about how to use it and to get descriptions for Clink's various options.
 
-Configuring Clink by and large involves configuring Readline by creating a **clink_inputrc** file. There is excellent documentation for all the options available to configure Readline in Readline's [manual](http://tinyurl.com/oum26rp).
+#### Clink Profile Directory
 
-Where Clink looks for **clink_inputrc** (as well as .lua scripts and the settings file) depends on which distribution of Clink was used. If you installed Clink using the .exe installer then Clink uses the current user's non-roaming application data directory. This user directory is usually found in one of the following locations;
+Clink looks for various scripts and configuration files in the Clink **profile** directory.  The location of this directory depends on which distribution of Clink was used. If you installed Clink using the .exe installer then Clink uses the current user's non-roaming application data directory. This user directory is usually found in one of the following locations:
 
 - c:\Documents and Settings\\&lt;username&gt;\Local Settings\Application Data *(XP)*
 - c:\Users\\&lt;username&gt;\AppData\Local *(Vista onwards)*
@@ -52,7 +52,22 @@ The .zip distribution of Clink creates and uses a directory called **profile** w
 
 All of the above locations can be overriden using the **--profile &lt;path&gt;** command line option which is specified when injecting Clink into cmd.exe using **clink inject**.
 
-#### Settings
+#### Readline Configuration
+
+Configuring Clink by and large involves configuring Readline by creating a [Readline Init File](http://tinyurl.com/otd9bv5), also known as an **inputrc** file. There is excellent documentation for all the options available to configure Readline in the [Readline manual](http://tinyurl.com/oum26rp). Readline will look for the inputrc file in several places and use the first one it finds:
+
+- a file specified by the INPUTRC environment variable
+- a file named `.inputrc` in the directory specified by the HOME environment variable
+- a file named `/etc/inputrc`, i.e. the inputrc file in the etc folder at the root of the current drive letter when clink is started
+
+Clink's default Readline configuration can be found in the `inputrc` file located in the same directory as Clink's core files.  You can include Clink's default inputrc into your own inputrc file in order to use it as a starting point (recommended):
+```
+$include <path/to/clink/dir>/inputrc
+```
+
+If Readline is unable to find an inputrc file, then Clink will configure Readline using the inputrc found in Clink's installation directory, and also look for a file named `clink_inputrc` in the Clink profile directory described above.  You can put any additional Readline configuration into `clink_inputrc`.
+
+#### Clink-Specific Settings
 
 It is also possible to configure settings specific to Clink. These are stored in a file called **settings** which is found in one of the locations mentioned in the previous section. The settings file gets created the first time Clink is run.
 
@@ -83,7 +98,7 @@ The Readline library allows clients to offer an alternative path for creating co
 
 #### The Location of Lua Scripts
 
-Clink looks for Lua scripts in the folders as described in the **Configuring Clink** section. By default **Ctrl-Q** is mapped to reload all Lua scripts which can be useful when developing and iterating on your own scripts.
+Clink looks for Lua scripts in the Clink **profile** directory described above. By default **Ctrl-Q** is mapped to reload all Lua scripts which can be useful when developing and iterating on your own scripts.
 
 #### Match Generators
 
@@ -287,7 +302,7 @@ Insert   | R      | i     | W     | )
 Delete   | S      | j     | X     | \*
 Tab      | (n/a)  | Z     | (n/a) | (n/a)
 
-Here is an example line from a clink_inputrc file that binds Shift-End to the Readline function **transpose-word** function;
+Here is an example line from an inputrc file that binds Shift-End to the Readline function **transpose-word** function;
 
 ```
 "\e`f": transpose-word

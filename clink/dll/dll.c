@@ -31,7 +31,6 @@ void                    save_history();
 void                    shutdown_lua();
 void                    shutdown_clink_settings();
 int                     get_clink_setting_int(const char*);
-void                    prepare_env_for_inputrc();
 
 inject_args_t           g_inject_args;
 static const shell_t*   g_shell                 = NULL;
@@ -109,9 +108,7 @@ static BOOL on_dll_attach()
         disable_log();
     }
 
-    // Prepare the process and environment for Readline.
     set_rl_readline_name();
-    prepare_env_for_inputrc();
 
     // Search for a supported shell.
     {

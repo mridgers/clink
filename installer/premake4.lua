@@ -195,7 +195,7 @@ newaction {
             "clink_x*.exe",
             "clink*.dll",
             "*.lua",
-            "clink_inputrc_base",
+            "inputrc",
             "CHANGES",
             "LICENSE",
             "clink_dll_x*.pdb",
@@ -205,6 +205,12 @@ newaction {
         for _, mask in ipairs(manifest) do
             copy(src .. mask, dest)
         end
+
+        -- Copy the default inputrc and add the include line to the end
+        exec("copy "..dest.."\\inputrc "..dest.."\\clink_inputrc_base")
+        local new_inputrc = io.open(dest.."\\clink_inputrc_base", "a")
+        new_inputrc:write("$include ~/clink_inputrc\n")
+        new_inputrc:close()
 
         -- Lump lua files together.
         unlink(dest .. "/clink._lua")
