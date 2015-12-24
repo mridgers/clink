@@ -23,6 +23,7 @@
 #include "util.h"
 #include "vm.h"
 #include "pe.h"
+#include "../modules/minhook/include/MinHook.h"
 
 //------------------------------------------------------------------------------
 static void* current_proc()
@@ -396,6 +397,7 @@ void* hook_jmp(const char* dll, const char* func_name, void* hook)
 {
     void* func_addr;
     void* trampoline;
+    MH_STATUS status;
 
     // Get the address of the function we're going to hook.
     func_addr = get_proc_addr(dll, func_name);
@@ -409,10 +411,18 @@ void* hook_jmp(const char* dll, const char* func_name, void* hook)
     LOG_INFO("Target is %s, %s @ %p", dll, func_name, func_addr);
 
     // Install the hook.
-    trampoline = hook_jmp_impl(func_addr, hook);
-    if (trampoline == NULL)
+    //trampoline = hook_jmp_impl(func_addr, hook);
+    trampoline = NULL;
+    status = MH_CreateHook(func_addr, hook, &trampoline);
+    if ((status != MH_OK) || (trampoline == NULL))
     {
-        LOG_INFO("Jump hook failed.");
+        LOG_INFO("MH_CreateHook failed.");
+        return NULL;
+    }
+    status = MH_EnableHook(func_addr);
+    if (status != MH_OK)
+    {
+        LOG_INFO("MH_EnableHook failed.");
         return NULL;
     }
 

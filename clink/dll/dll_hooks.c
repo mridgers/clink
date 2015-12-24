@@ -25,6 +25,7 @@
 #include "shared/hook.h"
 #include "shared/vm.h"
 #include "shared/pe.h"
+#include "../modules/minhook/include/MinHook.h"
 
 //------------------------------------------------------------------------------
 static int              (*g_hook_trap)()        = NULL;
@@ -135,6 +136,13 @@ int apply_hooks(const hook_decl_t* hooks, int hook_count)
     void* addr;
     void* self;
     int i;
+    MH_STATUS status;
+
+    status = MH_Initialize();
+    if (status != MH_OK)
+    {
+        return 0;
+    }
 
     // Each hook needs fixing up, so we find the base address of our module.
     self = get_alloc_base(apply_hooks);
