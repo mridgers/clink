@@ -70,8 +70,8 @@ const char_t* ANSI_FNAME(find_next_ansi_code)(const char_t* buffer, int* size)
 
     read = buffer;
     state = -1;
-	csi_len = 0;
-	osc_len = 0;
+    csi_len = 0;
+    osc_len = 0;
     while (*read)
     {
         if (state < 0)
@@ -82,15 +82,15 @@ const char_t* ANSI_FNAME(find_next_ansi_code)(const char_t* buffer, int* size)
                 state = read - buffer;
                 read += (csi_len > 1);
             }
-			else
-			{
-				osc_len = ANSI_FNAME(is_osc)(read);
-				if (osc_len)
-				{
-					state = read - buffer;
-					read += (osc_len > 1);
-				}
-			}
+            else
+            {
+                osc_len = ANSI_FNAME(is_osc)(read);
+                if (osc_len)
+                {
+                    state = read - buffer;
+                    read += (osc_len > 1);
+                }
+            }
         }
         else
         {
@@ -104,26 +104,26 @@ const char_t* ANSI_FNAME(find_next_ansi_code)(const char_t* buffer, int* size)
 
                 return buffer;
             }
-			// OSC codes may ends with ESC + BackSlash
-			else if (osc_len && c == '\x1b' && read[1] == '\\')
-			{
+            // OSC codes may ends with ESC + BackSlash
+            else if (osc_len && c == '\x1b' && read[1] == '\\')
+            {
                 buffer += state;
 
                 *size = (int)(read - buffer);
                 *size += 2;
 
                 return buffer;
-			}
-			// OSC codes may ends with BELL
-			else if (osc_len && c == '\x07')
-			{
+            }
+            // OSC codes may ends with BELL
+            else if (osc_len && c == '\x07')
+            {
                 buffer += state;
 
                 *size = (int)(read - buffer);
                 *size += 1;
 
                 return buffer;
-			}
+            }
         }
 
         ++read;
