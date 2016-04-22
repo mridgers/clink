@@ -44,11 +44,24 @@ static int ANSI_FNAME(is_csi)(const char_t* str)
 }
 
 //------------------------------------------------------------------------------
+static int ANSI_FNAME(is_osc)(const char_t* str)
+{
+    if ((str[0] == 0x1b) && (str[1] == ']'))
+    {
+        return 2;
+    }
+
+    return 0;
+}
+
+//------------------------------------------------------------------------------
 const char_t* ANSI_FNAME(find_next_ansi_code)(const char_t* buffer, int* size)
 {
     int size_temp;
     const char_t* read;
     int state;
+	int csi_len;
+	int osc_len;
 
     if (size == NULL)
     {
@@ -57,21 +70,32 @@ const char_t* ANSI_FNAME(find_next_ansi_code)(const char_t* buffer, int* size)
 
     read = buffer;
     state = -1;
+	csi_len = 0;
+	osc_len = 0;
     while (*read)
     {
         if (state < 0)
         {
-            int csi_len = ANSI_FNAME(is_csi)(read);
+            csi_len = ANSI_FNAME(is_csi)(read);
             if (csi_len)
             {
                 state = read - buffer;
                 read += (csi_len > 1);
             }
+			else
+			{
+				osc_len = ANSI_FNAME(is_osc)(read);
+				if (osc_len)
+				{
+					state = read - buffer;
+					read += (osc_len > 1);
+				}
+			}
         }
         else
         {
             char c = *read;
-            if ((c < '0' || c > '9') && c != ';')
+            if (csi_len && (c < '0' || c > '9') && c != ';')
             {
                 buffer += state;
 
@@ -80,6 +104,26 @@ const char_t* ANSI_FNAME(find_next_ansi_code)(const char_t* buffer, int* size)
 
                 return buffer;
             }
+			// OSC codes may ends with ESC + BackSlash
+			else if (osc_len && c == '\x1b' && read[1] == '\\')
+			{
+                buffer += state;
+
+                *size = (int)(read - buffer);
+                *size += 2;
+
+                return buffer;
+			}
+			// OSC codes may ends with BELL
+			else if (osc_len && c == '\x07')
+			{
+                buffer += state;
+
+                *size = (int)(read - buffer);
+                *size += 1;
+
+                return buffer;
+			}
         }
 
         ++read;
