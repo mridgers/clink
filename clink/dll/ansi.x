@@ -60,8 +60,8 @@ const char_t* ANSI_FNAME(find_next_ansi_code)(const char_t* buffer, int* size)
     int size_temp;
     const char_t* read;
     int state;
-	int csi_len;
-	int osc_len;
+    int csi_len;
+    int osc_len;
 
     if (size == NULL)
     {
