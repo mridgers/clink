@@ -1,6 +1,6 @@
 /* misc.c -- miscellaneous bindable readline functions. */
 
-/* Copyright (C) 1987-2009 Free Software Foundation, Inc.
+/* Copyright (C) 1987-2012 Free Software Foundation, Inc.
 
    This file is part of the GNU Readline Library (Readline), a library
    for reading lines of text with interactive input and history editing.      
@@ -55,6 +55,8 @@
 
 static int rl_digit_loop PARAMS((void));
 static void _rl_history_set_point PARAMS((void));
+
+extern int history_offset;
 
 /* Forward declarations used in this file */
 void _rl_free_history_entry PARAMS((HIST_ENTRY *));
@@ -483,6 +485,37 @@ _rl_revert_all_lines ()
   xfree (lbuf);
 }  
 
+/* Free the history list, including private readline data and take care
+   of pointer aliases to history data.  Resets rl_undo_list if it points
+   to an UNDO_LIST * saved as some history entry's data member.  This
+   should not be called while editing is active. */
+void
+rl_clear_history ()
+{
+  HIST_ENTRY **hlist, *hent;
+  register int i;
+  UNDO_LIST *ul, *saved_undo_list;
+
+  saved_undo_list = rl_undo_list;
+  hlist = history_list ();		/* direct pointer, not copy */
+
+  for (i = 0; i < history_length; i++)
+    {
+      hent = hlist[i];
+      if (ul = (UNDO_LIST *)hent->data)
+	{
+	  if (ul == saved_undo_list)
+	    saved_undo_list = 0;
+	  _rl_free_undo_list (ul);
+	  hent->data = 0;
+	}
+      _rl_free_history_entry (hent);
+    }
+
+  history_offset = history_length = 0;
+  rl_undo_list = saved_undo_list;	/* should be NULL */
+}
+
 /* **************************************************************** */
 /*								    */
 /*			History Commands			    */
@@ -629,6 +662,9 @@ rl_emacs_editing_mode (count, key)
  */
   _rl_set_cursor(RL_IM_INSERT, 1);
 /* end_clink_change */
+
+  if (_rl_show_mode_in_prompt)
+    _rl_reset_prompt ();
 
   return 0;
 }

@@ -1,7 +1,7 @@
 /* readline.c -- a general facility for reading lines of input
    with emacs style editing and completion. */
 
-/* Copyright (C) 1987-2009 Free Software Foundation, Inc.
+/* Copyright (C) 1987-2013 Free Software Foundation, Inc.
 
    This file is part of the GNU Readline Library (Readline), a library
    for reading lines of text with interactive input and history editing.      
@@ -82,6 +82,11 @@ extern int errno;
 
 extern void _rl_free_history_entry PARAMS((HIST_ENTRY *));
 
+#if defined (COLOR_SUPPORT)
+extern void _rl_parse_colors PARAMS((void));		/* XXX */
+#endif
+
+
 /* Forward declarations used in this file. */
 static char *readline_internal PARAMS((void));
 static void readline_initialize_everything PARAMS((void));
@@ -111,7 +116,6 @@ int rl_gnu_readline_p = 1;
 /* A pointer to the keymap that is currently in use.
    By default, it is the standard emacs keymap. */
 Keymap _rl_keymap = emacs_standard_keymap;
-
 
 /* The current style of editing. */
 int rl_editing_mode = emacs_mode;
@@ -238,13 +242,32 @@ int rl_erase_empty_line = 0;
    character bound to accept-line. */
 int rl_num_chars_to_read;
 
-/* Line buffer and maintenence. */
+/* Line buffer and maintenance. */
 char *rl_line_buffer = (char *)NULL;
 int rl_line_buffer_len = 0;
 
 /* Key sequence `contexts' */
 _rl_keyseq_cxt *_rl_kscxt = 0;
 
+int rl_executing_key;
+char *rl_executing_keyseq = 0;
+int _rl_executing_keyseq_size = 0;
+
+/* Timeout (specified in milliseconds) when reading characters making up an
+   ambiguous multiple-key sequence */
+int _rl_keyseq_timeout = 500;
+
+#define RESIZE_KEYSEQ_BUFFER() \
+  do \
+    { \
+      if (rl_key_sequence_length + 2 >= _rl_executing_keyseq_size) \
+	{ \
+	  _rl_executing_keyseq_size += 16; \
+	  rl_executing_keyseq = xrealloc (rl_executing_keyseq, _rl_executing_keyseq_size); \
+	} \
+    } \
+  while (0);
+        
 /* Forward declarations used by the display, termcap, and history code. */
 
 /* **************************************************************** */
@@ -278,6 +301,10 @@ int _rl_revert_all_at_newline = 0;
 /* Non-zero means to honor the termios ECHOCTL bit and echo control
    characters corresponding to keyboard-generated signals. */
 int _rl_echo_control_chars = 1;
+
+/* Non-zero means to prefix the displayed prompt with a character indicating
+   the editing mode: @ for emacs, : for vi-command, + for vi-insert. */
+int _rl_show_mode_in_prompt = 0;
 
 /* **************************************************************** */
 /*								    */
@@ -352,6 +379,11 @@ readline (prompt)
     RL_SETSTATE (RL_STATE_CALLBACK);
 #endif
 
+#if HAVE_DECL_AUDIT_TTY && defined (ENABLE_TTY_AUDIT_SUPPORT)
+  if (value)
+    _rl_audit_tty (value);
+#endif
+
   return (value);
 }
 
@@ -369,8 +401,18 @@ readline_internal_setup ()
   _rl_in_stream = rl_instream;
   _rl_out_stream = rl_outstream;
 
+  /* Enable the meta key only for the duration of readline(), if this
+     terminal has one and the terminal has been initialized */
+  if (_rl_enable_meta & RL_ISSTATE (RL_STATE_TERMPREPPED))
+    _rl_enable_meta_key ();
+
   if (rl_startup_hook)
     (*rl_startup_hook) ();
+
+#if defined (VI_MODE)
+  if (rl_editing_mode == vi_mode)
+    rl_vi_insertion_mode (1, 'i');	/* don't want to reset last */
+#endif /* VI_MODE */
 
   /* If we're not echoing, we still want to at least print a prompt, because
      rl_redisplay will not do it for us.  If the calling application has a
@@ -393,11 +435,6 @@ readline_internal_setup ()
 	rl_on_new_line ();
       (*rl_redisplay_function) ();
     }
-
-#if defined (VI_MODE)
-  if (rl_editing_mode == vi_mode)
-    rl_vi_insert_mode (1, 'i');
-#endif /* VI_MODE */
 
   if (rl_pre_input_hook)
     (*rl_pre_input_hook) ();
@@ -436,6 +473,11 @@ readline_internal_teardown (eof)
      rid of it now. */
   if (rl_undo_list)
     rl_free_undo_list ();
+
+  /* Disable the meta key, if this terminal has one and we were told to use it.
+     The check whether or not we sent the enable string is in
+     _rl_disable_meta_key(); the flag is set in _rl_enable_meta_key */
+  _rl_disable_meta_key ();
 
   /* Restore normal cursor, if available. */
   _rl_set_insert_mode (RL_IM_INSERT, 0);
@@ -492,7 +534,11 @@ readline_internal_charloop ()
 #endif
       lk = _rl_last_command_was_kill;
 
+#if defined (HAVE_POSIX_SIGSETJMP)
+      code = sigsetjmp (_rl_top_level, 0);
+#else
       code = setjmp (_rl_top_level);
+#endif
 
       if (code)
 	{
@@ -511,6 +557,7 @@ readline_internal_charloop ()
 	  /* Then initialize the argument and number of keys read. */
 	  _rl_reset_argument ();
 	  rl_key_sequence_length = 0;
+	  rl_executing_keyseq[0] = 0;
 	}
 
       RL_SETSTATE(RL_STATE_READCMD);
@@ -519,7 +566,8 @@ readline_internal_charloop ()
 
       /* look at input.c:rl_getc() for the circumstances under which this will
 	 be returned; punt immediately on read error without converting it to
-	 a newline. */
+	 a newline; assume that rl_read_key has already called the signal
+	 handler. */
       if (c == READERR)
 	{
 #if defined (READLINE_CALLBACKS)
@@ -531,7 +579,9 @@ readline_internal_charloop ()
 #endif
 	}
 
-      /* EOF typed to a non-blank line is a <NL>. */
+      /* EOF typed to a non-blank line is a <NL>.  If we want to change this,
+	 to force any existing line to be ignored when read(2) reads EOF,
+	 for example, this is the place to change. */
       if (c == EOF && rl_end)
 	c = NEWLINE;
 
@@ -743,9 +793,10 @@ _rl_dispatch_subseq (key, map, got_subseq)
 	{
 	  if (RL_ISSTATE (RL_STATE_MACRODEF))
 	    _rl_add_macro_char (ESC);
+	  RESIZE_KEYSEQ_BUFFER ();
+	  rl_executing_keyseq[rl_key_sequence_length++] = ESC;
 	  map = FUNCTION_TO_KEYMAP (map, ESC);
 	  key = UNMETA (key);
-	  rl_key_sequence_length += 2;
 	  return (_rl_dispatch (key, map));
 	}
       else
@@ -765,13 +816,19 @@ _rl_dispatch_subseq (key, map, got_subseq)
 	{
 	  /* Special case rl_do_lowercase_version (). */
 	  if (func == rl_do_lowercase_version)
+	    /* Should we do anything special if key == ANYOTHERKEY? */
 	    return (_rl_dispatch (_rl_to_lower (key), map));
 
 	  rl_executing_keymap = map;
+	  rl_executing_key = key;
+
+	  RESIZE_KEYSEQ_BUFFER();
+	  rl_executing_keyseq[rl_key_sequence_length++] = key;
+	  rl_executing_keyseq[rl_key_sequence_length] = '\0';
 
 	  rl_dispatching = 1;
 	  RL_SETSTATE(RL_STATE_DISPATCHING);
-	  (*map[key].function)(rl_numeric_arg * rl_arg_sign, key);
+	  r = (*func) (rl_numeric_arg * rl_arg_sign, key);
 	  RL_UNSETSTATE(RL_STATE_DISPATCHING);
 	  rl_dispatching = 0;
 
@@ -788,7 +845,10 @@ _rl_dispatch_subseq (key, map, got_subseq)
 	  /* OK, there's no function bound in this map, but there is a
 	     shadow function that was overridden when the current keymap
 	     was created.  Return -2 to note  that. */
-	  _rl_unget_char  (key);
+	  if (RL_ISSTATE (RL_STATE_MACROINPUT))
+	    _rl_prev_macro_key ();
+	  else
+	    _rl_unget_char  (key);
 	  return -2;
 	}
       else if (got_subseq)
@@ -797,7 +857,10 @@ _rl_dispatch_subseq (key, map, got_subseq)
 	     have a matching key, nor was one overridden.  This means
 	     we need to back up the recursion chain and find the last
 	     subsequence that is bound to a function. */
-	  _rl_unget_char (key);
+	  if (RL_ISSTATE (RL_STATE_MACROINPUT))
+	    _rl_prev_macro_key ();
+	  else
+	    _rl_unget_char (key);
 	  return -1;
 	}
       else
@@ -820,13 +883,17 @@ _rl_dispatch_subseq (key, map, got_subseq)
 	     check whether there's input in the queue, which there generally
 	     will be if an arrow key has been pressed, and, if there's not,
 	     just dispatch to (what we assume is) rl_vi_movement_mode right
-	     away.  This is essentially an input test with a zero timeout. */
+	     away.  This is essentially an input test with a zero timeout (by
+	     default) or a timeout determined by the value of `keyseq-timeout' */
+	  /* _rl_keyseq_timeout specified in milliseconds; _rl_input_queued
+	     takes microseconds, so multiply by 1000 */
 	  if (rl_editing_mode == vi_mode && key == ESC && map == vi_insertion_keymap
-	      && _rl_input_queued (0) == 0)
+	      && _rl_input_queued ((_rl_keyseq_timeout > 0) ? _rl_keyseq_timeout*1000 : 0) == 0)
 	    return (_rl_dispatch (ANYOTHERKEY, FUNCTION_TO_KEYMAP (map, key)));
 #endif
 
-	  rl_key_sequence_length++;
+	  RESIZE_KEYSEQ_BUFFER ();
+	  rl_executing_keyseq[rl_key_sequence_length++] = key;
 	  _rl_dispatching_keymap = FUNCTION_TO_KEYMAP (map, key);
 
 	  /* Allocate new context here.  Use linked contexts (linked through
@@ -855,6 +922,19 @@ _rl_dispatch_subseq (key, map, got_subseq)
 	    }
 #endif
 
+// clink patch ; this breaks shift+pageup key binding after one execution.
+//	  /* Tentative inter-character timeout for potential multi-key
+//	     sequences?  If no input within timeout, abort sequence and
+//	     act as if we got non-matching input. */
+//	  /* _rl_keyseq_timeout specified in milliseconds; _rl_input_queued
+//	     takes microseconds, so multiply by 1000 */
+//	  if (_rl_keyseq_timeout > 0 &&
+//	  	(RL_ISSTATE (RL_STATE_INPUTPENDING|RL_STATE_MACROINPUT) == 0) &&
+//	  	_rl_pushed_input_available () == 0 &&
+//		_rl_dispatching_keymap[ANYOTHERKEY].function &&
+//		_rl_input_queued (_rl_keyseq_timeout*1000) == 0)
+//	    return (_rl_subseq_result (-2, map, key, got_subseq));
+
 	  newkey = _rl_subseq_getchar (key);
 	  if (newkey < 0)
 	    {
@@ -875,6 +955,7 @@ _rl_dispatch_subseq (key, map, got_subseq)
     case ISMACR:
       if (map[key].function != 0)
 	{
+	  rl_executing_keyseq[rl_key_sequence_length] = '\0';
 	  macro = savestring ((char *)map[key].function);
 	  _rl_with_macro_input (macro);
 	  return 0;
@@ -884,6 +965,7 @@ _rl_dispatch_subseq (key, map, got_subseq)
 #if defined (VI_MODE)
   if (rl_editing_mode == vi_mode && _rl_keymap == vi_movement_keymap &&
       key != ANYOTHERKEY &&
+      rl_key_sequence_length == 1 &&	/* XXX */
       _rl_vi_textmod_command (key))
     _rl_vi_set_last (key, rl_numeric_arg, rl_arg_sign);
 #endif
@@ -935,14 +1017,20 @@ _rl_subseq_result (r, map, key, got_subseq)
       /* We didn't match (r is probably -1), so return something to
 	 tell the caller that it should try ANYOTHERKEY for an
 	 overridden function. */
-      _rl_unget_char (key);
+      if (RL_ISSTATE (RL_STATE_MACROINPUT))
+	_rl_prev_macro_key ();
+      else
+	_rl_unget_char (key);
       _rl_dispatching_keymap = map;
       return -2;
     }
   else if (r && got_subseq)
     {
       /* OK, back up the chain. */
-      _rl_unget_char (key);
+      if (RL_ISSTATE (RL_STATE_MACROINPUT))
+	_rl_prev_macro_key ();
+      else
+	_rl_unget_char (key);
       _rl_dispatching_keymap = map;
       return -1;
     }
@@ -971,7 +1059,7 @@ rl_initialize ()
       RL_SETSTATE(RL_STATE_INITIALIZED);
     }
 
-  /* Initalize the current line information. */
+  /* Initialize the current line information. */
   _rl_init_line_state ();
 
   /* We aren't done yet.  We haven't even gotten started yet! */
@@ -1091,14 +1179,19 @@ readline_initialize_everything ()
   /* Try to bind a common arrow key prefix, if not already bound. */
   bind_arrow_keys ();
 
-  /* Enable the meta key, if this terminal has one. */
-  if (_rl_enable_meta)
-    _rl_enable_meta_key ();
-
   /* If the completion parser's default word break characters haven't
      been set yet, then do so now. */
   if (rl_completer_word_break_characters == (char *)NULL)
     rl_completer_word_break_characters = (char *)rl_basic_word_break_characters;
+
+#if defined (COLOR_SUPPORT)
+  if (_rl_colored_stats)
+    _rl_parse_colors ();
+#endif
+
+  rl_executing_keyseq = malloc (_rl_executing_keyseq_size = 16);
+  if (rl_executing_keyseq)
+    rl_executing_keyseq[0] = '\0';
 }
 
 /* If this system allows us to look at the values of the regular
@@ -1163,6 +1256,20 @@ bind_arrow_keys_internal (map)
   rl_bind_keyseq_if_unbound ("\340P", rl_get_next_history);
   rl_bind_keyseq_if_unbound ("\340M", rl_forward_char);
   rl_bind_keyseq_if_unbound ("\340K", rl_backward_char);
+  rl_bind_keyseq_if_unbound ("\340G", rl_beg_of_line);
+  rl_bind_keyseq_if_unbound ("\340O", rl_end_of_line);
+  rl_bind_keyseq_if_unbound ("\340S", rl_delete);
+  rl_bind_keyseq_if_unbound ("\340R", rl_overwrite_mode);
+
+  /* These may or may not work because of the embedded NUL. */
+  rl_bind_keyseq_if_unbound ("\\000H", rl_get_previous_history);
+  rl_bind_keyseq_if_unbound ("\\000P", rl_get_next_history);
+  rl_bind_keyseq_if_unbound ("\\000M", rl_forward_char);
+  rl_bind_keyseq_if_unbound ("\\000K", rl_backward_char);
+  rl_bind_keyseq_if_unbound ("\\000G", rl_beg_of_line);
+  rl_bind_keyseq_if_unbound ("\\000O", rl_end_of_line);
+  rl_bind_keyseq_if_unbound ("\\000S", rl_delete);
+  rl_bind_keyseq_if_unbound ("\\000R", rl_overwrite_mode);
 #endif
 
   _rl_keymap = xkeymap;

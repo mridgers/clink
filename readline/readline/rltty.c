@@ -121,7 +121,7 @@ static int set_tty_settings PARAMS((int, TIOTYPE *));
 
 static void prepare_terminal_settings PARAMS((int, TIOTYPE, TIOTYPE *));
 
-static void set_special_char PARAMS((Keymap, TIOTYPE *, int, rl_command_func_t));
+static void set_special_char PARAMS((Keymap, TIOTYPE *, int, rl_command_func_t *));
 
 static void
 save_tty_chars (tiop)
@@ -341,7 +341,7 @@ static int set_tty_settings PARAMS((int, TIOTYPE *));
 
 static void prepare_terminal_settings PARAMS((int, TIOTYPE, TIOTYPE *));
 
-static void set_special_char PARAMS((Keymap, TIOTYPE *, int, rl_command_func_t));
+static void set_special_char PARAMS((Keymap, TIOTYPE *, int, rl_command_func_t *));
 static void _rl_bind_tty_special_chars PARAMS((Keymap, TIOTYPE));
 
 #if defined (FLUSHO)
@@ -528,10 +528,10 @@ prepare_terminal_settings (meta_flag, oldtio, tiop)
 
 #if defined (USE_XON_XOFF)
 #if defined (IXANY)
-  tiop->c_iflag &= ~(IXON | IXOFF | IXANY);
+  tiop->c_iflag &= ~(IXON | IXANY);
 #else
   /* `strict' Posix systems do not define IXANY. */
-  tiop->c_iflag &= ~(IXON | IXOFF);
+  tiop->c_iflag &= ~IXON;
 #endif /* IXANY */
 #endif /* USE_XON_XOFF */
 
@@ -678,7 +678,7 @@ rl_deprep_terminal ()
   /* Try to keep this function from being interrupted. */
   _rl_block_sigint ();
 
-  tty = rl_instream ? fileno (rl_instream) : fileno (stdout);
+  tty = rl_instream ? fileno (rl_instream) : fileno (stdin);
 
   if (_rl_enable_keypad)
     _rl_control_keypad (0);

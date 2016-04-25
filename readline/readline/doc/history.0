@@ -54,7 +54,7 @@ HHIISSTTOORRYY EEXXPPAANNSSIIOONN
               Refer  to the most recent command preceding the current position
               in the history list starting with _s_t_r_i_n_g.
        !!??_s_t_r_i_n_g[[??]]
-              Refer to the most recent command preceding the current postition
+              Refer to the most recent command preceding the current  position
               in  the  history  list containing _s_t_r_i_n_g.  The trailing ?? may be
               omitted if _s_t_r_i_n_g is followed immediately by a newline.
        ^^_s_t_r_i_n_g_1^^_s_t_r_i_n_g_2^^
@@ -75,7 +75,8 @@ HHIISSTTOORRYY EEXXPPAANNSSIIOONN
               The zeroth word.  For the shell, this is the command word.
        _n      The _nth word.
        ^^      The first argument.  That is, word 1.
-       $$      The last argument.
+       $$      The  last  word.   This  is  usually the last argument, but will
+              expand to the zeroth word if there is only one word in the line.
        %%      The word matched by the most recent `?_s_t_r_i_n_g?' search.
        _x--_y    A range of words; `-_y' abbreviates `0-_y'.
        **      All  of  the words but the zeroth.  This is a synonym for `_1_-_$'.
@@ -472,7 +473,7 @@ AAUUTTHHOORRSS
        bfox@gnu.org
 
        Chet Ramey, Case Western Reserve University
-       chet@ins.CWRU.Edu
+       chet.ramey@case.edu
 
 BBUUGG RREEPPOORRTTSS
        If you find a bug in the hhiissttoorryy library, you should  report  it.   But
@@ -486,8 +487,8 @@ BBUUGG RREEPPOORRTTSS
        ggnnuu..bbaasshh..bbuugg.
 
        Comments and bug reports concerning this manual page should be directed
-       to _c_h_e_t_@_i_n_s_._C_W_R_U_._E_d_u.
+       to _c_h_e_t_._r_a_m_e_y_@_c_a_s_e_._e_d_u.
 
 
 
-GNU History 6.2                 2010 August 12                      HISTORY(3)
+GNU History 6.3                  2013 June 27                       HISTORY(3)

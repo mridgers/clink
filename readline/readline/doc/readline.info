@@ -1,27 +1,18 @@
 This is readline.info, produced by makeinfo version 4.13 from
-/usr/src/local/chet/src/bash/readline-src/doc/rlman.texi.
+/usr/homes/chet/src/bash/readline-src/doc/rlman.texi.
 
-This manual describes the GNU Readline Library (version 6.2, September
-6 2010), a library which aids in the consistency of user interface
-across discrete programs which provide a command line interface.
+This manual describes the GNU Readline Library (version 6.3, 6 January
+2014), a library which aids in the consistency of user interface across
+discrete programs which provide a command line interface.
 
-   Copyright (C) 1988-2011 Free Software Foundation, Inc.
-
-   Permission is granted to make and distribute verbatim copies of this
-manual provided the copyright notice and this permission notice are
-preserved on all copies.
+   Copyright (C) 1988-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
-     being "A GNU Manual", and with the Back-Cover Texts as in (a)
-     below.  A copy of the license is included in the section entitled
-     "GNU Free Documentation License".
-
-     (a) The FSF's Back-Cover Text is: You are free to copy and modify
-     this GNU manual.  Buying copies from GNU Press supports the FSF in
-     developing GNU and promoting software freedom."
+     Foundation; with no Invariant Sections, no Front-Cover Texts, and
+     no Back-Cover Texts.  A copy of the license is included in the
+     section entitled "GNU Free Documentation License".
 
 
 INFO-DIR-SECTION Libraries
@@ -37,7 +28,8 @@ GNU Readline Library
 
 This document describes the GNU Readline Library, a utility which aids
 in the consistency of user interface across discrete programs which
-provide a command line interface.
+provide a command line interface.  The Readline home page is
+`http://www.gnu.org/software/readline/'.
 
 * Menu:
 
@@ -397,6 +389,12 @@ Variable Settings
           characters treated specially by the kernel's terminal driver
           to their Readline equivalents.
 
+    `colored-stats'
+          If set to `on', Readline displays possible completions using
+          different colors to indicate their file type.  The color
+          definitions are taken from the value of the `LS_COLORS'
+          environment variable.  The default is `off'.
+
     `comment-begin'
           The string to insert at the beginning of the line when the
           `insert-comment' command is executed.  The default value is
@@ -482,8 +480,10 @@ Variable Settings
 
     `history-size'
           Set the maximum number of history entries saved in the
-          history list.  If set to zero, the number of entries in the
-          history list is not limited.
+          history list.  If set to zero, any existing history entries
+          are deleted and no new entries are saved.  If set to a value
+          less than zero, the number of history entries is not limited.
+          By default, the number of history entries is not limited.
 
     `horizontal-scroll-mode'
           This variable can be set to either `on' or `off'.  Setting it
@@ -514,6 +514,22 @@ Variable Settings
           `vi-command'; `emacs' is equivalent to `emacs-standard'.  The
           default value is `emacs'.  The value of the `editing-mode'
           variable also affects the default keymap.
+
+    `keyseq-timeout'
+          Specifies the duration Readline will wait for a character
+          when reading an ambiguous key sequence (one that can form a
+          complete key sequence using the input read so far, or can
+          take additional input to complete a longer key sequence).  If
+          no input is received within the timeout, Readline will use
+          the shorter but complete key sequence.  Readline uses this
+          value to determine whether or not input is available on the
+          current input source (`rl_instream' by default).  The value
+          is specified in milliseconds, so a value of 1000 means that
+          Readline will wait one second for additional input.  If this
+          variable is set to a value less than or equal to zero, or to a
+          non-numeric value, Readline will wait until another key is
+          pressed to decide which key sequence to complete.  The
+          default value is `500'.
 
     `mark-directories'
           If set to `on', completed directory names have a slash
@@ -576,6 +592,11 @@ Variable Settings
           completions don't share a common prefix) cause the matches to
           be listed immediately instead of ringing the bell.  The
           default value is `off'.
+
+    `show-mode-in-prompt'
+          If set to `on', add a character to the beginning of the prompt
+          indicating the editing mode: emacs (`@'), vi command (`:'),
+          or vi insertion (`+').  The default value is `off'.
 
     `skip-completed-text'
           If set to `on', this alters the default completion behavior
@@ -791,7 +812,7 @@ variable assignment, and conditional syntax.
      # You can re-read the inputrc file with C-x C-r.
      # Lines beginning with '#' are comments.
      #
-     # First, include any systemwide bindings and variable
+     # First, include any system-wide bindings and variable
      # assignments from /etc/Inputrc
      $include /etc/Inputrc
 
@@ -991,12 +1012,26 @@ File: readline.info,  Node: Commands For History,  Next: Commands For Text,  Pre
 
 `history-search-forward ()'
      Search forward through the history for the string of characters
-     between the start of the current line and the point.  This is a
+     between the start of the current line and the point.  The search
+     string must match at the beginning of a history line.  This is a
      non-incremental search.  By default, this command is unbound.
 
 `history-search-backward ()'
      Search backward through the history for the string of characters
-     between the start of the current line and the point.  This is a
+     between the start of the current line and the point.  The search
+     string must match at the beginning of a history line.  This is a
+     non-incremental search.  By default, this command is unbound.
+
+`history-substr-search-forward ()'
+     Search forward through the history for the string of characters
+     between the start of the current line and the point.  The search
+     string may match anywhere in a history line.  This is a
+     non-incremental search.  By default, this command is unbound.
+
+`history-substr-search-backward ()'
+     Search backward through the history for the string of characters
+     between the start of the current line and the point.  The search
+     string may match anywhere in a history line.  This is a
      non-incremental search.  By default, this command is unbound.
 
 `yank-nth-arg (M-C-y)'
@@ -1028,10 +1063,16 @@ File: readline.info,  Node: Commands For Text,  Next: Commands For Killing,  Pre
 1.4.3 Commands For Changing Text
 --------------------------------
 
+`end-of-file (usually C-d)'
+     The character indicating end-of-file as set, for example, by
+     `stty'.  If this character is read when there are no characters on
+     the line, and point is at the beginning of the line, Readline
+     interprets it as the end of input and returns EOF.
+
 `delete-char (C-d)'
-     Delete the character at point.  If point is at the beginning of
-     the line, there are no characters in the line, and the last
-     character typed was not bound to `delete-char', then return EOF.
+     Delete the character at point.  If this function is bound to the
+     same character as the tty EOF character, as `C-d' commonly is, see
+     above for the effects.
 
 `backward-delete-char (Rubout)'
      Delete the character behind the cursor.  A numeric argument means
@@ -1242,6 +1283,10 @@ File: readline.info,  Node: Keyboard Macros,  Next: Miscellaneous Commands,  Pre
      Re-execute the last keyboard macro defined, by making the
      characters in the macro appear as if typed at the keyboard.
 
+`print-last-kbd-macro ()'
+     Print the last keboard macro defined in a format suitable for the
+     INPUTRC file.
+
 
 
 File: readline.info,  Node: Miscellaneous Commands,  Prev: Keyboard Macros,  Up: Bindable Readline Commands
@@ -1365,7 +1410,7 @@ the standard `vi' movement keys, move to previous history lines with
 aiding in the consistency of user interface across discrete programs
 that need to provide a command line interface.
 
-   Copyright (C) 1988-2011 Free Software Foundation, Inc.
+   Copyright (C) 1988-2014 Free Software Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice pare
@@ -1535,7 +1580,7 @@ File: readline.info,  Node: Readline Typedefs,  Next: Function Writing,  Up: Cus
 2.2.1 Readline Typedefs
 -----------------------
 
-For readabilty, we declare a number of new object types, all pointers
+For readability, we declare a number of new object types, all pointers
 to functions.
 
    The reason for declaring these new types is to make it easier to
@@ -1759,7 +1804,34 @@ These variables are available to function writers.
      If non-zero, Readline will call indirectly through this pointer to
      get a character from the input stream.  By default, it is set to
      `rl_getc', the default Readline character input function (*note
-     Character Input::).
+     Character Input::).  In general, an application that sets
+     RL_GETC_FUNCTION should consider setting RL_INPUT_AVAILABLE_HOOK
+     as well.
+
+ -- Variable: rl_hook_func_t * rl_signal_event_hook
+     If non-zero, this is the address of a function to call if a read
+     system call is interrupted when Readline is reading terminal input.
+
+ -- Variable: rl_hook_func_t * rl_input_available_hook
+     If non-zero, Readline will use this function's return value when
+     it needs to determine whether or not there is available input on
+     the current input source.  The default hook checks `rl_instream';
+     if an application is using a different input source, it should set
+     the hook appropriately.  Readline queries for available input when
+     implementing intra-key-sequence timeouts during input and
+     incremental searches.  This may use an application-specific
+     timeout before returning a value; Readline uses the value passed
+     to `rl_set_keyboard_input_timeout()' or the value of the
+     user-settable KEYSEQ-TIMEOUT variable.  This is designed for use
+     by applications using Readline's callback interface (*note
+     Alternate Interface::), which may not use the traditional
+     `read(2)' and file descriptor interface, or other applications
+     using a different input mechanism.  If an application uses an
+     input mechanism or hook that can potentially exceed the value of
+     KEYSEQ-TIMEOUT, it should increase the timeout or set this hook
+     appropriately even when not using the callback interface.  In
+     general, an application that sets RL_GETC_FUNCTION should consider
+     setting RL_INPUT_AVAILABLE_HOOK as well.
 
  -- Variable: rl_voidfunc_t * rl_redisplay_function
      If non-zero, Readline will call indirectly through this pointer to
@@ -1791,6 +1863,17 @@ These variables are available to function writers.
  -- Variable: char * rl_executing_macro
      This variable is set to the text of any currently-executing macro.
 
+ -- Variable: int rl_executing_key
+     The key that caused the dispatch to the currently-executing
+     Readline function.
+
+ -- Variable: char * rl_executing_keyseq
+     The full key sequence that caused the dispatch to the
+     currently-executing Readline function.
+
+ -- Variable: int rl_key_sequence_length
+     The number of characters in RL_EXECUTING_KEYSEQ.
+
  -- Variable: int rl_readline_state
      A variable with bit values that encapsulate the current Readline
      state.  A bit is set with the `RL_SETSTATE' macro, and unset with
@@ -1799,7 +1882,7 @@ These variables are available to function writers.
 
     `RL_STATE_NONE'
           Readline has not yet been called, nor has it begun to
-          intialize.
+          initialize.
 
     `RL_STATE_INITIALIZING'
           Readline is initializing its internal data structures.
@@ -1922,6 +2005,7 @@ File: readline.info,  Node: Readline Convenience Functions,  Next: Readline Sign
 * Miscellaneous Functions::	Functions that don't fall into any category.
 * Alternate Interface::	Using Readline in a `callback' fashion.
 * A Readline Example::		An example Readline function.
+* Alternate Interface Example::	An example program using the alternate interface.
 
 
 File: readline.info,  Node: Function Naming,  Next: Keymaps,  Up: Readline Convenience Functions
@@ -2236,7 +2320,7 @@ File: readline.info,  Node: Redisplay,  Next: Modifying Text,  Prev: Allowing Un
 
  -- Function: int rl_on_new_line (void)
      Tell the update functions that we have moved onto a new (empty)
-     line, usually after ouputting a newline.
+     line, usually after outputting a newline.
 
  -- Function: int rl_on_new_line_with_prompt (void)
      Tell the update functions that we have moved onto a new line, with
@@ -2534,6 +2618,12 @@ File: readline.info,  Node: Miscellaneous Functions,  Next: Alternate Interface,
      not use all of a terminal's capabilities, and this function will
      return values for only those capabilities Readline uses.
 
+ -- Function: void rl_clear_history (void)
+     Clear the history list by deleting all of the entries, in the same
+     manner as the History library's `clear_history()' function.  This
+     differs from `clear_history' because it frees private data
+     Readline saves in the history list.
+
 
 File: readline.info,  Node: Alternate Interface,  Next: A Readline Example,  Prev: Miscellaneous Functions,  Up: Readline Convenience Functions
 
@@ -2543,7 +2633,7 @@ File: readline.info,  Node: Alternate Interface,  Next: A Readline Example,  Pre
 An alternate interface is available to plain `readline()'.  Some
 applications need to interleave keyboard I/O with file, device, or
 window system I/O, typically by using a main loop to `select()' on
-various file descriptors.  To accomodate this need, readline can also
+various file descriptors.  To accommodate this need, readline can also
 be invoked as a `callback' function from an event loop.  There are
 functions available to make this easy.
 
@@ -2551,20 +2641,22 @@ functions available to make this easy.
           rl_vcpfunc_t *lhandler)
      Set up the terminal for readline I/O and display the initial
      expanded value of PROMPT.  Save the value of LHANDLER to use as a
-     function to call when a complete line of input has been entered.
-     The function takes the text of the line as an argument.
+     handler function to call when a complete line of input has been
+     entered.  The handler function receives the text of the line as an
+     argument.
 
  -- Function: void rl_callback_read_char (void)
      Whenever an application determines that keyboard input is
      available, it should call `rl_callback_read_char()', which will
      read the next character from the current input source.  If that
      character completes the line, `rl_callback_read_char' will invoke
-     the LHANDLER function saved by `rl_callback_handler_install' to
-     process the line.  Before calling the LHANDLER function, the
+     the LHANDLER function installed by `rl_callback_handler_install'
+     to process the line.  Before calling the LHANDLER function, the
      terminal settings are reset to the values they had before calling
      `rl_callback_handler_install'.  If the LHANDLER function returns,
-     the terminal settings are modified for Readline's use again.
-     `EOF' is  indicated by calling LHANDLER with a `NULL' line.
+     and the line handler remains installed, the terminal settings are
+     modified for Readline's use again.  `EOF' is indicated by calling
+     LHANDLER with a `NULL' line.
 
  -- Function: void rl_callback_handler_remove (void)
      Restore the terminal to its initial state and remove the line
@@ -2576,7 +2668,7 @@ functions available to make this easy.
      exits to reset the terminal settings.
 
 
-File: readline.info,  Node: A Readline Example,  Prev: Alternate Interface,  Up: Readline Convenience Functions
+File: readline.info,  Node: A Readline Example,  Next: Alternate Interface Example,  Prev: Alternate Interface,  Up: Readline Convenience Functions
 
 2.4.13 A Readline Example
 -------------------------
@@ -2644,6 +2736,99 @@ changed.
      }
 
 
+File: readline.info,  Node: Alternate Interface Example,  Prev: A Readline Example,  Up: Readline Convenience Functions
+
+2.4.14 Alternate Interface Example
+----------------------------------
+
+Here is a complete program that illustrates Readline's alternate
+interface.  It reads lines from the terminal and displays them,
+providing the standard history and TAB completion functions.  It
+understands the EOF character or "exit" to exit the program.
+
+     /* Standard include files. stdio.h is required. */
+     #include <stdlib.h>
+     #include <unistd.h>
+
+     /* Used for select(2) */
+     #include <sys/types.h>
+     #include <sys/select.h>
+
+     #include <stdio.h>
+
+     /* Standard readline include files. */
+     #include <readline/readline.h>
+     #include <readline/history.h>
+
+     static void cb_linehandler (char *);
+
+     int running;
+     const char *prompt = "rltest$ ";
+
+     /* Callback function called for each line when accept-line executed, EOF
+        seen, or EOF character read.  This sets a flag and returns; it could
+        also call exit(3). */
+     static void
+     cb_linehandler (char *line)
+     {
+       /* Can use ^D (stty eof) or `exit' to exit. */
+       if (line == NULL || strcmp (line, "exit") == 0)
+         {
+           if (line == 0)
+             printf ("\n");
+           printf ("exit\n");
+           /* This function needs to be called to reset the terminal settings,
+              and calling it from the line handler keeps one extra prompt from
+              being displayed. */
+           rl_callback_handler_remove ();
+
+           running = 0;
+         }
+       else
+         {
+           if (*line)
+             add_history (line);
+           printf ("input line: %s\n", line);
+           free (line);
+         }
+     }
+
+     int
+     main (int c, char **v)
+     {
+       fd_set fds;
+       int r;
+
+       /* Install the line handler. */
+       rl_callback_handler_install (prompt, cb_linehandler);
+
+       /* Enter a simple event loop.  This waits until something is available
+          to read on readline's input stream (defaults to standard input) and
+          calls the builtin character read callback to read it.  It does not
+          have to modify the user's terminal settings. */
+       running = 1;
+       while (running)
+         {
+           FD_ZERO (&fds);
+           FD_SET (fileno (rl_instream), &fds);
+
+           r = select (FD_SETSIZE, &fds, NULL, NULL, NULL);
+           if (r < 0)
+             {
+               perror ("rltest: select");
+               rl_callback_handler_remove ();
+               break;
+             }
+
+           if (FD_ISSET (fileno (rl_instream), &fds))
+             rl_callback_read_char ();
+         }
+
+       printf ("rltest: Event loop has exited\n");
+       return 0;
+     }
+
+
 File: readline.info,  Node: Readline Signal Handling,  Next: Custom Completers,  Prev: Readline Convenience Functions,  Up: Programming with GNU Readline
 
 2.5 Readline Signal Handling
@@ -2660,7 +2845,7 @@ received in order to restore the terminal to a sane state, or provide
 application writers with functions to do so manually.
 
    Readline contains an internal signal handler that is installed for a
-number of signals (`SIGINT', `SIGQUIT', `SIGTERM', `SIGALRM',
+number of signals (`SIGINT', `SIGQUIT', `SIGTERM', `SIGHUP', `SIGALRM',
 `SIGTSTP', `SIGTTIN', and `SIGTTOU').  When one of these signals is
 received, the signal handler will reset the terminal attributes to
 those that were in effect before `readline()' was called, reset the
@@ -2692,16 +2877,23 @@ signal handler, so Readline's internal signal state is not corrupted.
 
  -- Variable: int rl_catch_signals
      If this variable is non-zero, Readline will install signal
-     handlers for `SIGINT', `SIGQUIT', `SIGTERM', `SIGALRM', `SIGTSTP',
-     `SIGTTIN', and `SIGTTOU'.
+     handlers for `SIGINT', `SIGQUIT', `SIGTERM', `SIGHUP', `SIGALRM',
+     `SIGTSTP', `SIGTTIN', and `SIGTTOU'.
 
      The default value of `rl_catch_signals' is 1.
 
  -- Variable: int rl_catch_sigwinch
-     If this variable is non-zero, Readline will install a signal
-     handler for `SIGWINCH'.
+     If this variable is set to a non-zero value, Readline will install
+     a signal handler for `SIGWINCH'.
 
      The default value of `rl_catch_sigwinch' is 1.
+
+ -- Variable: int rl_change_environment
+     If this variable is set to a non-zero value, and Readline is
+     handling `SIGWINCH', Readline will modify the LINES and COLUMNS
+     environment variables upon receipt of a `SIGWINCH'
+
+     The default value of `rl_change_environment' is 1.
 
    If an application does not wish to have Readline catch any signals,
 or to handle signals other than those Readline catches (`SIGHUP', for
@@ -2763,8 +2955,8 @@ handlers.
 
  -- Function: int rl_set_signals (void)
      Install Readline's signal handler for `SIGINT', `SIGQUIT',
-     `SIGTERM', `SIGALRM', `SIGTSTP', `SIGTTIN', `SIGTTOU', and
-     `SIGWINCH', depending on the values of `rl_catch_signals' and
+     `SIGTERM', `SIGHUP', `SIGALRM', `SIGTSTP', `SIGTTIN', `SIGTTOU',
+     and `SIGWINCH', depending on the values of `rl_catch_signals' and
      `rl_catch_sigwinch'.
 
  -- Function: int rl_clear_signals (void)
@@ -2890,7 +3082,7 @@ Readline.
      This calls `rl_complete_internal()' with an argument of `*'.
 
  -- Function: int rl_completion_mode (rl_command_func_t *cfunc)
-     Returns the apppriate value to pass to `rl_complete_internal()'
+     Returns the appropriate value to pass to `rl_complete_internal()'
      depending on whether CFUNC was called twice in succession and the
      values of the `show-all-if-ambiguous' and `show-all-if-unmodified'
      variables.  Application-specific completion functions may use this
@@ -2999,16 +3191,45 @@ File: readline.info,  Node: Completion Variables,  Next: A Short Completion Exam
      the directory portion of the pathname the user typed.  At the
      least, even if no other expansion is performed, this function
      should remove any quote characters from the directory name,
-     because its result will be passed directly to `opendir()'.  The
-     directory completion hook returns an integer that should be
+     because its result will be passed directly to `opendir()'.
+
+     The directory completion hook returns an integer that should be
      non-zero if the function modifies its directory argument.  The
      function should not modify the directory argument if it returns 0.
+
+ -- Variable: rl_icppfunc_t * rl_directory_rewrite_hook;
+     If non-zero, this is the address of a function to call when
+     completing a directory name.  This function takes the address of
+     the directory name to be modified as an argument.  Unlike
+     `rl_directory_completion_hook', it only modifies the directory
+     name used in `opendir', not what is displayed when the possible
+     completions are printed or inserted.  It is called before
+     rl_directory_completion_hook.  At the least, even if no other
+     expansion is performed, this function should remove any quote
+     characters from the directory name, because its result will be
+     passed directly to `opendir()'.
+
+     The directory rewrite hook returns an integer that should be
+     non-zero if the function modfies its directory argument.  The
+     function should not modify the directory argument if it returns 0.
+
+ -- Variable: rl_icppfunc_t * rl_filename_stat_hook
+     If non-zero, this is the address of a function for the completer to
+     call before deciding which character to append to a completed name.
+     This function modifies its filename name argument, and the
+     modified value is passed to `stat()' to determine the file's type
+     and characteristics.  This function does not need to remove quote
+     characters from the filename.
+
+     The stat hook returns an integer that should be non-zero if the
+     function modfies its directory argument.  The function should not
+     modify the directory argument if it returns 0.
 
  -- Variable: rl_dequote_func_t * rl_filename_rewrite_hook
      If non-zero, this is the address of a function called when reading
      directory entries from the filesystem for completion and comparing
      them to the partial word to be completed.  The function should
-     perform any necesary application or system-specific conversion on
+     perform any necessary application or system-specific conversion on
      the filename, such as converting between character sets or
      converting from a filesystem format to a character input format.
      The function takes two arguments: FNAME, the filename to be
@@ -4192,7 +4413,7 @@ Function and Variable Index
 * accept-line (Newline or Return):       Commands For History.
                                                               (line   6)
 * backward-char (C-b):                   Commands For Moving. (line  15)
-* backward-delete-char (Rubout):         Commands For Text.   (line  11)
+* backward-delete-char (Rubout):         Commands For Text.   (line  17)
 * backward-kill-line (C-x Rubout):       Commands For Killing.
                                                               (line   9)
 * backward-kill-word (M-<DEL>):          Commands For Killing.
@@ -4206,45 +4427,47 @@ Function and Variable Index
 * bind-tty-special-chars:                Readline Init File Syntax.
                                                               (line  42)
 * call-last-kbd-macro (C-x e):           Keyboard Macros.     (line  13)
-* capitalize-word (M-c):                 Commands For Text.   (line  49)
+* capitalize-word (M-c):                 Commands For Text.   (line  55)
 * character-search (C-]):                Miscellaneous Commands.
                                                               (line  41)
 * character-search-backward (M-C-]):     Miscellaneous Commands.
                                                               (line  46)
 * clear-screen (C-l):                    Commands For Moving. (line  26)
-* comment-begin:                         Readline Init File Syntax.
+* colored-stats:                         Readline Init File Syntax.
                                                               (line  47)
+* comment-begin:                         Readline Init File Syntax.
+                                                              (line  53)
 * complete (<TAB>):                      Commands For Completion.
                                                               (line   6)
 * completion-display-width:              Readline Init File Syntax.
-                                                              (line  52)
+                                                              (line  58)
 * completion-ignore-case:                Readline Init File Syntax.
-                                                              (line  59)
+                                                              (line  65)
 * completion-map-case:                   Readline Init File Syntax.
-                                                              (line  64)
-* completion-prefix-display-length:      Readline Init File Syntax.
                                                               (line  70)
+* completion-prefix-display-length:      Readline Init File Syntax.
+                                                              (line  76)
 * completion-query-items:                Readline Init File Syntax.
-                                                              (line  77)
+                                                              (line  83)
 * convert-meta:                          Readline Init File Syntax.
-                                                              (line  87)
+                                                              (line  93)
 * copy-backward-word ():                 Commands For Killing.
                                                               (line  49)
 * copy-forward-word ():                  Commands For Killing.
                                                               (line  54)
 * copy-region-as-kill ():                Commands For Killing.
                                                               (line  45)
-* delete-char (C-d):                     Commands For Text.   (line   6)
+* delete-char (C-d):                     Commands For Text.   (line  12)
 * delete-char-or-list ():                Commands For Completion.
                                                               (line  39)
 * delete-horizontal-space ():            Commands For Killing.
                                                               (line  37)
 * digit-argument (M-0, M-1, ... M--):    Numeric Arguments.   (line   6)
 * disable-completion:                    Readline Init File Syntax.
-                                                              (line  93)
+                                                              (line  99)
 * do-uppercase-version (M-a, M-b, M-X, ...): Miscellaneous Commands.
                                                               (line  14)
-* downcase-word (M-l):                   Commands For Text.   (line  45)
+* downcase-word (M-l):                   Commands For Text.   (line  51)
 * dump-functions ():                     Miscellaneous Commands.
                                                               (line  70)
 * dump-macros ():                        Miscellaneous Commands.
@@ -4252,42 +4475,47 @@ Function and Variable Index
 * dump-variables ():                     Miscellaneous Commands.
                                                               (line  76)
 * editing-mode:                          Readline Init File Syntax.
-                                                              (line  98)
+                                                              (line 104)
 * enable-keypad:                         Readline Init File Syntax.
-                                                              (line 109)
+                                                              (line 115)
 * end-kbd-macro (C-x )):                 Keyboard Macros.     (line   9)
+* end-of-file (usually C-d):             Commands For Text.   (line   6)
 * end-of-history (M->):                  Commands For History.
                                                               (line  22)
 * end-of-line (C-e):                     Commands For Moving. (line   9)
 * exchange-point-and-mark (C-x C-x):     Miscellaneous Commands.
                                                               (line  36)
 * expand-tilde:                          Readline Init File Syntax.
-                                                              (line 120)
-* forward-backward-delete-char ():       Commands For Text.   (line  15)
+                                                              (line 126)
+* forward-backward-delete-char ():       Commands For Text.   (line  21)
 * forward-char (C-f):                    Commands For Moving. (line  12)
 * forward-search-history (C-s):          Commands For History.
                                                               (line  30)
 * forward-word (M-f):                    Commands For Moving. (line  18)
 * history-preserve-point:                Readline Init File Syntax.
-                                                              (line 124)
+                                                              (line 130)
 * history-search-backward ():            Commands For History.
-                                                              (line  50)
+                                                              (line  51)
 * history-search-forward ():             Commands For History.
                                                               (line  45)
 * history-size:                          Readline Init File Syntax.
-                                                              (line 130)
+                                                              (line 136)
+* history-substr-search-backward ():     Commands For History.
+                                                              (line  63)
+* history-substr-search-forward ():      Commands For History.
+                                                              (line  57)
 * horizontal-scroll-mode:                Readline Init File Syntax.
-                                                              (line 135)
+                                                              (line 143)
 * input-meta:                            Readline Init File Syntax.
-                                                              (line 142)
+                                                              (line 150)
 * insert-comment (M-#):                  Miscellaneous Commands.
                                                               (line  60)
 * insert-completions (M-*):              Commands For Completion.
                                                               (line  18)
 * isearch-terminators:                   Readline Init File Syntax.
-                                                              (line 149)
+                                                              (line 157)
 * keymap:                                Readline Init File Syntax.
-                                                              (line 156)
+                                                              (line 164)
 * kill-line (C-k):                       Commands For Killing.
                                                               (line   6)
 * kill-region ():                        Commands For Killing.
@@ -4297,19 +4525,19 @@ Function and Variable Index
 * kill-word (M-d):                       Commands For Killing.
                                                               (line  19)
 * mark-modified-lines:                   Readline Init File Syntax.
-                                                              (line 169)
+                                                              (line 193)
 * mark-symlinked-directories:            Readline Init File Syntax.
-                                                              (line 174)
+                                                              (line 198)
 * match-hidden-files:                    Readline Init File Syntax.
-                                                              (line 179)
+                                                              (line 203)
 * menu-complete ():                      Commands For Completion.
                                                               (line  22)
 * menu-complete-backward ():             Commands For Completion.
                                                               (line  34)
 * menu-complete-display-prefix:          Readline Init File Syntax.
-                                                              (line 186)
+                                                              (line 210)
 * meta-flag:                             Readline Init File Syntax.
-                                                              (line 142)
+                                                              (line 150)
 * next-history (C-n):                    Commands For History.
                                                               (line  16)
 * non-incremental-forward-search-history (M-n): Commands For History.
@@ -4317,17 +4545,18 @@ Function and Variable Index
 * non-incremental-reverse-search-history (M-p): Commands For History.
                                                               (line  35)
 * output-meta:                           Readline Init File Syntax.
-                                                              (line 191)
-* overwrite-mode ():                     Commands For Text.   (line  53)
+                                                              (line 215)
+* overwrite-mode ():                     Commands For Text.   (line  59)
 * page-completions:                      Readline Init File Syntax.
-                                                              (line 196)
+                                                              (line 220)
 * possible-completions (M-?):            Commands For Completion.
                                                               (line  11)
 * prefix-meta (<ESC>):                   Miscellaneous Commands.
                                                               (line  18)
 * previous-history (C-p):                Commands For History.
                                                               (line  12)
-* quoted-insert (C-q or C-v):            Commands For Text.   (line  20)
+* print-last-kbd-macro ():               Keyboard Macros.     (line  17)
+* quoted-insert (C-q or C-v):            Commands For Text.   (line  26)
 * re-read-init-file (C-x C-r):           Miscellaneous Commands.
                                                               (line   6)
 * readline:                              Basic Behavior.      (line  12)
@@ -4335,7 +4564,7 @@ Function and Variable Index
 * reverse-search-history (C-r):          Commands For History.
                                                               (line  26)
 * revert-all-at-newline:                 Readline Init File Syntax.
-                                                              (line 206)
+                                                              (line 230)
 * revert-line (M-r):                     Miscellaneous Commands.
                                                               (line  25)
 * rl_add_defun:                          Function Naming.     (line  20)
@@ -4347,11 +4576,11 @@ Function and Variable Index
 * rl_attempted_completion_function:      Completion Variables.
                                                               (line  12)
 * rl_attempted_completion_over:          Completion Variables.
-                                                              (line 226)
+                                                              (line 255)
 * rl_basic_quote_characters:             Completion Variables.
-                                                              (line 115)
+                                                              (line 144)
 * rl_basic_word_break_characters:        Completion Variables.
-                                                              (line 109)
+                                                              (line 138)
 * rl_begin_undo_group:                   Allowing Undoing.    (line  29)
 * rl_bind_key:                           Binding Keys.        (line  22)
 * rl_bind_key_if_unbound:                Binding Keys.        (line  32)
@@ -4361,71 +4590,77 @@ Function and Variable Index
 * rl_bind_keyseq_if_unbound:             Binding Keys.        (line  77)
 * rl_bind_keyseq_if_unbound_in_map:      Binding Keys.        (line  83)
 * rl_bind_keyseq_in_map:                 Binding Keys.        (line  66)
-* rl_binding_keymap:                     Readline Variables.  (line 159)
+* rl_binding_keymap:                     Readline Variables.  (line 186)
 * rl_callback_handler_install:           Alternate Interface. (line  15)
-* rl_callback_handler_remove:            Alternate Interface. (line  33)
-* rl_callback_read_char:                 Alternate Interface. (line  21)
+* rl_callback_handler_remove:            Alternate Interface. (line  35)
+* rl_callback_read_char:                 Alternate Interface. (line  22)
 * rl_catch_signals:                      Readline Signal Handling.
                                                               (line  48)
 * rl_catch_sigwinch:                     Readline Signal Handling.
                                                               (line  55)
+* rl_change_environment:                 Readline Signal Handling.
+                                                              (line  61)
 * rl_char_is_quoted_p:                   Completion Variables.
                                                               (line  46)
 * rl_cleanup_after_signal:               Readline Signal Handling.
-                                                              (line  66)
+                                                              (line  73)
+* rl_clear_history:                      Miscellaneous Functions.
+                                                              (line  50)
 * rl_clear_message:                      Redisplay.           (line  48)
 * rl_clear_pending_input:                Character Input.     (line  30)
 * rl_clear_signals:                      Readline Signal Handling.
-                                                              (line 125)
-* rl_complete <1>:                       Completion Functions.
-                                                              (line  20)
-* rl_complete:                           How Completing Works.
+                                                              (line 132)
+* rl_complete <1>:                       How Completing Works.
                                                               (line  49)
+* rl_complete:                           Completion Functions.
+                                                              (line  20)
 * rl_complete_internal:                  Completion Functions.
                                                               (line  10)
 * rl_completer_quote_characters:         Completion Variables.
-                                                              (line 132)
+                                                              (line 161)
 * rl_completer_word_break_characters:    Completion Variables.
-                                                              (line 118)
+                                                              (line 147)
 * rl_completion_append_character:        Completion Variables.
-                                                              (line 156)
+                                                              (line 185)
 * rl_completion_display_matches_hook:    Completion Variables.
-                                                              (line  96)
+                                                              (line 125)
 * rl_completion_entry_function <1>:      How Completing Works.
                                                               (line  55)
 * rl_completion_entry_function:          Completion Variables.
                                                               (line   7)
 * rl_completion_found_quote:             Completion Variables.
-                                                              (line 184)
+                                                              (line 213)
 * rl_completion_invoking_key:            Completion Variables.
-                                                              (line 249)
+                                                              (line 278)
 * rl_completion_mark_symlink_dirs:       Completion Variables.
-                                                              (line 191)
+                                                              (line 220)
 * rl_completion_matches:                 Completion Functions.
                                                               (line  45)
 * rl_completion_mode:                    Completion Functions.
                                                               (line  37)
 * rl_completion_query_items:             Completion Variables.
-                                                              (line 150)
+                                                              (line 179)
 * rl_completion_quote_character:         Completion Variables.
-                                                              (line 172)
+                                                              (line 201)
 * rl_completion_suppress_append:         Completion Variables.
-                                                              (line 166)
+                                                              (line 195)
 * rl_completion_suppress_quote:          Completion Variables.
-                                                              (line 178)
+                                                              (line 207)
 * rl_completion_type:                    Completion Variables.
-                                                              (line 241)
+                                                              (line 270)
 * rl_completion_word_break_hook:         Completion Variables.
-                                                              (line 123)
+                                                              (line 152)
 * rl_copy_keymap:                        Keymaps.             (line  17)
 * rl_copy_text:                          Modifying Text.      (line  15)
 * rl_crlf:                               Redisplay.           (line  30)
 * rl_delete_text:                        Modifying Text.      (line  11)
-* rl_deprep_term_function:               Readline Variables.  (line 149)
+* rl_deprep_term_function:               Readline Variables.  (line 176)
 * rl_deprep_terminal:                    Terminal Management. (line  13)
 * rl_ding:                               Utility Functions.   (line  36)
 * rl_directory_completion_hook:          Completion Variables.
                                                               (line  64)
+* rl_directory_rewrite_hook;:            Completion Variables.
+                                                              (line  82)
 * rl_discard_keymap:                     Keymaps.             (line  26)
 * rl_dispatching:                        Readline Variables.  (line  41)
 * rl_display_match_list:                 Utility Functions.   (line  43)
@@ -4433,37 +4668,41 @@ Function and Variable Index
 * rl_do_undo:                            Allowing Undoing.    (line  48)
 * rl_done:                               Readline Variables.  (line  28)
 * rl_echo_signal_char:                   Readline Signal Handling.
-                                                              (line  89)
-* rl_editing_mode:                       Readline Variables.  (line 270)
+                                                              (line  96)
+* rl_editing_mode:                       Readline Variables.  (line 308)
 * rl_end:                                Readline Variables.  (line  19)
 * rl_end_undo_group:                     Allowing Undoing.    (line  35)
 * rl_erase_empty_line:                   Readline Variables.  (line  47)
 * rl_event_hook:                         Readline Variables.  (line 124)
 * rl_execute_next:                       Character Input.     (line  26)
-* rl_executing_keymap:                   Readline Variables.  (line 155)
-* rl_executing_macro:                    Readline Variables.  (line 163)
+* rl_executing_key:                      Readline Variables.  (line 193)
+* rl_executing_keymap:                   Readline Variables.  (line 182)
+* rl_executing_keyseq:                   Readline Variables.  (line 197)
+* rl_executing_macro:                    Readline Variables.  (line 190)
 * rl_expand_prompt:                      Redisplay.           (line  64)
-* rl_explicit_arg:                       Readline Variables.  (line 261)
+* rl_explicit_arg:                       Readline Variables.  (line 299)
 * rl_extend_line_buffer:                 Utility Functions.   (line  27)
 * rl_filename_completion_desired:        Completion Variables.
-                                                              (line 206)
+                                                              (line 235)
 * rl_filename_completion_function:       Completion Functions.
                                                               (line  59)
 * rl_filename_dequoting_function:        Completion Variables.
                                                               (line  37)
 * rl_filename_quote_characters:          Completion Variables.
-                                                              (line 138)
+                                                              (line 167)
 * rl_filename_quoting_desired:           Completion Variables.
-                                                              (line 216)
+                                                              (line 245)
 * rl_filename_quoting_function:          Completion Variables.
                                                               (line  24)
 * rl_filename_rewrite_hook:              Completion Variables.
-                                                              (line  81)
+                                                              (line 110)
+* rl_filename_stat_hook:                 Completion Variables.
+                                                              (line  98)
 * rl_forced_update_display:              Redisplay.           (line  11)
 * rl_free:                               Utility Functions.   (line  18)
 * rl_free_keymap:                        Keymaps.             (line  30)
 * rl_free_line_state:                    Readline Signal Handling.
-                                                              (line  72)
+                                                              (line  79)
 * rl_free_undo_list:                     Allowing Undoing.    (line  45)
 * rl_function_dumper:                    Associating Function Names and Bindings.
                                                               (line  30)
@@ -4476,19 +4715,20 @@ Function and Variable Index
 * rl_get_keymap_by_name:                 Keymaps.             (line  43)
 * rl_get_keymap_name:                    Keymaps.             (line  48)
 * rl_get_screen_size:                    Readline Signal Handling.
-                                                              (line 108)
+                                                              (line 115)
 * rl_get_termcap:                        Miscellaneous Functions.
                                                               (line  42)
 * rl_getc:                               Character Input.     (line  15)
 * rl_getc_function:                      Readline Variables.  (line 130)
 * rl_gnu_readline_p:                     Readline Variables.  (line  83)
 * rl_ignore_completion_duplicates:       Completion Variables.
-                                                              (line 202)
+                                                              (line 231)
 * rl_ignore_some_completions_function:   Completion Variables.
                                                               (line  56)
 * rl_inhibit_completion:                 Completion Variables.
-                                                              (line 255)
+                                                              (line 284)
 * rl_initialize:                         Utility Functions.   (line  31)
+* rl_input_available_hook:               Readline Variables.  (line 142)
 * rl_insert_completions:                 Completion Functions.
                                                               (line  32)
 * rl_insert_text:                        Modifying Text.      (line   7)
@@ -4497,6 +4737,7 @@ Function and Variable Index
                                                               (line  21)
 * rl_invoking_keyseqs_in_map:            Associating Function Names and Bindings.
                                                               (line  26)
+* rl_key_sequence_length:                Readline Variables.  (line 201)
 * rl_kill_text:                          Modifying Text.      (line  19)
 * rl_last_func:                          Readline Variables.  (line 110)
 * rl_library_version:                    Readline Variables.  (line  73)
@@ -4515,7 +4756,7 @@ Function and Variable Index
 * rl_named_function:                     Associating Function Names and Bindings.
                                                               (line  11)
 * rl_num_chars_to_read:                  Readline Variables.  (line  32)
-* rl_numeric_arg:                        Readline Variables.  (line 265)
+* rl_numeric_arg:                        Readline Variables.  (line 303)
 * rl_on_new_line:                        Redisplay.           (line  15)
 * rl_on_new_line_with_prompt:            Redisplay.           (line  19)
 * rl_outstream:                          Readline Variables.  (line 101)
@@ -4526,26 +4767,26 @@ Function and Variable Index
                                                               (line  28)
 * rl_pre_input_hook:                     Readline Variables.  (line 119)
 * rl_prefer_env_winsize:                 Readline Variables.  (line 105)
-* rl_prep_term_function:                 Readline Variables.  (line 142)
+* rl_prep_term_function:                 Readline Variables.  (line 169)
 * rl_prep_terminal:                      Terminal Management. (line   7)
 * rl_prompt:                             Readline Variables.  (line  53)
 * rl_push_macro_input:                   Modifying Text.      (line  26)
 * rl_read_init_file:                     Binding Keys.        (line 101)
 * rl_read_key:                           Character Input.     (line   7)
 * rl_readline_name:                      Readline Variables.  (line  92)
-* rl_readline_state:                     Readline Variables.  (line 166)
+* rl_readline_state:                     Readline Variables.  (line 204)
 * rl_readline_version:                   Readline Variables.  (line  76)
 * rl_redisplay:                          Redisplay.           (line   7)
-* rl_redisplay_function:                 Readline Variables.  (line 136)
+* rl_redisplay_function:                 Readline Variables.  (line 163)
 * rl_replace_line:                       Utility Functions.   (line  22)
 * rl_reset_after_signal:                 Readline Signal Handling.
-                                                              (line  80)
+                                                              (line  87)
 * rl_reset_line_state:                   Redisplay.           (line  26)
 * rl_reset_screen_size:                  Readline Signal Handling.
-                                                              (line 112)
+                                                              (line 119)
 * rl_reset_terminal:                     Terminal Management. (line  28)
 * rl_resize_terminal:                    Readline Signal Handling.
-                                                              (line  95)
+                                                              (line 102)
 * rl_restore_prompt:                     Redisplay.           (line  57)
 * rl_restore_state:                      Utility Functions.   (line  12)
 * rl_save_prompt:                        Redisplay.           (line  53)
@@ -4557,14 +4798,15 @@ Function and Variable Index
                                                               (line  37)
 * rl_set_prompt:                         Redisplay.           (line  78)
 * rl_set_screen_size:                    Readline Signal Handling.
-                                                              (line  99)
+                                                              (line 106)
 * rl_set_signals:                        Readline Signal Handling.
-                                                              (line 119)
+                                                              (line 126)
 * rl_show_char:                          Redisplay.           (line  33)
+* rl_signal_event_hook:                  Readline Variables.  (line 138)
 * rl_sort_completion_matches:            Completion Variables.
-                                                              (line 233)
+                                                              (line 262)
 * rl_special_prefixes:                   Completion Variables.
-                                                              (line 143)
+                                                              (line 172)
 * rl_startup_hook:                       Readline Variables.  (line 115)
 * rl_stuff_char:                         Character Input.     (line  19)
 * rl_terminal_name:                      Readline Variables.  (line  87)
@@ -4582,20 +4824,22 @@ Function and Variable Index
                                                               (line  31)
 * rl_variable_value:                     Miscellaneous Functions.
                                                               (line  26)
-* self-insert (a, b, A, 1, !, ...):      Commands For Text.   (line  27)
+* self-insert (a, b, A, 1, !, ...):      Commands For Text.   (line  33)
 * set-mark (C-@):                        Miscellaneous Commands.
                                                               (line  32)
 * show-all-if-ambiguous:                 Readline Init File Syntax.
-                                                              (line 212)
+                                                              (line 236)
 * show-all-if-unmodified:                Readline Init File Syntax.
-                                                              (line 218)
+                                                              (line 242)
+* show-mode-in-prompt:                   Readline Init File Syntax.
+                                                              (line 251)
 * skip-completed-text:                   Readline Init File Syntax.
-                                                              (line 227)
+                                                              (line 256)
 * skip-csi-sequence ():                  Miscellaneous Commands.
                                                               (line  51)
 * start-kbd-macro (C-x ():               Keyboard Macros.     (line   6)
-* transpose-chars (C-t):                 Commands For Text.   (line  30)
-* transpose-words (M-t):                 Commands For Text.   (line  36)
+* transpose-chars (C-t):                 Commands For Text.   (line  36)
+* transpose-words (M-t):                 Commands For Text.   (line  42)
 * undo (C-_ or C-x C-u):                 Miscellaneous Commands.
                                                               (line  22)
 * universal-argument ():                 Numeric Arguments.   (line  10)
@@ -4605,72 +4849,73 @@ Function and Variable Index
                                                               (line  12)
 * unix-word-rubout (C-w):                Commands For Killing.
                                                               (line  28)
-* upcase-word (M-u):                     Commands For Text.   (line  41)
+* upcase-word (M-u):                     Commands For Text.   (line  47)
 * visible-stats:                         Readline Init File Syntax.
-                                                              (line 240)
+                                                              (line 269)
 * yank (C-y):                            Commands For Killing.
                                                               (line  59)
 * yank-last-arg (M-. or M-_):            Commands For History.
-                                                              (line  64)
+                                                              (line  78)
 * yank-nth-arg (M-C-y):                  Commands For History.
-                                                              (line  55)
+                                                              (line  69)
 * yank-pop (M-y):                        Commands For Killing.
                                                               (line  62)
 
 
 
 Tag Table:
-Node: Top1330
-Node: Command Line Editing1987
-Node: Introduction and Notation2639
-Node: Readline Interaction4262
-Node: Readline Bare Essentials5454
-Node: Readline Movement Commands7244
-Node: Readline Killing Commands8210
-Node: Readline Arguments10131
-Node: Searching11176
-Node: Readline Init File13328
-Node: Readline Init File Syntax14482
-Node: Conditional Init Constructs29543
-Node: Sample Init File32077
-Node: Bindable Readline Commands35195
-Node: Commands For Moving36253
-Node: Commands For History37115
-Node: Commands For Text40520
-Node: Commands For Killing43247
-Node: Numeric Arguments45390
-Node: Commands For Completion46530
-Node: Keyboard Macros48500
-Node: Miscellaneous Commands49072
-Node: Readline vi Mode52929
-Node: Programming with GNU Readline54746
-Node: Basic Behavior55732
-Node: Custom Functions59149
-Node: Readline Typedefs60633
-Node: Function Writing62272
-Node: Readline Variables63579
-Node: Readline Convenience Functions74245
-Node: Function Naming75235
-Node: Keymaps76497
-Node: Binding Keys78490
-Node: Associating Function Names and Bindings83037
-Node: Allowing Undoing85322
-Node: Redisplay87872
-Node: Modifying Text91772
-Node: Character Input93018
-Node: Terminal Management94916
-Node: Utility Functions96352
-Node: Miscellaneous Functions99680
-Node: Alternate Interface101977
-Node: A Readline Example104136
-Node: Readline Signal Handling106039
-Node: Custom Completers112227
-Node: How Completing Works112947
-Node: Completion Functions116261
-Node: Completion Variables119833
-Node: A Short Completion Example133946
-Node: GNU Free Documentation License146725
-Node: Concept Index171918
-Node: Function and Variable Index173439
+Node: Top907
+Node: Command Line Editing1632
+Node: Introduction and Notation2284
+Node: Readline Interaction3907
+Node: Readline Bare Essentials5099
+Node: Readline Movement Commands6889
+Node: Readline Killing Commands7855
+Node: Readline Arguments9776
+Node: Searching10821
+Node: Readline Init File12973
+Node: Readline Init File Syntax14127
+Node: Conditional Init Constructs30832
+Node: Sample Init File33366
+Node: Bindable Readline Commands36485
+Node: Commands For Moving37543
+Node: Commands For History38405
+Node: Commands For Text42560
+Node: Commands For Killing45543
+Node: Numeric Arguments47686
+Node: Commands For Completion48826
+Node: Keyboard Macros50796
+Node: Miscellaneous Commands51485
+Node: Readline vi Mode55342
+Node: Programming with GNU Readline57159
+Node: Basic Behavior58145
+Node: Custom Functions61562
+Node: Readline Typedefs63046
+Node: Function Writing64686
+Node: Readline Variables65993
+Node: Readline Convenience Functions78671
+Node: Function Naming79743
+Node: Keymaps81005
+Node: Binding Keys82998
+Node: Associating Function Names and Bindings87545
+Node: Allowing Undoing89830
+Node: Redisplay92380
+Node: Modifying Text96281
+Node: Character Input97527
+Node: Terminal Management99425
+Node: Utility Functions100861
+Node: Miscellaneous Functions104189
+Node: Alternate Interface106778
+Node: A Readline Example109012
+Node: Alternate Interface Example110951
+Node: Readline Signal Handling113724
+Node: Custom Completers120246
+Node: How Completing Works120966
+Node: Completion Functions124280
+Node: Completion Variables127854
+Node: A Short Completion Example143502
+Node: GNU Free Documentation License156281
+Node: Concept Index181474
+Node: Function and Variable Index182995
 
 End Tag Table

@@ -59,6 +59,8 @@
 
 #include "rlstdc.h"
 #include "rlshell.h"
+#include "rldefs.h"
+
 #include "xmalloc.h"
 
 #if defined (HAVE_GETPWUID) && !defined (HAVE_GETPW_DECLS)
@@ -120,31 +122,27 @@ sh_single_quote (string)
 
 /* Set the environment variables LINES and COLUMNS to lines and cols,
    respectively. */
+static char setenv_buf[INT_STRLEN_BOUND (int) + 1];
+static char putenv_buf1[INT_STRLEN_BOUND (int) + 6 + 1];	/* sizeof("LINES=") == 6 */
+static char putenv_buf2[INT_STRLEN_BOUND (int) + 8 + 1];	/* sizeof("COLUMNS=") == 8 */
+
 void
 sh_set_lines_and_columns (lines, cols)
      int lines, cols;
 {
-  char *b;
-
 #if defined (HAVE_SETENV)
-  b = (char *)xmalloc (INT_STRLEN_BOUND (int) + 1);
-  sprintf (b, "%d", lines);
-  setenv ("LINES", b, 1);
-  xfree (b);
+  sprintf (setenv_buf, "%d", lines);
+  setenv ("LINES", setenv_buf, 1);
 
-  b = (char *)xmalloc (INT_STRLEN_BOUND (int) + 1);
-  sprintf (b, "%d", cols);
-  setenv ("COLUMNS", b, 1);
-  xfree (b);
+  sprintf (setenv_buf, "%d", cols);
+  setenv ("COLUMNS", setenv_buf, 1);
 #else /* !HAVE_SETENV */
 #  if defined (HAVE_PUTENV)
-  b = (char *)xmalloc (INT_STRLEN_BOUND (int) + sizeof ("LINES=") + 1);
-  sprintf (b, "LINES=%d", lines);
-  putenv (b);
+  sprintf (putenv_buf1, "LINES=%d", lines);
+  putenv (putenv_buf1);
 
-  b = (char *)xmalloc (INT_STRLEN_BOUND (int) + sizeof ("COLUMNS=") + 1);
-  sprintf (b, "COLUMNS=%d", cols);
-  putenv (b);
+  sprintf (putenv_buf2, "COLUMNS=%d", cols);
+  putenv (putenv_buf2);
 #  endif /* HAVE_PUTENV */
 #endif /* !HAVE_SETENV */
 }
@@ -159,15 +157,27 @@ sh_get_env_value (varname)
 char *
 sh_get_home_dir ()
 {
-  char *home_dir;
+  static char *home_dir = (char *)NULL;
   struct passwd *entry;
+
+  if (home_dir)
+    return (home_dir);
 
   home_dir = (char *)NULL;
 #if defined (HAVE_GETPWUID)
+#  if defined (__TANDEM)
+  entry = getpwnam (getlogin ());
+#  else
   entry = getpwuid (getuid ());
+#  endif
   if (entry)
-    home_dir = entry->pw_dir;
+    home_dir = savestring (entry->pw_dir);
 #endif
+
+#if defined (HAVE_GETPWENT)
+  endpwent ();		/* some systems need this */
+#endif
+
   return (home_dir);
 }
 

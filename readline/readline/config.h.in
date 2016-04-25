@@ -124,6 +124,9 @@
 /* Define if you have the wcwidth function.  */
 #undef HAVE_WCWIDTH
 
+/* and whether it works */
+#undef WCWIDTH_BROKEN
+
 #undef STDC_HEADERS
 
 /* Define if you have the <dirent.h> header file.  */
@@ -152,6 +155,9 @@
 
 /* Define if you have the <stdarg.h> header file.  */
 #undef HAVE_STDARG_H
+
+/* Define if you have the <stdbool.h> header file.  */
+#undef HAVE_STDBOOL_H
 
 /* Define if you have the <stdlib.h> header file.  */
 #undef HAVE_STDLIB_H
@@ -218,6 +224,9 @@
 /* Define if you have <langinfo.h> and nl_langinfo(CODESET). */
 #undef HAVE_LANGINFO_CODESET
 
+/* Define if you have <linux/audit.h> and it defines AUDIT_USER_TTY */
+#undef HAVE_DECL_AUDIT_USER_TTY
+
 /* Definitions pulled in from aclocal.m4. */
 #undef VOID_SIGHANDLER
 
@@ -259,12 +268,4 @@
 #  define TERMIOS_MISSING
 #endif
 
-#if defined (__STDC__) && defined (HAVE_STDARG_H)
-#  define PREFER_STDARG
-#  define USE_VARARGS
-#else
-#  if defined (HAVE_VARARGS_H)
-#    define PREFER_VARARGS
-#    define USE_VARARGS
-#  endif
-#endif
+/* VARARGS defines moved to rlstdc.h */

@@ -1,6 +1,6 @@
 /* history.c -- standalone history library */
 
-/* Copyright (C) 1989-2009 Free Software Foundation, Inc.
+/* Copyright (C) 1989-2011 Free Software Foundation, Inc.
 
    This file contains the GNU History Library (History), a set of
    routines for managing the text of previously typed lines.
@@ -236,7 +236,7 @@ history_get_time (hist)
   ts = hist->timestamp;
   if (ts[0] != history_comment_char)
     return 0;
-  t = (time_t) atol (ts + 1);		/* XXX - should use strtol() here */
+  t = (time_t) strtol (ts + 1, (char **)NULL, 10);		/* XXX - should use strtol() here */
   return t;
 }
 
@@ -318,7 +318,7 @@ add_history_time (string)
 {
   HIST_ENTRY *hs;
 
-  if (string == 0)
+  if (string == 0 || history_length < 1)
     return;
   hs = the_history[history_length - 1];
   FREE (hs->timestamp);
@@ -394,7 +394,7 @@ replace_history_entry (which, line, data)
    WHICH >= 0 means to replace that particular history entry's data, as
    long as it matches OLD. */
 void
-replace_history_data (which,old, new)
+replace_history_data (which, old, new)
      int which;
      histdata_t *old, *new;
 {

@@ -72,7 +72,7 @@
 #  define IN_CTYPE_DOMAIN(c) isascii(c)
 #endif
 
-#if !defined (isxdigit) && !defined (HAVE_ISXDIGIT)
+#if !defined (isxdigit) && !defined (HAVE_ISXDIGIT) && !defined (__cplusplus)
 #  define isxdigit(c)   (isdigit((c)) || ((c) >= 'a' && (c) <= 'f') || ((c) >= 'A' && (c) <= 'F'))
 #endif
 

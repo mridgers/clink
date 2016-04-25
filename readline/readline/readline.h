@@ -1,6 +1,6 @@
 /* Readline.h -- the names of functions callable from within readline. */
 
-/* Copyright (C) 1987-2011 Free Software Foundation, Inc.
+/* Copyright (C) 1987-2013 Free Software Foundation, Inc.
 
    This file is part of the GNU Readline Library (Readline), a library
    for reading lines of text with interactive input and history editing.      
@@ -39,9 +39,9 @@ extern "C" {
 #endif
 
 /* Hex-encoded Readline version number. */
-#define RL_READLINE_VERSION	0x0602		/* Readline 6.2 */
+#define RL_READLINE_VERSION	0x0603		/* Readline 6.3 */
 #define RL_VERSION_MAJOR	6
-#define RL_VERSION_MINOR	2
+#define RL_VERSION_MINOR	3
 
 /* Readline data structures. */
 
@@ -185,6 +185,7 @@ extern int rl_forward_search_history PARAMS((int, int));
 extern int rl_start_kbd_macro PARAMS((int, int));
 extern int rl_end_kbd_macro PARAMS((int, int));
 extern int rl_call_last_kbd_macro PARAMS((int, int));
+extern int rl_print_last_kbd_macro PARAMS((int, int));
 
 /* Bindable undo commands. */
 extern int rl_revert_line PARAMS((int, int));
@@ -204,6 +205,8 @@ extern int rl_tty_status PARAMS((int, int));
 /* Bindable commands for incremental and non-incremental history searching. */
 extern int rl_history_search_forward PARAMS((int, int));
 extern int rl_history_search_backward PARAMS((int, int));
+extern int rl_history_substr_search_forward PARAMS((int, int));
+extern int rl_history_substr_search_backward PARAMS((int, int));
 extern int rl_noninc_forward_search PARAMS((int, int));
 extern int rl_noninc_reverse_search PARAMS((int, int));
 extern int rl_noninc_forward_search_again PARAMS((int, int));
@@ -339,6 +342,7 @@ extern Keymap rl_make_bare_keymap PARAMS((void));
 extern Keymap rl_copy_keymap PARAMS((Keymap));
 extern Keymap rl_make_keymap PARAMS((void));
 extern void rl_discard_keymap PARAMS((Keymap));
+extern void rl_free_keymap PARAMS((Keymap));
 
 extern Keymap rl_get_keymap_by_name PARAMS((const char *));
 extern char *rl_get_keymap_name PARAMS((Keymap));
@@ -435,6 +439,10 @@ extern void rl_free_line_state PARAMS((void));
 extern void rl_echo_signal_char PARAMS((int)); 
 
 extern int rl_set_paren_blink_timeout PARAMS((int));
+
+/* History management functions. */
+
+extern void rl_clear_history PARAMS((void));
 
 /* Undocumented. */
 extern int rl_maybe_save_line PARAMS((void));
@@ -560,6 +568,13 @@ extern rl_hook_func_t *rl_pre_input_hook;
    awaiting character input, or NULL, for no event handling. */
 extern rl_hook_func_t *rl_event_hook;
 
+/* The address of a function to call if a read is interrupted by a signal. */
+extern rl_hook_func_t *rl_signal_event_hook;
+
+/* The address of a function to call if Readline needs to know whether or not
+   there is data available from the current input source. */
+extern rl_hook_func_t *rl_input_available_hook;
+
 /* The address of the function to call to fetch a character from the current
    Readline input stream */
 extern rl_getc_func_t *rl_getc_function;
@@ -572,6 +587,10 @@ extern rl_voidfunc_t *rl_deprep_term_function;
 /* Dispatch variables. */
 extern Keymap rl_executing_keymap;
 extern Keymap rl_binding_keymap;
+
+extern int rl_executing_key;
+extern char *rl_executing_keyseq;
+extern int rl_key_sequence_length;
 
 /* Display variables. */
 /* If non-zero, readline will erase the entire line, including any prompt,
@@ -602,6 +621,10 @@ extern int rl_catch_signals;
    application's signal handler is called; use rl_cleanup_after_signal()
    to do that. */
 extern int rl_catch_sigwinch;
+
+/* If non-zero, the readline SIGWINCH handler will modify LINES and
+   COLUMNS in the environment. */
+extern int rl_change_environment;
 
 /* Completion variables. */
 /* Pointer to the generator function for completion_matches ().
@@ -685,6 +708,13 @@ extern rl_icppfunc_t *rl_directory_completion_hook;
    I'm not happy with how this works yet, so it's undocumented.  I'm trying
    it in bash to see how well it goes. */
 extern rl_icppfunc_t *rl_directory_rewrite_hook;
+
+/* If non-zero, this is the address of a function for the completer to call
+   before deciding which character to append to a completed name.  It should
+   modify the directory name passed as an argument if appropriate, and return
+   non-zero if it modifies the name.  This should not worry about dequoting
+   the filename; that has already happened by the time it gets here. */
+extern rl_icppfunc_t *rl_filename_stat_hook;
 
 /* If non-zero, this is the address of a function to call when reading
    directory entries from the filesystem for completion and comparing

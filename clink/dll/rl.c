@@ -49,7 +49,9 @@ int                 history_expand_control(char*, int);
 void                initialise_fwrite();
 
 int                 g_slash_translation             = 0;
+#ifdef VISIBLE_STATS
 extern int          rl_visible_stats;
+#endif // VISIBLE_STATS
 extern int          rl_display_fixed;
 extern int          rl_editing_mode;
 extern const char*  rl_filename_quote_characters;
@@ -489,7 +491,9 @@ static int initialise_hook()
     rl_re_read_init_file(0, 0);
     read_profile_inputrc();
 
+#ifdef VISIBLE_STATS
     rl_visible_stats = 0;               // serves no purpose under win32.
+#endif
 
     rl_startup_hook = NULL;
     return 0;

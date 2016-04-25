@@ -1,27 +1,18 @@
 This is history.info, produced by makeinfo version 4.13 from
-/usr/src/local/chet/src/bash/readline-src/doc/history.texi.
+/usr/homes/chet/src/bash/readline-src/doc/history.texi.
 
-This document describes the GNU History library (version 6.2, September
-6 2010), a programming tool that provides a consistent user interface
-for recalling lines of previously typed input.
+This document describes the GNU History library (version 6.3, 6 January
+2014), a programming tool that provides a consistent user interface for
+recalling lines of previously typed input.
 
-   Copyright (C) 1988-2011 Free Software Foundation, Inc.
-
-   Permission is granted to make and distribute verbatim copies of this
-manual provided the copyright notice and this permission notice are
-preserved on all copies.
+   Copyright (C) 1988-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
-     being "A GNU Manual", and with the Back-Cover Texts as in (a)
-     below.  A copy of the license is included in the section entitled
-     "GNU Free Documentation License".
-
-     (a) The FSF's Back-Cover Text is: You are free to copy and modify
-     this GNU manual.  Buying copies from GNU Press supports the FSF in
-     developing GNU and promoting software freedom."
+     Foundation; with no Invariant Sections, no Front-Cover Texts, and
+     no Back-Cover Texts.  A copy of the license is included in the
+     section entitled "GNU Free Documentation License".
 
 
 INFO-DIR-SECTION Libraries
@@ -596,7 +587,7 @@ These functions implement history expansion.
           if the returned line should be displayed, but not executed,
           as with the `:p' modifier (*note Modifiers::).
 
-     If an error ocurred in expansion, then OUTPUT contains a
+     If an error occurred in expansion, then OUTPUT contains a
      descriptive error message.
 
  -- Function: char * get_history_event (const char *string, int
@@ -1375,27 +1366,27 @@ Appendix C Function and Variable Index
 
 
 Tag Table:
-Node: Top1314
-Node: Using History Interactively1959
-Node: History Interaction2467
-Node: Event Designators3891
-Node: Word Designators5033
-Node: Modifiers6672
-Node: Programming with GNU History7897
-Node: Introduction to History8640
-Node: History Storage10330
-Node: History Functions11465
-Node: Initializing History and State Management12454
-Node: History List Management13266
-Node: Information About the History List15298
-Node: Moving Around the History List16795
-Node: Searching the History List17796
-Node: Managing the History File19728
-Node: History Expansion21548
-Node: History Variables23456
-Node: History Programming Example26488
-Node: GNU Free Documentation License29165
-Node: Concept Index54356
-Node: Function and Variable Index55061
+Node: Top891
+Node: Using History Interactively1536
+Node: History Interaction2044
+Node: Event Designators3468
+Node: Word Designators4610
+Node: Modifiers6249
+Node: Programming with GNU History7474
+Node: Introduction to History8217
+Node: History Storage9907
+Node: History Functions11042
+Node: Initializing History and State Management12031
+Node: History List Management12843
+Node: Information About the History List14875
+Node: Moving Around the History List16372
+Node: Searching the History List17373
+Node: Managing the History File19305
+Node: History Expansion21125
+Node: History Variables23034
+Node: History Programming Example26066
+Node: GNU Free Documentation License28743
+Node: Concept Index53934
+Node: Function and Variable Index54639
 
 End Tag Table

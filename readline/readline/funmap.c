@@ -98,6 +98,8 @@ static const FUNMAP default_funmap[] = {
   { "forward-word", rl_forward_word },
   { "history-search-backward", rl_history_search_backward },
   { "history-search-forward", rl_history_search_forward },
+  { "history-substring-search-backward", rl_history_substr_search_backward },
+  { "history-substring-search-forward", rl_history_substr_search_forward },
   { "insert-comment", rl_insert_comment },
   { "insert-completions", rl_insert_completions },
   { "kill-whole-line", rl_kill_full_line },
@@ -118,6 +120,7 @@ static const FUNMAP default_funmap[] = {
 #endif
   { "possible-completions", rl_possible_completions },
   { "previous-history", rl_get_previous_history },
+  { "print-last-kbd-macro", rl_print_last_kbd_macro },
   { "quoted-insert", rl_quoted_insert },
   { "re-read-init-file", rl_re_read_init_file },
   { "redraw-current-line", rl_refresh_line},
@@ -236,7 +239,7 @@ rl_initialize_funmap ()
 
 /* Produce a NULL terminated array of known function names.  The array
    is sorted.  The array itself is allocated, but not the strings inside.
-   You should free () the array when you done, but not the pointrs. */
+   You should free () the array when you done, but not the pointers. */
 const char **
 rl_funmap_names ()
 {
