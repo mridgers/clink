@@ -221,7 +221,9 @@ _rl_handle_signal (sig)
       /* FALLTHROUGH */
 
     case SIGTERM:
-//    case SIGHUP:
+/* begin_clink_change 
+*    case SIGHUP:
+* end_clink_change */
 #if defined (SIGTSTP)
     case SIGTSTP:
     case SIGTTOU:
@@ -402,7 +404,7 @@ rl_set_signals ()
 
       sigaddset (&bset, SIGINT);
       sigaddset (&bset, SIGTERM);
-//      sigaddset (&bset, SIGHUP);
+      sigaddset (&bset, SIGHUP);
 #if defined (SIGQUIT)
       sigaddset (&bset, SIGQUIT);
 #endif
@@ -431,7 +433,9 @@ rl_set_signals ()
 
       rl_maybe_set_sighandler (SIGINT, rl_signal_handler, &old_int);
       rl_maybe_set_sighandler (SIGTERM, rl_signal_handler, &old_term);
-//      rl_maybe_set_sighandler (SIGHUP, rl_signal_handler, &old_hup);
+/* begin_clink_change 
+      rl_maybe_set_sighandler (SIGHUP, rl_signal_handler, &old_hup);
+* end_clink_change  */
 #if defined (SIGQUIT)
       rl_maybe_set_sighandler (SIGQUIT, rl_signal_handler, &old_quit);
 #endif
@@ -496,7 +500,9 @@ rl_clear_signals ()
 	 overhead */
       rl_maybe_restore_sighandler (SIGINT, &old_int);
       rl_maybe_restore_sighandler (SIGTERM, &old_term);
-//      rl_maybe_restore_sighandler (SIGHUP, &old_hup);
+/* begin_clink_change 
+      rl_maybe_restore_sighandler (SIGHUP, &old_hup);
+* end_clink_change  */
 #if defined (SIGQUIT)
       rl_maybe_restore_sighandler (SIGQUIT, &old_quit);
 #endif

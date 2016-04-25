@@ -55,11 +55,12 @@
 #  include <sys/ioctl.h>
 #endif /* GWINSZ_IN_SYS_IOCTL && !TIOCGWINSZ */
 
-/* clink patch
+/* begin_clink_change */
+#undef __MSDOS__
+/* end_clink_change */
 #ifdef __MSDOS__ 
 #  include <pc.h>
 #endif
-*/
 
 #include "rltty.h"
 #include "tcap.h"
@@ -98,7 +99,7 @@ int rl_change_environment = 1;
 /*								    */
 /* **************************************************************** */
 
-#if 1 //def __MSDOS__ 
+#ifndef __MSDOS__ 
 static char *term_buffer = (char *)NULL;
 static char *term_string_buffer = (char *)NULL;
 #endif
@@ -454,7 +455,7 @@ _rl_init_terminal_io (terminal_name)
   if (term == 0)
     term = "dumb";
 
-#if 0 // def __MSDOS__ // && 0
+#if def __MSDOS__
   _rl_term_im = _rl_term_ei = _rl_term_ic = _rl_term_IC = (char *)NULL;
   _rl_term_up = _rl_term_dc = _rl_term_DC = _rl_visible_bell = (char *)NULL;
   _rl_term_ku = _rl_term_kd = _rl_term_kl = _rl_term_kr = (char *)NULL;
@@ -668,7 +669,7 @@ _rl_backspace (count)
 {
   register int i;
 
-#if 1 // ndef __MSDOS__
+#ifndef __MSDOS__
   if (_rl_term_backspace)
     for (i = 0; i < count; i++)
       tputs (_rl_term_backspace, 1, _rl_output_character_function);
@@ -781,7 +782,7 @@ void
 _rl_set_cursor (im, force)
      int im, force;
 {
-#if 1 //ndef __MSDOS__
+#ifndef __MSDOS__
   if (_rl_term_ve && _rl_term_vs)
     {
       if (force || im != rl_insert_mode)

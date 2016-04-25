@@ -178,12 +178,7 @@ rl_gather_tyi ()
   int tty;
   register int tem, result;
   int chars_avail, k;
-/* begin_clink_change
- * MSVC compile error
- */
-  //char input;
-  char input = 0;
-/* end_clink_change */
+  char input;
 #if defined(HAVE_SELECT)
   fd_set readfds, exceptfds;
   struct timeval timeout;
@@ -537,16 +532,14 @@ rl_getc (stream)
 	 Otherwise (not EINTR), some error occurred, also signifying EOF. */
       if (errno != EINTR)
 	return (RL_ISSTATE (RL_STATE_READCMD) ? READERR : EOF);
-/* 63unhandled
-      else if (_rl_caught_signal == SIGHUP || _rl_caught_signal == SIGTERM)
+      else if ( /*_rl_caught_signal == SIGHUP || */ _rl_caught_signal == SIGTERM)
 	return (RL_ISSTATE (RL_STATE_READCMD) ? READERR : EOF);
-      else if (_rl_caught_signal == SIGINT || _rl_caught_signal == SIGQUIT)
+      else if (_rl_caught_signal == SIGINT /* ||  _rl_caught_signal == SIGQUIT */ )
         RL_CHECK_SIGNALS ();
 
       if (rl_signal_event_hook)
 	(*rl_signal_event_hook) ();
-*/
-    }
+  }
 }
 
 #if defined (HANDLE_MULTIBYTE)

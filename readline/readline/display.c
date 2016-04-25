@@ -41,11 +41,18 @@
 
 #include <stdio.h>
 
-/* clink patch
+/* begin_clink_change
+ * __MSDOS__ is used for both platform-specific file handling and terminal
+ * display, but Clink has a sufficient implementation of the Termcap library.
+ */
+#ifdef __MSDOS__
+#undef __MSDOS__
+#endif
+/* end_clink_change */
+
 #ifdef __MSDOS__
 #  include <pc.h>
 #endif
-*/
 
 /* System-specific feature definitions and include files. */
 #include "rldefs.h"
@@ -60,15 +67,6 @@
 
 #include "rlprivate.h"
 #include "xmalloc.h"
-
-/* begin_clink_change
- * __MSDOS__ is used for both platform-specific file handling and terminal
- * display, but Clink has a sufficient implementation of the Termcap library.
- */
-#ifdef __MSDOS__
-#   undef __MSDOS__
-#endif
-/* end_clink_change */
 
 #if !defined (strchr) && !defined (__STDC__)
 extern char *strchr (), *strrchr ();
@@ -2508,7 +2506,7 @@ static void
 open_some_spaces (col)
      int col;
 {
-#if 1 //!defined (__MSDOS__) && !defined (__MINGW32__)
+#if !defined (__MSDOS__) && !defined (__MINGW32__)
   char *buffer;
   register int i;
 

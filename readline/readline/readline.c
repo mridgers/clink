@@ -255,7 +255,10 @@ int _rl_executing_keyseq_size = 0;
 
 /* Timeout (specified in milliseconds) when reading characters making up an
    ambiguous multiple-key sequence */
-int _rl_keyseq_timeout = 500;
+/* begin_clink_change 
+This causes trouble with keybindings like shift+pageup
+*/
+int _rl_keyseq_timeout = 0; // 500;
 
 #define RESIZE_KEYSEQ_BUFFER() \
   do \
@@ -922,18 +925,17 @@ _rl_dispatch_subseq (key, map, got_subseq)
 	    }
 #endif
 
-// clink patch ; this breaks shift+pageup key binding after one execution.
-//	  /* Tentative inter-character timeout for potential multi-key
-//	     sequences?  If no input within timeout, abort sequence and
-//	     act as if we got non-matching input. */
-//	  /* _rl_keyseq_timeout specified in milliseconds; _rl_input_queued
-//	     takes microseconds, so multiply by 1000 */
-//	  if (_rl_keyseq_timeout > 0 &&
-//	  	(RL_ISSTATE (RL_STATE_INPUTPENDING|RL_STATE_MACROINPUT) == 0) &&
-//	  	_rl_pushed_input_available () == 0 &&
-//		_rl_dispatching_keymap[ANYOTHERKEY].function &&
-//		_rl_input_queued (_rl_keyseq_timeout*1000) == 0)
-//	    return (_rl_subseq_result (-2, map, key, got_subseq));
+	  /* Tentative inter-character timeout for potential multi-key
+	     sequences?  If no input within timeout, abort sequence and
+	     act as if we got non-matching input. */
+	  /* _rl_keyseq_timeout specified in milliseconds; _rl_input_queued
+	     takes microseconds, so multiply by 1000 */
+	  if (_rl_keyseq_timeout > 0 &&
+	  	(RL_ISSTATE (RL_STATE_INPUTPENDING|RL_STATE_MACROINPUT) == 0) &&
+	  	_rl_pushed_input_available () == 0 &&
+		_rl_dispatching_keymap[ANYOTHERKEY].function &&
+		_rl_input_queued (_rl_keyseq_timeout*1000) == 0)
+	    return (_rl_subseq_result (-2, map, key, got_subseq));
 
 	  newkey = _rl_subseq_getchar (key);
 	  if (newkey < 0)
