@@ -125,21 +125,14 @@ history_filename (filename)
   home = sh_get_env_value ("HOME");
 
   if (home == 0)
-    {
-#if 0
-      home = ".";
-      home_len = 1;
-#else
-      return (NULL);
-#endif
-    }
+    return (NULL);
   else
     home_len = strlen (home);
 
   return_val = (char *)xmalloc (2 + home_len + 8); /* strlen(".history") == 8 */
   strcpy (return_val, home);
   return_val[home_len] = '/';
-#if defined (__MSDOS__)
+#if defined (__MSDOS__) && 0
   strcpy (return_val + home_len + 1, "_history");
 #else
   strcpy (return_val + home_len + 1, ".history");
@@ -148,6 +141,21 @@ history_filename (filename)
   return (return_val);
 }
 
+static char *
+history_backupfile (filename)
+     const char *filename;
+{
+  char *ret;
+  size_t len;
+
+  len = strlen (filename);
+  ret = xmalloc (len + 2);
+  strcpy (ret, filename);
+  ret[len] = '-';
+  ret[len+1] = '\0';
+  return ret;
+}
+  
 /* Add the contents of FILENAME to the history list, a line at a time.
    If FILENAME is NULL, then read from ~/.history.  Returns 0 if
    successful, or errno if not. */
@@ -403,14 +411,16 @@ history_truncate_file (fname, lines)
      truncate to. */
   if (bp > buffer && ((file = open (filename, O_WRONLY|O_TRUNC|O_BINARY, 0600)) != -1))
     {
-      write (file, bp, chars_read - (bp - buffer));
+      if (write (file, bp, chars_read - (bp - buffer)) < 0)
+	rv = errno;
 
 #if defined (__BEOS__)
       /* BeOS ignores O_TRUNC. */
       ftruncate (file, chars_read - (bp - buffer));
 #endif
 
-      close (file);
+      if (close (file) < 0 && rv == 0)
+	rv = errno;
     }
 
  truncate_exit:
@@ -430,7 +440,7 @@ history_do_write (filename, nelements, overwrite)
      int nelements, overwrite;
 {
   register int i;
-  char *output;
+  char *output, *bakname;
   int file, mode, rv;
 #ifdef HISTORY_USE_MMAP
   size_t cursize;
@@ -440,13 +450,22 @@ history_do_write (filename, nelements, overwrite)
   mode = overwrite ? O_WRONLY|O_CREAT|O_TRUNC|O_BINARY : O_WRONLY|O_APPEND|O_BINARY;
 #endif
   output = history_filename (filename);
+  bakname = (overwrite && output) ? history_backupfile (output) : 0;
+
+  if (output && bakname)
+    rename (output, bakname);
+
   file = output ? open (output, mode, 0600) : -1;
   rv = 0;
 
   if (file == -1)
     {
+      rv = errno;
+      if (output && bakname)
+        rename (bakname, output);
       FREE (output);
-      return (errno);
+      FREE (bakname);
+      return (rv);
     }
 
 #ifdef HISTORY_USE_MMAP
@@ -486,8 +505,11 @@ history_do_write (filename, nelements, overwrite)
       {
 mmap_error:
 	rv = errno;
-	FREE (output);
 	close (file);
+	if (output && bakname)
+	  rename (bakname, output);
+	FREE (output);
+	FREE (bakname);
 	return rv;
       }
 #else    
@@ -495,8 +517,11 @@ mmap_error:
     if (buffer == 0)
       {
       	rv = errno;
-	FREE (output);
 	close (file);
+	if (output && bakname)
+	  rename (bakname, output);
+	FREE (output);
+	FREE (bakname);
 	return rv;
       }
 #endif
@@ -524,9 +549,16 @@ mmap_error:
 #endif
   }
 
-  close (file);
+  if (close (file) < 0 && rv == 0)
+    rv = errno;
+
+  if (rv != 0 && output && bakname)
+    rename (bakname, output);
+  else if (rv == 0 && bakname)
+    unlink (bakname);
 
   FREE (output);
+  FREE (bakname);
 
   return (rv);
 }

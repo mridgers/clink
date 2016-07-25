@@ -1,7 +1,7 @@
 @ignore
 This file documents the user interface to the GNU History library.
 
-Copyright (C) 1988-2011 Free Software Foundation, Inc.
+Copyright (C) 1988-2014 Free Software Foundation, Inc.
 Authored by Brian Fox and Chet Ramey.
 
 Permission is granted to make and distribute verbatim copies of this manual
@@ -377,7 +377,7 @@ if the returned line should be displayed, but not executed,
 as with the @code{:p} modifier (@pxref{Modifiers}).
 @end table
 
-If an error ocurred in expansion, then @var{output} contains a descriptive
+If an error occurred in expansion, then @var{output} contains a descriptive
 error message.
 @end deftypefun
 

@@ -1,7 +1,7 @@
 /* vi_mode.c -- A vi emulation mode for Bash.
    Derived from code written by Jeff Sparkes (jsparkes@bnr.ca).  */
 
-/* Copyright (C) 1987-2010 Free Software Foundation, Inc.
+/* Copyright (C) 1987-2012 Free Software Foundation, Inc.
 
    This file is part of the GNU Readline Library (Readline), a library
    for reading lines of text with interactive input and history editing.      
@@ -108,8 +108,12 @@ static const char * const vi_textmod = "_*\\AaIiCcDdPpYyRrSsXx~";
 /* Arrays for the saved marks. */
 static int vi_mark_chars['z' - 'a' + 1];
 
+static void _rl_vi_replace_insert PARAMS((int));
+static void _rl_vi_save_replace PARAMS((void));
 static void _rl_vi_stuff_insert PARAMS((int));
 static void _rl_vi_save_insert PARAMS((UNDO_LIST *));
+
+static void vi_save_insert_buffer PARAMS ((int, int));
 
 static void _rl_vi_backup PARAMS((void));
 
@@ -189,6 +193,22 @@ _rl_vi_textmod_command (c)
 }
 
 static void
+_rl_vi_replace_insert (count)
+     int count;
+{
+  int nchars;
+
+  nchars = strlen (vi_insert_buffer);
+
+  rl_begin_undo_group ();
+  while (count--)
+    /* nchars-1 to compensate for _rl_replace_text using `end+1' in call
+       to rl_delete_text */
+    _rl_replace_text (vi_insert_buffer, rl_point, rl_point+nchars-1);
+  rl_end_undo_group ();
+}
+
+static void
 _rl_vi_stuff_insert (count)
      int count;
 {
@@ -207,7 +227,7 @@ rl_vi_redo (count, c)
 {
   int r;
 
-  if (!rl_explicit_arg)
+  if (rl_explicit_arg == 0)
     {
       rl_numeric_arg = _rl_vi_last_repeat;
       rl_arg_sign = _rl_vi_last_arg_sign;
@@ -220,6 +240,13 @@ rl_vi_redo (count, c)
   if (_rl_vi_last_command == 'i' && vi_insert_buffer && *vi_insert_buffer)
     {
       _rl_vi_stuff_insert (count);
+      /* And back up point over the last character inserted. */
+      if (rl_point > 0)
+	_rl_vi_backup ();
+    }
+  else if (_rl_vi_last_command == 'R' && vi_insert_buffer && *vi_insert_buffer)
+    {
+      _rl_vi_replace_insert (count);
       /* And back up point over the last character inserted. */
       if (rl_point > 0)
 	_rl_vi_backup ();
@@ -686,14 +713,17 @@ int
 rl_vi_insertion_mode (count, key)
      int count, key;
 {
+  _rl_keymap = vi_insertion_keymap;
+  _rl_vi_last_key_before_insert = key;
+  if (_rl_show_mode_in_prompt)
+    _rl_reset_prompt ();
+
 /* begin_clink_change
  * Change cursor appearance to reflect vi edit mode
  */
   _rl_set_cursor(RL_IM_INSERT, 1);
 /* end_clink_change */
 
-  _rl_keymap = vi_insertion_keymap;
-  _rl_vi_last_key_before_insert = key;
   return (0);
 }
 
@@ -703,6 +733,43 @@ rl_vi_insert_mode (count, key)
 {
   rl_vi_start_inserting (key, 1, rl_arg_sign);
   return (0);
+}
+
+static void
+vi_save_insert_buffer (start, len)
+     int start, len;
+{
+  /* Same code as _rl_vi_save_insert below */
+  if (len >= vi_insert_buffer_size)
+    {
+      vi_insert_buffer_size += (len + 32) - (len % 32);
+      vi_insert_buffer = (char *)xrealloc (vi_insert_buffer, vi_insert_buffer_size);
+    }
+  strncpy (vi_insert_buffer, rl_line_buffer + start, len - 1);
+  vi_insert_buffer[len-1] = '\0';
+}
+
+static void
+_rl_vi_save_replace ()
+{
+  int len, start, end;
+  UNDO_LIST *up;
+
+  up = rl_undo_list;
+  if (up == 0 || up->what != UNDO_END || vi_replace_count <= 0)
+    {
+      if (vi_insert_buffer_size >= 1)
+	vi_insert_buffer[0] = '\0';
+      return;
+    }
+  /* Let's try it the quick and easy way for now.  This should essentially
+     accommodate every UNDO_INSERT and save the inserted text to
+     vi_insert_buffer */
+  end = rl_point;
+  start = end - vi_replace_count + 1;
+  len = vi_replace_count + 1;
+
+  vi_save_insert_buffer (start, len);  
 }
 
 static void
@@ -721,13 +788,8 @@ _rl_vi_save_insert (up)
   start = up->start;
   end = up->end;
   len = end - start + 1;
-  if (len >= vi_insert_buffer_size)
-    {
-      vi_insert_buffer_size += (len + 32) - (len % 32);
-      vi_insert_buffer = (char *)xrealloc (vi_insert_buffer, vi_insert_buffer_size);
-    }
-  strncpy (vi_insert_buffer, rl_line_buffer + start, len - 1);
-  vi_insert_buffer[len-1] = '\0';
+
+  vi_save_insert_buffer (start, len);
 }
     
 void
@@ -748,7 +810,10 @@ _rl_vi_done_inserting ()
 	 on absolute indices into the line which may change (though they
 	 probably will not). */
       _rl_vi_doing_insert = 0;
-      _rl_vi_save_insert (rl_undo_list->next);
+      if (_rl_vi_last_key_before_insert == 'R')
+	_rl_vi_save_replace ();		/* Half the battle */
+      else
+	_rl_vi_save_insert (rl_undo_list->next);
       vi_continued_command = 1;
     }
   else
@@ -781,6 +846,9 @@ rl_vi_movement_mode (count, key)
      first time you go into command mode should not be undone. */
   if (RL_ISSTATE (RL_STATE_VICMDONCE) == 0)
     rl_free_undo_list ();
+
+  if (_rl_show_mode_in_prompt)
+    _rl_reset_prompt ();
 
   RL_SETSTATE (RL_STATE_VICMDONCE);
   return (0);
@@ -1134,7 +1202,7 @@ rl_domove_read_callback (m)
       rl_beg_of_line (1, c);
       _rl_vi_last_motion = c;
       RL_UNSETSTATE (RL_STATE_VIMOTION);
-      return (0);
+      return (vidomove_dispatch (m));
     }
 #if defined (READLINE_CALLBACKS)
   /* XXX - these need to handle rl_universal_argument bindings */
@@ -1254,10 +1322,18 @@ rl_vi_delete_to (count, key)
       _rl_vimvcxt->motion = '$';
       r = rl_domove_motion_callback (_rl_vimvcxt);
     }
-  else if (vi_redoing)
+  else if (vi_redoing && _rl_vi_last_motion != 'd')	/* `dd' is special */
     {
       _rl_vimvcxt->motion = _rl_vi_last_motion;
       r = rl_domove_motion_callback (_rl_vimvcxt);
+    }
+  else if (vi_redoing)		/* handle redoing `dd' here */
+    {
+      _rl_vimvcxt->motion = _rl_vi_last_motion;
+      rl_mark = rl_end;
+      rl_beg_of_line (1, key);
+      RL_UNSETSTATE (RL_STATE_VIMOTION);
+      r = vidomove_dispatch (_rl_vimvcxt);
     }
 #if defined (READLINE_CALLBACKS)
   else if (RL_ISSTATE (RL_STATE_CALLBACK))
@@ -1336,10 +1412,18 @@ rl_vi_change_to (count, key)
       _rl_vimvcxt->motion = '$';
       r = rl_domove_motion_callback (_rl_vimvcxt);
     }
-  else if (vi_redoing)
+  else if (vi_redoing && _rl_vi_last_motion != 'c')	/* `cc' is special */
     {
       _rl_vimvcxt->motion = _rl_vi_last_motion;
       r = rl_domove_motion_callback (_rl_vimvcxt);
+    }
+  else if (vi_redoing)		/* handle redoing `cc' here */
+    {
+      _rl_vimvcxt->motion = _rl_vi_last_motion;
+      rl_mark = rl_end;
+      rl_beg_of_line (1, key);
+      RL_UNSETSTATE (RL_STATE_VIMOTION);
+      r = vidomove_dispatch (_rl_vimvcxt);
     }
 #if defined (READLINE_CALLBACKS)
   else if (RL_ISSTATE (RL_STATE_CALLBACK))
@@ -1396,6 +1480,19 @@ rl_vi_yank_to (count, key)
     {
       _rl_vimvcxt->motion = '$';
       r = rl_domove_motion_callback (_rl_vimvcxt);
+    }
+  else if (vi_redoing && _rl_vi_last_motion != 'y')	/* `yy' is special */
+    {
+      _rl_vimvcxt->motion = _rl_vi_last_motion;
+      r = rl_domove_motion_callback (_rl_vimvcxt);
+    }
+  else if (vi_redoing)			/* handle redoing `yy' here */
+    {
+      _rl_vimvcxt->motion = _rl_vi_last_motion;
+      rl_mark = rl_end;
+      rl_beg_of_line (1, key);
+      RL_UNSETSTATE (RL_STATE_VIMOTION);
+      r = vidomove_dispatch (_rl_vimvcxt);
     }
 #if defined (READLINE_CALLBACKS)
   else if (RL_ISSTATE (RL_STATE_CALLBACK))
@@ -1937,14 +2034,20 @@ rl_vi_replace (count, key)
 
   vi_replace_count = 0;
 
-  if (!vi_replace_map)
+  if (vi_replace_map == 0)
     {
       vi_replace_map = rl_make_bare_keymap ();
+
+      for (i = 0; i < ' '; i++)
+	if (vi_insertion_keymap[i].type == ISFUNC)
+	  vi_replace_map[i].function = vi_insertion_keymap[i].function;
 
       for (i = ' '; i < KEYMAP_SIZE; i++)
 	vi_replace_map[i].function = rl_vi_overstrike;
 
       vi_replace_map[RUBOUT].function = rl_vi_overstrike_delete;
+
+      /* Make sure these are what we want. */
       vi_replace_map[ESC].function = rl_vi_movement_mode;
       vi_replace_map[RETURN].function = rl_newline;
       vi_replace_map[NEWLINE].function = rl_newline;
@@ -1957,7 +2060,12 @@ rl_vi_replace (count, key)
 	vi_replace_map[CTRL ('H')].function = rl_vi_overstrike_delete;
 
     }
+
+  rl_vi_start_inserting (key, 1, rl_arg_sign);
+
+  _rl_vi_last_key_before_insert = key;
   _rl_keymap = vi_replace_map;
+
   return (0);
 }
 

@@ -7,7 +7,7 @@ This document describes the GNU Readline Library, a utility for aiding
 in the consistency of user interface across discrete programs that need
 to provide a command line interface.
 
-Copyright (C) 1988--2011 Free Software Foundation, Inc.
+Copyright (C) 1988--2014 Free Software Foundation, Inc.
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -195,7 +195,7 @@ For Readline 4.2, for example, the value of
 @node Readline Typedefs
 @subsection Readline Typedefs
 
-For readabilty, we declare a number of new object types, all pointers
+For readability, we declare a number of new object types, all pointers
 to functions.
 
 The reason for declaring these new types is to make it easier to write
@@ -440,6 +440,35 @@ If non-zero, Readline will call indirectly through this pointer
 to get a character from the input stream.  By default, it is set to
 @code{rl_getc}, the default Readline character input function
 (@pxref{Character Input}).
+In general, an application that sets @var{rl_getc_function} should consider
+setting @var{rl_input_available_hook} as well.
+@end deftypevar
+
+@deftypevar {rl_hook_func_t *} rl_signal_event_hook
+If non-zero, this is the address of a function to call if a read system
+call is interrupted when Readline is reading terminal input.
+@end deftypevar
+
+@deftypevar {rl_hook_func_t *} rl_input_available_hook
+If non-zero, Readline will use this function's return value when it needs
+to determine whether or not there is available input on the current input
+source.
+The default hook checks @code{rl_instream}; if an application is using a
+different input source, it should set the hook appropriately.
+Readline queries for available input when implementing intra-key-sequence
+timeouts during input and incremental searches.
+This may use an application-specific timeout before returning a value;
+Readline uses the value passed to @code{rl_set_keyboard_input_timeout()}
+or the value of the user-settable @var{keyseq-timeout} variable.
+This is designed for use by applications using Readline's callback interface
+(@pxref{Alternate Interface}), which may not use the traditional
+@code{read(2)} and file descriptor interface, or other applications using
+a different input mechanism.
+If an application uses an input mechanism or hook that can potentially exceed
+the value of @var{keyseq-timeout}, it should increase the timeout or set
+this hook appropriately even when not using the callback interface.
+In general, an application that sets @var{rl_getc_function} should consider
+setting @var{rl_input_available_hook} as well.
 @end deftypevar
 
 @deftypevar {rl_voidfunc_t *} rl_redisplay_function
@@ -479,6 +508,19 @@ last key binding occurred.
 This variable is set to the text of any currently-executing macro.
 @end deftypevar
 
+@deftypevar int rl_executing_key
+The key that caused the dispatch to the currently-executing Readline function.
+@end deftypevar
+
+@deftypevar {char *} rl_executing_keyseq
+The full key sequence that caused the dispatch to the currently-executing
+Readline function.
+@end deftypevar
+
+@deftypevar int rl_key_sequence_length
+The number of characters in @var{rl_executing_keyseq}.
+@end deftypevar
+
 @deftypevar {int} rl_readline_state
 A variable with bit values that encapsulate the current Readline state.
 A bit is set with the @code{RL_SETSTATE} macro, and unset with the
@@ -487,7 +529,7 @@ whether a particular state bit is set.  Current state bits include:
 
 @table @code
 @item RL_STATE_NONE
-Readline has not yet been called, nor has it begun to intialize.
+Readline has not yet been called, nor has it begun to initialize.
 @item RL_STATE_INITIALIZING
 Readline is initializing its internal data structures.
 @item RL_STATE_INITIALIZED
@@ -580,6 +622,7 @@ means that vi mode is active.
 * Miscellaneous Functions::	Functions that don't fall into any category.
 * Alternate Interface::	Using Readline in a `callback' fashion.
 * A Readline Example::		An example Readline function.
+* Alternate Interface Example::	An example program using the alternate interface.
 @end menu
 
 @node Function Naming
@@ -908,7 +951,7 @@ Readline thinks the screen display is correct.
 
 @deftypefun int rl_on_new_line (void)
 Tell the update functions that we have moved onto a new (empty) line,
-usually after ouputting a newline.
+usually after outputting a newline.
 @end deftypefun
 
 @deftypefun int rl_on_new_line_with_prompt (void)
@@ -1241,21 +1284,29 @@ use all of a terminal's capabilities, and this function will return
 values for only those capabilities Readline uses.
 @end deftypefun
 
+@deftypefun {void} rl_clear_history (void)
+Clear the history list by deleting all of the entries, in the same manner
+as the History library's @code{clear_history()} function.
+This differs from @code{clear_history} because it frees private data
+Readline saves in the history list.
+@end deftypefun
+
 @node Alternate Interface
 @subsection Alternate Interface
 
 An alternate interface is available to plain @code{readline()}.  Some
 applications need to interleave keyboard I/O with file, device, or
 window system I/O, typically by using a main loop to @code{select()}
-on various file descriptors.  To accomodate this need, readline can
+on various file descriptors.  To accommodate this need, readline can
 also be invoked as a `callback' function from an event loop.  There
 are functions available to make this easy.
 
 @deftypefun void rl_callback_handler_install (const char *prompt, rl_vcpfunc_t *lhandler)
 Set up the terminal for readline I/O and display the initial
 expanded value of @var{prompt}.  Save the value of @var{lhandler} to
-use as a function to call when a complete line of input has been entered.
-The function takes the text of the line as an argument.
+use as a handler function to call when a complete line of input has been
+entered.
+The handler function receives the text of the line as an argument.
 @end deftypefun
 
 @deftypefun void rl_callback_read_char (void)
@@ -1263,14 +1314,15 @@ Whenever an application determines that keyboard input is available, it
 should call @code{rl_callback_read_char()}, which will read the next
 character from the current input source.
 If that character completes the line, @code{rl_callback_read_char} will
-invoke the @var{lhandler} function saved by @code{rl_callback_handler_install}
-to process the line.
+invoke the @var{lhandler} function installed by
+@code{rl_callback_handler_install} to process the line.
 Before calling the @var{lhandler} function, the terminal settings are
 reset to the values they had before calling
 @code{rl_callback_handler_install}.
 If the @var{lhandler} function returns,
+and the line handler remains installed,
 the terminal settings are modified for Readline's use again.
-@code{EOF} is  indicated by calling @var{lhandler} with a
+@code{EOF} is indicated by calling @var{lhandler} with a
 @code{NULL} line.
 @end deftypefun
 
@@ -1350,6 +1402,98 @@ invert_case_line (count, key)
 @}
 @end example
 
+@node Alternate Interface Example
+@subsection Alternate Interface Example
+
+Here is a complete program that illustrates Readline's alternate interface.
+It reads lines from the terminal and displays them, providing the
+standard history and TAB completion functions.
+It understands the EOF character or "exit" to exit the program.
+
+@example
+/* Standard include files. stdio.h is required. */
+#include <stdlib.h>
+#include <unistd.h>
+
+/* Used for select(2) */
+#include <sys/types.h>
+#include <sys/select.h>
+
+#include <stdio.h>
+
+/* Standard readline include files. */
+#include <readline/readline.h>
+#include <readline/history.h>
+
+static void cb_linehandler (char *);
+
+int running;
+const char *prompt = "rltest$ ";
+
+/* Callback function called for each line when accept-line executed, EOF
+   seen, or EOF character read.  This sets a flag and returns; it could
+   also call exit(3). */
+static void
+cb_linehandler (char *line)
+@{
+  /* Can use ^D (stty eof) or `exit' to exit. */
+  if (line == NULL || strcmp (line, "exit") == 0)
+    @{
+      if (line == 0)
+        printf ("\n");
+      printf ("exit\n");
+      /* This function needs to be called to reset the terminal settings,
+         and calling it from the line handler keeps one extra prompt from
+         being displayed. */
+      rl_callback_handler_remove ();
+
+      running = 0;
+    @}
+  else
+    @{
+      if (*line)
+        add_history (line);
+      printf ("input line: %s\n", line);
+      free (line);
+    @}
+@}
+
+int
+main (int c, char **v)
+@{
+  fd_set fds;
+  int r;
+
+  /* Install the line handler. */
+  rl_callback_handler_install (prompt, cb_linehandler);
+
+  /* Enter a simple event loop.  This waits until something is available
+     to read on readline's input stream (defaults to standard input) and
+     calls the builtin character read callback to read it.  It does not
+     have to modify the user's terminal settings. */
+  running = 1;
+  while (running)
+    @{
+      FD_ZERO (&fds);
+      FD_SET (fileno (rl_instream), &fds);    
+
+      r = select (FD_SETSIZE, &fds, NULL, NULL, NULL);
+      if (r < 0)
+        @{
+          perror ("rltest: select");
+          rl_callback_handler_remove ();
+          break;
+        @}
+
+      if (FD_ISSET (fileno (rl_instream), &fds))
+        rl_callback_read_char ();
+    @}
+
+  printf ("rltest: Event loop has exited\n");
+  return 0;
+@}
+@end example
+
 @node Readline Signal Handling
 @section Readline Signal Handling
 
@@ -1365,6 +1509,7 @@ functions to do so manually.
 
 Readline contains an internal signal handler that is installed for a
 number of signals (@code{SIGINT}, @code{SIGQUIT}, @code{SIGTERM},
+@code{SIGHUP}, 
 @code{SIGALRM}, @code{SIGTSTP}, @code{SIGTTIN}, and @code{SIGTTOU}).
 When one of these signals is received, the signal handler
 will reset the terminal attributes to those that were in effect before
@@ -1397,17 +1542,26 @@ a signal handler, so Readline's internal signal state is not corrupted.
 
 @deftypevar int rl_catch_signals
 If this variable is non-zero, Readline will install signal handlers for
-@code{SIGINT}, @code{SIGQUIT}, @code{SIGTERM}, @code{SIGALRM},
+@code{SIGINT}, @code{SIGQUIT}, @code{SIGTERM}, @code{SIGHUP}, @code{SIGALRM},
 @code{SIGTSTP}, @code{SIGTTIN}, and @code{SIGTTOU}.
 
 The default value of @code{rl_catch_signals} is 1.
 @end deftypevar
 
 @deftypevar int rl_catch_sigwinch
-If this variable is non-zero, Readline will install a signal handler for
-@code{SIGWINCH}.
+If this variable is set to a non-zero value,
+Readline will install a signal handler for @code{SIGWINCH}.
 
 The default value of @code{rl_catch_sigwinch} is 1.
+@end deftypevar
+
+@deftypevar int rl_change_environment
+If this variable is set to a non-zero value,
+and Readline is handling @code{SIGWINCH}, Readline will modify the
+@var{LINES} and @var{COLUMNS} environment variables upon receipt of a
+@code{SIGWINCH}
+
+The default value of @code{rl_change_environment} is 1.
 @end deftypevar
 
 If an application does not wish to have Readline catch any signals, or
@@ -1477,7 +1631,7 @@ The following functions install and remove Readline's signal handlers.
 
 @deftypefun int rl_set_signals (void)
 Install Readline's signal handler for @code{SIGINT}, @code{SIGQUIT},
-@code{SIGTERM}, @code{SIGALRM}, @code{SIGTSTP}, @code{SIGTTIN},
+@code{SIGTERM}, @code{SIGHUP}, @code{SIGALRM}, @code{SIGTSTP}, @code{SIGTTIN},
 @code{SIGTTOU}, and @code{SIGWINCH}, depending on the values of
 @code{rl_catch_signals} and @code{rl_catch_sigwinch}.
 @end deftypefun
@@ -1611,7 +1765,7 @@ This calls @code{rl_complete_internal()} with an argument of @samp{*}.
 @end deftypefun
 
 @deftypefun int rl_completion_mode (rl_command_func_t *cfunc)
-Returns the apppriate value to pass to @code{rl_complete_internal()}
+Returns the appropriate value to pass to @code{rl_complete_internal()}
 depending on whether @var{cfunc} was called twice in succession and
 the values of the @code{show-all-if-ambiguous} and
 @code{show-all-if-unmodified} variables.
@@ -1728,29 +1882,45 @@ the directory portion of the pathname the user typed.
 At the least, even if no other expansion is performed, this function should
 remove any quote characters from the directory name, because its result will
 be passed directly to @code{opendir()}.
+
 The directory completion hook returns an integer that should be non-zero if
 the function modifies its directory argument.
 The function should not modify the directory argument if it returns 0.
 @end deftypevar
 
-@ignore
-@deftypevar extern rl_icppfunc_t *rl_directory_rewrite_hook;
+@deftypevar {rl_icppfunc_t *} rl_directory_rewrite_hook;
 If non-zero, this is the address of a function to call when completing
 a directory name.  This function takes the address of the directory name
 to be modified as an argument.  Unlike @code{rl_directory_completion_hook},
 it only modifies the directory name used in @code{opendir}, not what is
 displayed when the possible completions are printed or inserted.  It is
 called before rl_directory_completion_hook.
+At the least, even if no other expansion is performed, this function should
+remove any quote characters from the directory name, because its result will
+be passed directly to @code{opendir()}.
 
-I'm not happy with how this works yet, so it's undocumented.
+The directory rewrite hook returns an integer that should be non-zero if
+the function modfies its directory argument.
+The function should not modify the directory argument if it returns 0.
 @end deftypevar
-@end ignore
+
+@deftypevar {rl_icppfunc_t *} rl_filename_stat_hook
+If non-zero, this is the address of a function for the completer to
+call before deciding which character to append to a completed name.
+This function modifies its filename name argument, and the modified value
+is passed to @code{stat()} to determine the file's type and characteristics.
+This function does not need to remove quote characters from the filename.
+
+The stat hook returns an integer that should be non-zero if
+the function modfies its directory argument.
+The function should not modify the directory argument if it returns 0.
+@end deftypevar
 
 @deftypevar {rl_dequote_func_t *} rl_filename_rewrite_hook
 If non-zero, this is the address of a function called when reading
 directory entries from the filesystem for completion and comparing
 them to the partial word to be completed.  The function should
-perform any necesary application or system-specific conversion on
+perform any necessary application or system-specific conversion on
 the filename, such as converting between character sets or converting
 from a filesystem format to a character input format.
 The function takes two arguments: @var{fname}, the filename to be converted,

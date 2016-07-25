@@ -43,12 +43,18 @@
 #  include <locale.h>
 #endif
 
+#if defined (HAVE_LANGINFO_CODESET)
+#  include <langinfo.h>
+#endif
+
 #include <ctype.h>
 
 #include "rldefs.h"
 #include "readline.h"
 #include "rlshell.h"
 #include "rlprivate.h"
+
+static int utf8locale PARAMS((char *));
 
 #if !defined (HAVE_SETLOCALE)    
 /* A list of legal values for the LANG or LC_CTYPE environment variables.
@@ -72,8 +78,9 @@ static char *legal_lang_values[] =
 };
 
 static char *normalize_codeset PARAMS((char *));
-static char *find_codeset PARAMS((char *, size_t *));
 #endif /* !HAVE_SETLOCALE */
+
+static char *find_codeset PARAMS((char *, size_t *));
 
 static char *_rl_get_locale_var PARAMS((const char *));
 
@@ -91,7 +98,26 @@ _rl_get_locale_var (v)
 
   return lspec;
 }
-  
+
+static int
+utf8locale (lspec)
+     char *lspec;
+{
+  char *cp;
+  size_t len;
+
+#if HAVE_LANGINFO_CODESET
+  cp = nl_langinfo (CODESET);
+  return (STREQ (cp, "UTF-8") || STREQ (cp, "utf8"));
+#else
+  cp = find_codeset (lspec, &len);
+
+  if (cp == 0 || len < 4 || len > 5)
+    return 0;
+  return ((len == 5) ? strncmp (cp, "UTF-8", len) == 0 : strncmp (cp, "utf8", 4) == 0);
+#endif
+}
+
 /* Check for LC_ALL, LC_CTYPE, and LANG and use the first with a value
    to decide the defaults for 8-bit character input and output.  Returns
    1 if we set eight-bit mode. */
@@ -115,6 +141,9 @@ _rl_init_eightbit ()
   if (lspec == 0)
     lspec = "";
   t = setlocale (LC_CTYPE, lspec);
+
+  if (t && *t)
+    _rl_utf8locale = utf8locale (t);
 
   if (t && *t && (t[0] != 'C' || t[1]) && (STREQ (t, "POSIX") == 0))
     {
@@ -197,6 +226,7 @@ normalize_codeset (codeset)
 
   return retval;
 }
+#endif /* !HAVE_SETLOCALE */
 
 /* Isolate codeset portion of locale specification. */
 static char *
@@ -249,4 +279,3 @@ find_codeset (name, lenp)
 
   return result;
 }
-#endif /* !HAVE_SETLOCALE */

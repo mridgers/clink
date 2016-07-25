@@ -240,7 +240,7 @@ rl_replace_line (text, clear_undo)
    this is the same as rl_end.
 
    Any command that is called interactively receives two arguments.
-   The first is a count: the numeric arg pased to this command.
+   The first is a count: the numeric arg passed to this command.
    The second is the key which invoked this command.
 */
 
@@ -826,7 +826,7 @@ _rl_insert_char (count, c)
 	 pending characters that are bound to rl_insert, and insert
 	 them all.  Don't do this if we're current reading input from
 	 a macro. */
-      if ((RL_ISSTATE (RL_STATE_MACROINPUT) == 0) && _rl_any_typein ())
+      if ((RL_ISSTATE (RL_STATE_MACROINPUT) == 0) && _rl_pushed_input_available ())
 	_rl_insert_typein (c);
       else
 	{
@@ -907,6 +907,9 @@ _rl_insert_next (count)
 
   if (c < 0)
     return -1;
+
+  if (RL_ISSTATE (RL_STATE_MACRODEF))
+    _rl_add_macro_char (c);
 
 #if defined (HANDLE_SIGNALS)
   if (RL_ISSTATE (RL_STATE_CALLBACK) == 0)

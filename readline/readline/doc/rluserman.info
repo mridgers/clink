@@ -1,28 +1,19 @@
 This is rluserman.info, produced by makeinfo version 4.13 from
-/usr/src/local/chet/src/bash/readline-src/doc/rluserman.texi.
+/usr/homes/chet/src/bash/readline-src/doc/rluserman.texi.
 
 This manual describes the end user interface of the GNU Readline Library
-(version 6.2, September 6 2010), a library which aids in the
-consistency of user interface across discrete programs which provide a
-command line interface.
+(version 6.3, 6 January 2014), a library which aids in the consistency
+of user interface across discrete programs which provide a command line
+interface.
 
-   Copyright (C) 1988-2011 Free Software Foundation, Inc.
-
-   Permission is granted to make and distribute verbatim copies of this
-manual provided the copyright notice and this permission notice are
-preserved on all copies.
+   Copyright (C) 1988-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
-     being "A GNU Manual", and with the Back-Cover Texts as in (a)
-     below.  A copy of the license is included in the section entitled
-     "GNU Free Documentation License".
-
-     (a) The FSF's Back-Cover Text is: You are free to copy and modify
-     this GNU manual.  Buying copies from GNU Press supports the FSF in
-     developing GNU and promoting software freedom."
+     Foundation; with no Invariant Sections, no Front-Cover Texts, and
+     no Back-Cover Texts.  A copy of the license is included in the
+     section entitled "GNU Free Documentation License".
 
 
 INFO-DIR-SECTION Libraries
@@ -38,7 +29,8 @@ GNU Readline Library
 
 This document describes the end user interface of the GNU Readline
 Library, a utility which aids in the consistency of user interface
-across discrete programs which provide a command line interface.
+across discrete programs which provide a command line interface.  The
+Readline home page is `http://www.gnu.org/software/readline/'.
 
 * Menu:
 
@@ -394,6 +386,12 @@ Variable Settings
           characters treated specially by the kernel's terminal driver
           to their Readline equivalents.
 
+    `colored-stats'
+          If set to `on', Readline displays possible completions using
+          different colors to indicate their file type.  The color
+          definitions are taken from the value of the `LS_COLORS'
+          environment variable.  The default is `off'.
+
     `comment-begin'
           The string to insert at the beginning of the line when the
           `insert-comment' command is executed.  The default value is
@@ -479,8 +477,10 @@ Variable Settings
 
     `history-size'
           Set the maximum number of history entries saved in the
-          history list.  If set to zero, the number of entries in the
-          history list is not limited.
+          history list.  If set to zero, any existing history entries
+          are deleted and no new entries are saved.  If set to a value
+          less than zero, the number of history entries is not limited.
+          By default, the number of history entries is not limited.
 
     `horizontal-scroll-mode'
           This variable can be set to either `on' or `off'.  Setting it
@@ -511,6 +511,22 @@ Variable Settings
           `vi-command'; `emacs' is equivalent to `emacs-standard'.  The
           default value is `emacs'.  The value of the `editing-mode'
           variable also affects the default keymap.
+
+    `keyseq-timeout'
+          Specifies the duration Readline will wait for a character
+          when reading an ambiguous key sequence (one that can form a
+          complete key sequence using the input read so far, or can
+          take additional input to complete a longer key sequence).  If
+          no input is received within the timeout, Readline will use
+          the shorter but complete key sequence.  Readline uses this
+          value to determine whether or not input is available on the
+          current input source (`rl_instream' by default).  The value
+          is specified in milliseconds, so a value of 1000 means that
+          Readline will wait one second for additional input.  If this
+          variable is set to a value less than or equal to zero, or to a
+          non-numeric value, Readline will wait until another key is
+          pressed to decide which key sequence to complete.  The
+          default value is `500'.
 
     `mark-directories'
           If set to `on', completed directory names have a slash
@@ -573,6 +589,11 @@ Variable Settings
           completions don't share a common prefix) cause the matches to
           be listed immediately instead of ringing the bell.  The
           default value is `off'.
+
+    `show-mode-in-prompt'
+          If set to `on', add a character to the beginning of the prompt
+          indicating the editing mode: emacs (`@'), vi command (`:'),
+          or vi insertion (`+').  The default value is `off'.
 
     `skip-completed-text'
           If set to `on', this alters the default completion behavior
@@ -788,7 +809,7 @@ variable assignment, and conditional syntax.
      # You can re-read the inputrc file with C-x C-r.
      # Lines beginning with '#' are comments.
      #
-     # First, include any systemwide bindings and variable
+     # First, include any system-wide bindings and variable
      # assignments from /etc/Inputrc
      $include /etc/Inputrc
 
@@ -988,12 +1009,26 @@ File: rluserman.info,  Node: Commands For History,  Next: Commands For Text,  Pr
 
 `history-search-forward ()'
      Search forward through the history for the string of characters
-     between the start of the current line and the point.  This is a
+     between the start of the current line and the point.  The search
+     string must match at the beginning of a history line.  This is a
      non-incremental search.  By default, this command is unbound.
 
 `history-search-backward ()'
      Search backward through the history for the string of characters
-     between the start of the current line and the point.  This is a
+     between the start of the current line and the point.  The search
+     string must match at the beginning of a history line.  This is a
+     non-incremental search.  By default, this command is unbound.
+
+`history-substr-search-forward ()'
+     Search forward through the history for the string of characters
+     between the start of the current line and the point.  The search
+     string may match anywhere in a history line.  This is a
+     non-incremental search.  By default, this command is unbound.
+
+`history-substr-search-backward ()'
+     Search backward through the history for the string of characters
+     between the start of the current line and the point.  The search
+     string may match anywhere in a history line.  This is a
      non-incremental search.  By default, this command is unbound.
 
 `yank-nth-arg (M-C-y)'
@@ -1025,10 +1060,16 @@ File: rluserman.info,  Node: Commands For Text,  Next: Commands For Killing,  Pr
 1.4.3 Commands For Changing Text
 --------------------------------
 
+`end-of-file (usually C-d)'
+     The character indicating end-of-file as set, for example, by
+     `stty'.  If this character is read when there are no characters on
+     the line, and point is at the beginning of the line, Readline
+     interprets it as the end of input and returns EOF.
+
 `delete-char (C-d)'
-     Delete the character at point.  If point is at the beginning of
-     the line, there are no characters in the line, and the last
-     character typed was not bound to `delete-char', then return EOF.
+     Delete the character at point.  If this function is bound to the
+     same character as the tty EOF character, as `C-d' commonly is, see
+     above for the effects.
 
 `backward-delete-char (Rubout)'
      Delete the character behind the cursor.  A numeric argument means
@@ -1238,6 +1279,10 @@ File: rluserman.info,  Node: Keyboard Macros,  Next: Miscellaneous Commands,  Pr
 `call-last-kbd-macro (C-x e)'
      Re-execute the last keyboard macro defined, by making the
      characters in the macro appear as if typed at the keyboard.
+
+`print-last-kbd-macro ()'
+     Print the last keboard macro defined in a format suitable for the
+     INPUTRC file.
 
 
 
@@ -1847,29 +1892,29 @@ permit their use in free software.
 
 
 Tag Table:
-Node: Top1373
-Node: Command Line Editing1827
-Node: Introduction and Notation2481
-Node: Readline Interaction4105
-Node: Readline Bare Essentials5298
-Node: Readline Movement Commands7089
-Node: Readline Killing Commands8056
-Node: Readline Arguments9978
-Node: Searching11024
-Node: Readline Init File13177
-Node: Readline Init File Syntax14332
-Node: Conditional Init Constructs29394
-Node: Sample Init File31929
-Node: Bindable Readline Commands35048
-Node: Commands For Moving36107
-Node: Commands For History36970
-Node: Commands For Text40376
-Node: Commands For Killing43104
-Node: Numeric Arguments45248
-Node: Commands For Completion46389
-Node: Keyboard Macros48360
-Node: Miscellaneous Commands48933
-Node: Readline vi Mode52791
-Node: GNU Free Documentation License53705
+Node: Top950
+Node: Command Line Editing1472
+Node: Introduction and Notation2126
+Node: Readline Interaction3750
+Node: Readline Bare Essentials4943
+Node: Readline Movement Commands6734
+Node: Readline Killing Commands7701
+Node: Readline Arguments9623
+Node: Searching10669
+Node: Readline Init File12822
+Node: Readline Init File Syntax13977
+Node: Conditional Init Constructs30683
+Node: Sample Init File33218
+Node: Bindable Readline Commands36338
+Node: Commands For Moving37397
+Node: Commands For History38260
+Node: Commands For Text42416
+Node: Commands For Killing45400
+Node: Numeric Arguments47544
+Node: Commands For Completion48685
+Node: Keyboard Macros50656
+Node: Miscellaneous Commands51346
+Node: Readline vi Mode55204
+Node: GNU Free Documentation License56118
 
 End Tag Table

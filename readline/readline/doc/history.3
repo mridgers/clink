@@ -4,11 +4,11 @@
 .\"	Chet Ramey
 .\"	Information Network Services
 .\"	Case Western Reserve University
-.\"	chet@ins.CWRU.Edu
+.\"	chet.ramey@case.edu
 .\"
-.\"	Last Change: Thu Aug 12 22:24:41 EDT 2010
+.\"	Last Change: Thu Thu Jun 27 10:34:44 EDT 2013
 .\"
-.TH HISTORY 3 "2010 August 12" "GNU History 6.2"
+.TH HISTORY 3 "2013 June 27" "GNU History 6.3"
 .\"
 .\" File Name macro.  This used to be `.PN', for Path Name,
 .\" but Sun doesn't seem to like that very much.
@@ -112,7 +112,7 @@ starting with
 .TP
 .B !?\fIstring\fR\fB[?]\fR
 Refer to the most recent command
-preceding the current postition in the history list
+preceding the current position in the history list
 containing
 .IR string .
 The trailing \fB?\fP may be omitted if
@@ -161,7 +161,8 @@ The \fIn\fRth word.
 The first argument.  That is, word 1.
 .TP
 .B $
-The last argument.
+The last word.  This is usually the last argument, but will expand to the
+zeroth word if there is only one word in the line.
 .TP
 .B %
 The word matched by the most recent `?\fIstring\fR?' search.
@@ -649,7 +650,7 @@ bfox@gnu.org
 .PP
 Chet Ramey, Case Western Reserve University
 .br
-chet@ins.CWRU.Edu
+chet.ramey@case.edu
 .SH BUG REPORTS
 If you find a bug in the
 .B history
@@ -669,4 +670,4 @@ newsgroup
 .PP
 Comments and bug reports concerning
 this manual page should be directed to
-.IR chet@ins.CWRU.Edu .
+.IR chet.ramey@case.edu .

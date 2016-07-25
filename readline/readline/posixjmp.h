@@ -30,11 +30,13 @@
 #  if !defined (__OPENNT)
 #    undef setjmp
 #    define setjmp(x)	sigsetjmp((x), 1)
+#    define setjmp_nosigs(x)	sigsetjmp((x), 0)
 #    undef longjmp
 #    define longjmp(x, n)	siglongjmp((x), (n))
 #  endif /* !__OPENNT */
 #else
 #  define procenv_t	jmp_buf
+#  define setjmp_nosigs	setjmp
 #endif
 
 #endif /* _POSIXJMP_H_ */

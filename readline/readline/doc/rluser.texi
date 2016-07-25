@@ -9,7 +9,7 @@ use these features.  There is a document entitled "readline.texinfo"
 which contains both end-user and programmer documentation for the
 GNU Readline Library.
 
-Copyright (C) 1988--2011 Free Software Foundation, Inc.
+Copyright (C) 1988--2014 Free Software Foundation, Inc.
 
 Authored by Brian Fox and Chet Ramey.
 
@@ -72,6 +72,8 @@ Line editing can be enabled at any time using the @option{-o emacs} or
 				a specific command.
 * Programmable Completion Builtins::	Builtin commands to specify how to
 				complete arguments for a particular command.
+* A Programmable Completion Example::	An example shell function for
+				generating possible completions.
 @end ifset
 @end menu
 
@@ -425,6 +427,14 @@ If set to @samp{on}, Readline attempts to bind the control characters
 treated specially by the kernel's terminal driver to their Readline
 equivalents.
 
+@item colored-stats
+@vindex colored-stats
+If set to @samp{on}, Readline displays possible completions using different
+colors to indicate their file type.
+The color definitions are taken from the value of the @env{LS_COLORS}
+environment variable.
+The default is @samp{off}.
+
 @item comment-begin
 @vindex comment-begin
 The string to insert at the beginning of the line when the
@@ -521,8 +531,12 @@ or @code{next-history}.  The default is @samp{off}.
 
 @item history-size
 @vindex history-size
-Set the maximum number of history entries saved in the history list.  If
-set to zero, the number of entries in the history list is not limited.
+Set the maximum number of history entries saved in the history list.
+If set to zero, any existing history entries are deleted and no new entries
+are saved.
+If set to a value less than zero, the number of history entries is not
+limited.
+By default, the number of history entries is not limited.
 
 @item horizontal-scroll-mode
 @vindex horizontal-scroll-mode
@@ -564,6 +578,22 @@ Acceptable @code{keymap} names are
 equivalent to @code{emacs-standard}.  The default value is @code{emacs}.
 The value of the @code{editing-mode} variable also affects the
 default keymap.
+
+@item keyseq-timeout
+Specifies the duration Readline will wait for a character when reading an
+ambiguous key sequence (one that can form a complete key sequence using
+the input read so far, or can take additional input to complete a longer
+key sequence).
+If no input is received within the timeout, Readline will use the shorter
+but complete key sequence.
+Readline uses this value to determine whether or not input is
+available on the current input source (@code{rl_instream} by default).
+The value is specified in milliseconds, so a value of 1000 means that
+Readline will wait one second for additional input.
+If this variable is set to a value less than or equal to zero, or to a
+non-numeric value, Readline will wait until another key is pressed to
+decide which key sequence to complete.
+The default value is @code{500}.
 
 @item mark-directories
 If set to @samp{on}, completed directory names have a slash
@@ -638,6 +668,13 @@ words which have more than one possible completion without any
 possible partial completion (the possible completions don't share
 a common prefix) cause the matches to be listed immediately instead
 of ringing the bell.
+The default value is @samp{off}.
+
+@item show-mode-in-prompt
+@vindex show-mode-in-prompt
+If set to @samp{on}, add a character to the beginning of the prompt
+indicating the editing mode: emacs (@samp{@@}), vi command (@samp{:}),
+or vi insertion (@samp{+}).
 The default value is @samp{off}.
 
 @item skip-completed-text
@@ -880,7 +917,7 @@ binding, variable assignment, and conditional syntax.
 # You can re-read the inputrc file with C-x C-r.
 # Lines beginning with '#' are comments.
 #
-# First, include any systemwide bindings and variable
+# First, include any system-wide bindings and variable
 # assignments from /etc/Inputrc
 $include /etc/Inputrc
 
@@ -1100,13 +1137,30 @@ for a string supplied by the user.
 @item history-search-forward ()
 Search forward through the history for the string of characters
 between the start of the current line and the point.
+The search string must match at the beginning of a history line.
 This is a non-incremental search.
 By default, this command is unbound.
 
 @item history-search-backward ()
 Search backward through the history for the string of characters
-between the start of the current line and the point.  This
-is a non-incremental search.  By default, this command is unbound.
+between the start of the current line and the point.
+The search string must match at the beginning of a history line.
+This is a non-incremental search.
+By default, this command is unbound.
+
+@item history-substr-search-forward ()
+Search forward through the history for the string of characters
+between the start of the current line and the point.
+The search string may match anywhere in a history line.
+This is a non-incremental search.
+By default, this command is unbound.
+
+@item history-substr-search-backward ()
+Search backward through the history for the string of characters
+between the start of the current line and the point.
+The search string may match anywhere in a history line.
+This is a non-incremental search.
+By default, this command is unbound.
 
 @item yank-nth-arg (M-C-y)
 Insert the first argument to the previous command (usually
@@ -1137,11 +1191,17 @@ as if the @samp{!$} history expansion had been specified.
 @subsection Commands For Changing Text
 
 @ftable @code
+
+@item @i{end-of-file} (usually C-d)
+The character indicating end-of-file as set, for example, by
+@code{stty}.  If this character is read when there are no characters
+on the line, and point is at the beginning of the line, Readline
+interprets it as the end of input and returns @sc{eof}.
+
 @item delete-char (C-d)
-Delete the character at point.  If point is at the
-beginning of the line, there are no characters in the line, and
-the last character typed was not bound to @code{delete-char}, then
-return @sc{eof}.
+Delete the character at point.  If this function is bound to the
+same character as the tty @sc{eof} character, as @kbd{C-d}
+commonly is, see above for the effects.
 
 @item backward-delete-char (Rubout)
 Delete the character behind the cursor.  A numeric argument means
@@ -1435,6 +1495,10 @@ and save the definition.
 Re-execute the last keyboard macro defined, by making the characters
 in the macro appear as if typed at the keyboard.
 
+@item print-last-kbd-macro ()
+Print the last keboard macro defined in a format suitable for the
+@var{inputrc} file.
+
 @end ftable
 
 @node Miscellaneous Commands
@@ -1693,10 +1757,11 @@ When the command or function is invoked, the @env{COMP_LINE},
 assigned values as described above (@pxref{Bash Variables}).
 If a shell function is being invoked, the @env{COMP_WORDS} and
 @env{COMP_CWORD} variables are also set.
-When the function or command is invoked, the first argument is the
+When the function or command is invoked, the first argument ($1) is the
 name of the command whose arguments are being completed, the
-second argument is the word being completed, and the third argument
-is the word preceding the word being completed on the current command line.
+second argument ($2) is the word being completed, and the third argument
+($3) is the word preceding the word being completed on the current command
+line.
 No filtering of the generated completions against the word being completed
 is performed; the function or command has complete freedom in generating
 the matches.
@@ -1706,7 +1771,7 @@ The function may use any of the shell facilities, including the
 @code{compgen} and @code{compopt} builtins described below
 (@pxref{Programmable Completion Builtins}), to generate the matches.
 It must put the possible completions in the @env{COMPREPLY} array
-variable.
+variable, one per array element.
 
 Next, any command specified with the @option{-C} option is invoked
 in an environment equivalent to command substitution.
@@ -1774,17 +1839,18 @@ completion function would load completions dynamically:
 @example
 _completion_loader()
 @{
-	. "/etc/bash_completion.d/$1.sh" >/dev/null 2>&1 && return 124
+    . "/etc/bash_completion.d/$1.sh" >/dev/null 2>&1 && return 124
 @}
-complete -D -F _completion_loader
+complete -D -F _completion_loader -o bashdefault -o default
 @end example
 
 @node Programmable Completion Builtins
 @section Programmable Completion Builtins
 @cindex completion builtins
 
-Two builtin commands are available to manipulate the programmable completion
-facilities.
+Three builtin commands are available to manipulate the programmable completion
+facilities: one to specify how the arguments to a particular command are to
+be completed, and two to modify the completion as it is happening.
 
 @table @code
 @item compgen
@@ -1870,6 +1936,10 @@ filename-specific processing (like adding a slash to directory names
 quoting special characters, or suppressing trailing spaces).
 This option is intended to be used with shell functions specified
 with @option{-F}.
+
+@item noquote
+Tell Readline not to quote the completed words if they are filenames
+(quoting filenames is the default).
 
 @item nospace
 Tell Readline not to append a space (the default) to words completed at
@@ -1970,6 +2040,10 @@ used as the possible completions.
 @item -F @var{function}
 The shell function @var{function} is executed in the current shell
 environment.
+When it is executed, $1 is the name of the command whose arguments are
+being completed, $2 is the word being completed, and $3 is the word
+preceding the word being completed, as described above
+(@pxref{Programmable Completion}).
 When it finishes, the possible completions are retrieved from the value
 of the @env{COMPREPLY} array variable.
 
@@ -2033,5 +2107,123 @@ is made to modify the options for a @var{name} for which no completion
 specification exists, or an output error occurs.
 
 @end table
+
+@node A Programmable Completion Example
+@section A Programmable Completion Example
+
+The most common way to obtain additional completion functionality beyond
+the default actions @code{complete} and @code{compgen} provide is to use
+a shell function and bind it to a particular command using @code{complete -F}.
+
+The following function provides completions for the @code{cd} builtin.
+It is a reasonably good example of what shell functions must do when
+used for completion.  This function uses the word passsed as @code{$2}
+to determine the directory name to complete.  You can also use the
+@code{COMP_WORDS} array variable; the current word is indexed by the
+@code{COMP_CWORD} variable.
+
+The function relies on the @code{complete} and @code{compgen} builtins
+to do much of the work, adding only the things that the Bash @code{cd}
+does beyond accepting basic directory names:
+tilde expansion (@pxref{Tilde Expansion}),
+searching directories in @var{$CDPATH}, which is described above
+(@pxref{Bourne Shell Builtins}),
+and basic support for the @code{cdable_vars} shell option
+(@pxref{The Shopt Builtin}).
+@code{_comp_cd} modifies the value of @var{IFS} so that it contains only
+a newline to accommodate file names containing spaces and tabs --
+@code{compgen} prints the possible completions it generates one per line.
+
+Possible completions go into the @var{COMPREPLY} array variable, one
+completion per array element.  The programmable completion system retrieves
+the completions from there when the function returns.
+
+@example
+# A completion function for the cd builtin
+# based on the cd completion function from the bash_completion package
+_comp_cd()
+@{
+    local IFS=$' \t\n'    # normalize IFS
+    local cur _skipdot _cdpath
+    local i j k
+
+    # Tilde expansion, with side effect of expanding tilde to full pathname
+    case "$2" in
+    \~*)    eval cur="$2" ;;
+    *)      cur=$2 ;;
+    esac
+
+    # no cdpath or absolute pathname -- straight directory completion
+    if [[ -z "$@{CDPATH:-@}" ]] || [[ "$cur" == @@(./*|../*|/*) ]]; then
+        # compgen prints paths one per line; could also use while loop
+        IFS=$'\n'
+        COMPREPLY=( $(compgen -d -- "$cur") )
+        IFS=$' \t\n'
+    # CDPATH+directories in the current directory if not in CDPATH
+    else
+        IFS=$'\n'
+        _skipdot=false
+        # preprocess CDPATH to convert null directory names to .
+        _cdpath=$@{CDPATH/#:/.:@}
+        _cdpath=$@{_cdpath//::/:.:@}
+        _cdpath=$@{_cdpath/%:/:.@}
+        for i in $@{_cdpath//:/$'\n'@}; do
+            if [[ $i -ef . ]]; then _skipdot=true; fi
+            k="$@{#COMPREPLY[@@]@}"
+            for j in $( compgen -d -- "$i/$cur" ); do
+                COMPREPLY[k++]=$@{j#$i/@}        # cut off directory
+            done
+        done
+        $_skipdot || COMPREPLY+=( $(compgen -d -- "$cur") )
+        IFS=$' \t\n'
+    fi
+
+    # variable names if appropriate shell option set and no completions
+    if shopt -q cdable_vars && [[ $@{#COMPREPLY[@@]@} -eq 0 ]]; then
+        COMPREPLY=( $(compgen -v -- "$cur") )
+    fi
+
+    return 0
+@}
+@end example
+
+We install the completion function using the @option{-F} option to
+@code{complete}:
+
+@example
+# Tell readline to quote appropriate and append slashes to directories;
+# use the bash default completion for other arguments
+complete -o filenames -o nospace -o bashdefault -F _comp_cd cd
+@end example
+
+@noindent
+Since we'd like Bash and Readline to take care of some
+of the other details for us, we use several other options to tell Bash
+and Readline what to do.  The @option{-o filenames} option tells Readline
+that the possible completions should be treated as filenames, and quoted
+appropriately.  That option will also cause Readline to append a slash to
+filenames it can determine are directories (which is why we might want to
+extend @code{_comp_cd} to append a slash if we're using directories found
+via @var{CDPATH}: Readline can't tell those completions are directories).
+The @option{-o nospace} option tells Readline to not append a space
+character to the directory name, in case we want to append to it.
+The @option{-o bashdefault} option brings in the rest of the "Bash default"
+completions -- possible completion that Bash adds to the default Readline
+set.  These include things like command name completion, variable completion
+for words beginning with @samp{@{}, completions containing pathname
+expansion patterns (@pxref{Filename Expansion}), and so on.
+
+Once installed using @code{complete}, @code{_comp_cd} will be called every
+time we attempt word completion for a @code{cd} command.
+
+Many more examples -- an extensive collection of completions for most of
+the common GNU, Unix, and Linux commands -- are available as part of the
+bash_completion project.  This is installed by default on many GNU/Linux
+distributions.  Originally written by Ian Macdonald, the project now lives
+at @url{http://bash-completion.alioth.debian.org/}.  There are ports for
+other systems such as Solaris and Mac OS X.
+
+An older version of the bash_completion package is distributed with bash
+in the @file{examples/complete} subdirectory.
 
 @end ifset

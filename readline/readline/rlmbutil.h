@@ -123,6 +123,15 @@ extern int _rl_walphabetic PARAMS((wchar_t));
 #define MB_INVALIDCH(x)		((x) == (size_t)-1 || (x) == (size_t)-2)
 #define MB_NULLWCH(x)		((x) == 0)
 
+/* Unicode combining characters range from U+0300 to U+036F */
+#define UNICODE_COMBINING_CHAR(x) ((x) >= 768 && (x) <= 879)
+
+#if defined (WCWIDTH_BROKEN)
+#  define WCWIDTH(wc)	((_rl_utf8locale && UNICODE_COMBINING_CHAR(wc)) ? 0 : wcwidth(wc))
+#else
+#  define WCWIDTH(wc)	wcwidth(wc)
+#endif
+
 #else /* !HANDLE_MULTIBYTE */
 
 #undef MB_LEN_MAX

@@ -1,6 +1,6 @@
 /* rltypedefs.h -- Type declarations for readline functions. */
 
-/* Copyright (C) 2000-2009 Free Software Foundation, Inc.
+/* Copyright (C) 2000-2011 Free Software Foundation, Inc.
 
    This file is part of the GNU Readline Library (Readline), a library
    for reading lines of text with interactive input and history editing.      
@@ -25,18 +25,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/* Old-style */
-
-#if !defined (_FUNCTION_DEF)
-#  define _FUNCTION_DEF
-
-typedef int Function ();
-typedef void VFunction ();
-typedef char *CPFunction ();
-typedef char **CPPFunction ();
-
-#endif /* _FUNCTION_DEF */
 
 /* New style. */
 

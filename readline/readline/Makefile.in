@@ -26,8 +26,10 @@ PACKAGE_NAME = @PACKAGE_NAME@
 PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 
+PACKAGE_TARNAME = @PACKAGE_TARNAME@
+
 srcdir = @srcdir@
-VPATH = .:@srcdir@
+VPATH = @srcdir@
 top_srcdir = @top_srcdir@
 BUILD_DIR = @BUILD_DIR@
 
@@ -61,6 +63,8 @@ datadir = @datadir@
 localedir = @localedir@
 
 infodir = @infodir@
+
+docdir = @docdir@
 
 man3dir = $(mandir)/man3
 
@@ -112,7 +116,7 @@ CSOURCES = $(srcdir)/readline.c $(srcdir)/funmap.c $(srcdir)/keymaps.c \
 	   $(srcdir)/histfile.c $(srcdir)/nls.c $(srcdir)/search.c \
 	   $(srcdir)/shell.c $(srcdir)/savestring.c $(srcdir)/tilde.c \
 	   $(srcdir)/text.c $(srcdir)/misc.c $(srcdir)/compat.c \
-	   $(srcdir)/mbutil.c
+	   $(srcdir)/mbutil.c $(srcdir)/xfree.c
 
 # The header files for this library.
 HSOURCES = $(srcdir)/readline.h $(srcdir)/rldefs.h $(srcdir)/chardefs.h \
@@ -121,14 +125,17 @@ HSOURCES = $(srcdir)/readline.h $(srcdir)/rldefs.h $(srcdir)/chardefs.h \
 	   $(srcdir)/tilde.h $(srcdir)/rlconf.h $(srcdir)/rltty.h \
 	   $(srcdir)/ansi_stdlib.h $(srcdir)/tcap.h $(srcdir)/rlstdc.h \
 	   $(srcdir)/xmalloc.h $(srcdir)/rlprivate.h $(srcdir)/rlshell.h \
-	   $(srcdir)/rltypedefs.h $(srcdir)/rlmbutil.h
+	   $(srcdir)/rltypedefs.h $(srcdir)/rlmbutil.h \
+	   $(srcdir)/colors.h $(srcdir)/parse-colors.h
 
 HISTOBJ = history.o histexpand.o histfile.o histsearch.o shell.o mbutil.o
 TILDEOBJ = tilde.o
+COLORSOBJ = colors.o parse-colors.o
 OBJECTS = readline.o vi_mode.o funmap.o keymaps.o parens.o search.o \
 	  rltty.o complete.o bind.o isearch.o display.o signals.o \
 	  util.o kill.o undo.o macro.o input.o callback.o terminal.o \
-	  text.o nls.o misc.o compat.o xfree.o xmalloc.o $(HISTOBJ) $(TILDEOBJ)
+	  text.o nls.o misc.o $(HISTOBJ) $(TILDEOBJ) $(COLORSOBJ) \
+	  xmalloc.o xfree.o compat.o
 
 # The texinfo files which document this library.
 DOCSOURCE = doc/rlman.texinfo doc/rltech.texinfo doc/rluser.texinfo
@@ -143,6 +150,9 @@ CREATED_TAGS = TAGS tags
 
 INSTALLED_HEADERS = readline.h chardefs.h keymaps.h history.h tilde.h \
 		    rlstdc.h rlconf.h rltypedefs.h
+
+OTHER_DOCS = $(srcdir)/CHANGES $(srcdir)/INSTALL $(srcdir)/README
+OTHER_INSTALLED_DOCS = CHANGES INSTALL README
 
 ##########################################################################
 TARGETS = @STATIC_TARGET@ @SHARED_TARGET@
@@ -193,13 +203,13 @@ stamp-h: config.status $(srcdir)/config.h.in
 	CONFIG_FILES= CONFIG_HEADERS=config.h ./config.status
 	echo > $@
 
-#$(srcdir)/configure: $(srcdir)/configure.in	## Comment-me-out in distribution
+#$(srcdir)/configure: $(srcdir)/configure.ac	## Comment-me-out in distribution
 #	cd $(srcdir) && autoconf	## Comment-me-out in distribution
 
 
 shared:	force
 	-test -d shlib || mkdir shlib
-	-( cd shlib ; ${MAKE} ${MFLAGS} all )
+	( cd shlib ; ${MAKE} ${MFLAGS} all )
 
 documentation: force
 	-test -d doc || mkdir doc
@@ -235,7 +245,7 @@ install-static: installdirs $(STATIC_LIBS) install-headers install-doc install-e
 installdirs: $(srcdir)/support/mkinstalldirs
 	-$(SHELL) $(srcdir)/support/mkinstalldirs $(DESTDIR)$(includedir) \
 		$(DESTDIR)$(includedir)/readline $(DESTDIR)$(libdir) \
-		$(DESTDIR)$(infodir) $(DESTDIR)$(man3dir)
+		$(DESTDIR)$(infodir) $(DESTDIR)$(man3dir) $(DESTDIR)$(docdir)
 
 uninstall: uninstall-headers uninstall-doc uninstall-examples
 	-test -n "$(DESTDIR)$(libdir)" && cd $(DESTDIR)$(libdir) && \
@@ -243,24 +253,26 @@ uninstall: uninstall-headers uninstall-doc uninstall-examples
 	-( cd shlib; ${MAKE} ${MFLAGS} DESTDIR=${DESTDIR} uninstall )
 
 install-shared: installdirs install-headers shared install-doc
-	-( cd shlib ; ${MAKE} ${MFLAGS} DESTDIR=${DESTDIR} install )
+	( cd shlib ; ${MAKE} ${MFLAGS} DESTDIR=${DESTDIR} install )
 	
 uninstall-shared: maybe-uninstall-headers
 	-( cd shlib; ${MAKE} ${MFLAGS} DESTDIR=${DESTDIR} uninstall )
 
-install-examples: installdirs install-headers shared
+install-examples: installdirs install-headers
 	-( cd examples ; ${MAKE} ${MFLAGS} DESTDIR=${DESTDIR} install )
 	
 uninstall-examples: maybe-uninstall-headers
 	-( cd examples; ${MAKE} ${MFLAGS} DESTDIR=${DESTDIR} uninstall )
 
 install-doc:	installdirs
+	$(INSTALL_DATA) $(OTHER_DOCS) $(DESTDIR)$(docdir)
 	-( if test -d doc ; then \
 		cd doc && \
 		${MAKE} ${MFLAGS} infodir=$(infodir) DESTDIR=${DESTDIR} install; \
 	  fi )
 
 uninstall-doc:
+	-( cd $(DESTDIR)$(docdir) && ${RM} ${OTHER_INSTALLED_DOCS} )
 	-( if test -d doc ; then \
 		cd doc && \
 		${MAKE} ${MFLAGS} infodir=$(infodir) DESTDIR=${DESTDIR} uninstall; \
@@ -275,24 +287,24 @@ tags:	force
 clean:	force
 	$(RM) $(OBJECTS) $(STATIC_LIBS)
 	$(RM) readline readline.exe
-	-( cd shlib && $(MAKE) $(MFLAGS) $@ )
+	( cd shlib && $(MAKE) $(MFLAGS) $@ )
 	-( cd doc && $(MAKE) $(MFLAGS) $@ )
 	-( cd examples && $(MAKE) $(MFLAGS) $@ )
 
 mostlyclean: clean
-	-( cd shlib && $(MAKE) $(MFLAGS) $@ )
+	( cd shlib && $(MAKE) $(MFLAGS) $@ )
 	-( cd doc && $(MAKE) $(MFLAGS) $@ )
 	-( cd examples && $(MAKE) $(MFLAGS) $@ )
 
 distclean maintainer-clean: clean
-	-( cd shlib && $(MAKE) $(MFLAGS) $@ )
+	( cd shlib && $(MAKE) $(MFLAGS) $@ )
 	-( cd doc && $(MAKE) $(MFLAGS) $@ )
 	-( cd examples && $(MAKE) $(MFLAGS) $@ )
 	$(RM) Makefile
 	$(RM) $(CREATED_CONFIGURE)
 	$(RM) $(CREATED_TAGS)
 
-info dvi htm pdf ps:
+info dvi html pdf ps:
 	-( cd doc && $(MAKE) $(MFLAGS) $@ )
 
 install-info:
@@ -416,6 +428,14 @@ xfree.o: ansi_stdlib.h
 xmalloc.o: ${BUILD_DIR}/config.h
 xmalloc.o: ansi_stdlib.h
 
+colors.o: ${BUILD_DIR}/config.h colors.h
+colors.o: readline.h keymaps.h rltypedefs.h chardefs.h tilde.h rlstdc.h
+colors.o: rlconf.h  
+colors.o: ansi_stdlib.h posixstat.h
+parse-colors.o: ${BUILD_DIR}/config.h colors.h parse-colors.h
+parse-colors.o: rldefs.h rlconf.h
+parse-colors.o: readline.h keymaps.h rltypedefs.h chardefs.h tilde.h rlstdc.h
+
 bind.o: rlshell.h
 histfile.o: rlshell.h
 nls.o: rlshell.h
@@ -445,8 +465,11 @@ text.o: rlprivate.h
 undo.o: rlprivate.h
 util.o: rlprivate.h
 vi_mode.o: rlprivate.h
+colors.o: rlprivate.h
+parse-colors.o: rlprivate.h
 
 bind.o: xmalloc.h
+callback.o: xmalloc.h
 complete.o: xmalloc.h
 display.o: xmalloc.h
 funmap.o: xmalloc.h
@@ -472,6 +495,8 @@ util.o: xmalloc.h
 vi_mode.o: xmalloc.h
 xfree.o: xmalloc.h
 xmalloc.o: xmalloc.h
+colors.o: xmalloc.h
+parse-colors.o: xmalloc.h
 
 complete.o: rlmbutil.h
 display.o: rlmbutil.h
@@ -514,6 +539,9 @@ util.o: $(srcdir)/util.c
 vi_mode.o: $(srcdir)/vi_mode.c
 xfree.o: $(srcdir)/xfree.c
 xmalloc.o: $(srcdir)/xmalloc.c
+
+colors.o: $(srcdir)/parse-colors.c
+parse-colors.o: $(srcdir)/parse-colors.c
 
 histexpand.o: $(srcdir)/histexpand.c
 histfile.o: $(srcdir)/histfile.c

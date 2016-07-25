@@ -1,6 +1,6 @@
 /* bind.c -- key binding and startup file support for the readline library. */
 
-/* Copyright (C) 1987-2010 Free Software Foundation, Inc.
+/* Copyright (C) 1987-2012 Free Software Foundation, Inc.
 
    This file is part of the GNU Readline Library (Readline), a library
    for reading lines of text with interactive input and history editing.
@@ -72,11 +72,15 @@ extern char *strchr (), *strrchr ();
 /* Variables exported by this file. */
 Keymap rl_binding_keymap;
 
+static int _rl_skip_to_delim PARAMS((char *, int, int));
+
 static char *_rl_read_file PARAMS((char *, size_t *));
 static void _rl_init_file_error PARAMS((const char *));
 static int _rl_read_init_file PARAMS((const char *, int));
 static int glean_key_from_name PARAMS((char *));
+
 static int find_boolean_var PARAMS((const char *));
+static int find_string_var PARAMS((const char *));
 
 static char *_rl_get_string_variable_value PARAMS((const char *));
 static int substring_member_of_array PARAMS((const char *, const char * const *));
@@ -567,6 +571,40 @@ rl_translate_keyseq (seq, array, len)
   return (0);
 }
 
+static int
+_rl_isescape (c)
+     int c;
+{
+  switch (c)
+    {
+    case '\007':
+    case '\b':
+    case '\f':
+    case '\n':
+    case '\r':
+    case TAB:
+    case 0x0b:  return (1);
+    default: return (0);
+    }
+}
+
+static int
+_rl_escchar (c)
+     int c;
+{
+  switch (c)
+    {
+    case '\007':  return ('a');
+    case '\b':  return ('b');
+    case '\f':  return ('f');
+    case '\n':  return ('n');
+    case '\r':  return ('r');
+    case TAB:  return ('t');
+    case 0x0b:  return ('v');
+    default: return (c);
+    }
+}
+
 char *
 rl_untranslate_keyseq (seq)
      int seq;
@@ -618,9 +656,10 @@ rl_untranslate_keyseq (seq)
   return kseq;
 }
 
-static char *
-_rl_untranslate_macro_value (seq)
+char *
+_rl_untranslate_macro_value (seq, use_escapes)
      char *seq;
+     int use_escapes;
 {
   char *ret, *r, *s;
   int c;
@@ -644,9 +683,14 @@ _rl_untranslate_macro_value (seq)
       else if (CTRL_CHAR (c))
 	{
 	  *r++ = '\\';
-	  *r++ = 'C';
-	  *r++ = '-';
-	  c = _rl_to_lower (UNCTRL (c));
+	  if (use_escapes && _rl_isescape (c))
+	    c = _rl_escchar (c);
+	  else
+	    {
+	      *r++ = 'C';
+	      *r++ = '-';
+	      c = _rl_to_lower (UNCTRL (c));
+	    }
 	}
       else if (c == RUBOUT)
  	{
@@ -1170,6 +1214,38 @@ handle_parser_directive (statement)
   return (1);
 }
 
+/* Start at STRING[START] and look for DELIM.  Return I where STRING[I] ==
+   DELIM or STRING[I] == 0.  DELIM is usually a double quote. */
+static int
+_rl_skip_to_delim (string, start, delim)
+     char *string;
+     int start, delim;
+{
+  int i, c, passc;
+
+  for (i = start,passc = 0; c = string[i]; i++)
+    {
+      if (passc)
+	{
+	  passc = 0;
+	  if (c == 0)
+	    break;
+	  continue;
+	}
+
+      if (c == '\\')
+	{
+	  passc = 1;
+	  continue;
+	}
+
+      if (c == delim)
+	break;
+    }
+
+  return i;
+}
+
 /* Read the binding command from STRING and perform it.
    A key binding command looks like: Keyname: function-name\0,
    a variable binding command looks like: set variable value.
@@ -1185,7 +1261,7 @@ rl_parse_and_bind (string)
   while (string && whitespace (*string))
     string++;
 
-  if (!string || !*string || *string == '#')
+  if (string == 0 || *string == 0 || *string == '#')
     return 0;
 
   /* If this is a parser directive, act on it. */
@@ -1205,31 +1281,16 @@ rl_parse_and_bind (string)
      backslash to quote characters in the key expression. */
   if (*string == '"')
     {
-      int passc = 0;
+      i = _rl_skip_to_delim (string, 1, '"');
 
-      for (i = 1; c = string[i]; i++)
-	{
-	  if (passc)
-	    {
-	      passc = 0;
-	      continue;
-	    }
-
-	  if (c == '\\')
-	    {
-	      passc++;
-	      continue;
-	    }
-
-	  if (c == '"')
-	    break;
-	}
       /* If we didn't find a closing quote, abort the line. */
       if (string[i] == '\0')
         {
           _rl_init_file_error ("no closing `\"' in key binding");
           return 1;
         }
+      else
+        i++;	/* skip past closing double quote */
     }
 
   /* Advance to the colon (:) or whitespace which separates the two objects. */
@@ -1249,6 +1310,7 @@ rl_parse_and_bind (string)
   if (_rl_stricmp (string, "set") == 0)
     {
       char *var, *value, *e;
+      int s;
 
       var = string + i;
       /* Make VAR point to start of variable name. */
@@ -1256,25 +1318,37 @@ rl_parse_and_bind (string)
 
       /* Make VALUE point to start of value string. */
       value = var;
-      while (*value && !whitespace (*value)) value++;
+      while (*value && whitespace (*value) == 0) value++;
       if (*value)
 	*value++ = '\0';
       while (*value && whitespace (*value)) value++;
 
-      /* Strip trailing whitespace from values to boolean variables.  Temp
-	 fix until I get a real quoted-string parser here. */
-      i = find_boolean_var (var);
-      if (i >= 0)
+      /* Strip trailing whitespace from values of boolean variables. */
+      if (find_boolean_var (var) >= 0)
 	{
 	  /* remove trailing whitespace */
+remove_trailing:
 	  e = value + strlen (value) - 1;
 	  while (e >= value && whitespace (*e))
 	    e--;
 	  e++;		/* skip back to whitespace or EOS */
+	  
 	  if (*e && e >= value)
 	    *e = '\0';
 	}
-
+      else if ((i = find_string_var (var)) >= 0)
+	{
+	  /* Allow quoted strings in variable values */
+	  if (*value == '"')
+	    {
+	      i = _rl_skip_to_delim (value, 1, *value);
+	      value[i] = '\0';
+	      value++;	/* skip past the quote */
+	    }
+	  else
+	    goto remove_trailing;
+	}
+	
       rl_variable_bind (var, value);
       return 0;
     }
@@ -1295,32 +1369,13 @@ rl_parse_and_bind (string)
      the quoted string delimiter, like the shell. */
   if (*funname == '\'' || *funname == '"')
     {
-      int delimiter, passc;
-
-      delimiter = string[i++];
-      for (passc = 0; c = string[i]; i++)
-	{
-	  if (passc)
-	    {
-	      passc = 0;
-	      continue;
-	    }
-
-	  if (c == '\\')
-	    {
-	      passc = 1;
-	      continue;
-	    }
-
-	  if (c == delimiter)
-	    break;
-	}
-      if (c)
+      i = _rl_skip_to_delim (string, i+1, *funname);
+      if (string[i])
 	i++;
     }
 
   /* Advance to the end of the string.  */
-  for (; string[i] && !whitespace (string[i]); i++);
+  for (; string[i] && whitespace (string[i]) == 0; i++);
 
   /* No extra whitespace at the end of the string. */
   string[i] = '\0';
@@ -1380,7 +1435,7 @@ rl_parse_and_bind (string)
 
   /* Get the actual character we want to deal with. */
   kname = strrchr (string, '-');
-  if (!kname)
+  if (kname == 0)
     kname = string;
   else
     kname++;
@@ -1436,6 +1491,9 @@ static const struct {
   { "bind-tty-special-chars",	&_rl_bind_stty_chars,		0 },
   { "blink-matching-paren",	&rl_blink_matching_paren,	V_SPECIAL },
   { "byte-oriented",		&rl_byte_oriented,		0 },
+#if defined (COLOR_SUPPORT)
+  { "colored-stats",		&_rl_colored_stats,		0 },
+#endif
   { "completion-ignore-case",	&_rl_completion_case_fold,	0 },
   { "completion-map-case",	&_rl_completion_case_map,	0 },
   { "convert-meta",		&_rl_convert_meta_chars_to_ascii, 0 },
@@ -1460,6 +1518,7 @@ static const struct {
   { "revert-all-at-newline",	&_rl_revert_all_at_newline,	0 },
   { "show-all-if-ambiguous",	&_rl_complete_show_all,		0 },
   { "show-all-if-unmodified",	&_rl_complete_show_unmodified,	0 },
+  { "show-mode-in-prompt",	&_rl_show_mode_in_prompt,	0 },
   { "skip-completed-text",	&_rl_skip_completed_text,	0 },
 #if defined (VISIBLE_STATS)
   { "visible-stats",		&rl_visible_stats,		0 },
@@ -1499,6 +1558,8 @@ hack_special_boolean_var (i)
       else
 	_rl_bell_preference = AUDIBLE_BELL;
     }
+  else if (_rl_stricmp (name, "show-mode-in-prompt") == 0)
+    _rl_reset_prompt ();
 }
 
 typedef int _rl_sv_func_t PARAMS((const char *));
@@ -1524,6 +1585,7 @@ static int sv_editmode PARAMS((const char *));
 static int sv_histsize PARAMS((const char *));
 static int sv_isrchterm PARAMS((const char *));
 static int sv_keymap PARAMS((const char *));
+static int sv_seqtimeout PARAMS((const char *));
 
 static const struct {
   const char * const name;
@@ -1539,6 +1601,7 @@ static const struct {
   { "history-size",	V_INT,		sv_histsize },
   { "isearch-terminators", V_STRING,	sv_isrchterm },
   { "keymap",		V_STRING,	sv_keymap },
+  { "keyseq-timeout",	V_INT,		sv_seqtimeout },
   { (char *)NULL,	0, (_rl_sv_func_t *)0 }
 };
 
@@ -1696,13 +1759,17 @@ static int
 sv_histsize (value)
      const char *value;
 {
-  int nval = 500;
+  int nval;
 
+  nval = 500;
   if (value && *value)
     {
       nval = atoi (value);
       if (nval < 0)
-	return 1;
+	{
+	  unstifle_history ();
+	  return 0;
+	}
     }
   stifle_history (nval);
   return 0;
@@ -1721,6 +1788,23 @@ sv_keymap (value)
       return 0;
     }
   return 1;
+}
+
+static int
+sv_seqtimeout (value)
+     const char *value;
+{
+  int nval;
+
+  nval = 0;
+  if (value && *value)
+    {
+      nval = atoi (value);
+      if (nval < 0)
+	nval = 0;
+    }
+  _rl_keyseq_timeout = nval;
+  return 0;
 }
 
 static int
@@ -2180,6 +2264,8 @@ rl_function_dumper (print_readably)
 	    }
 	}
     }
+
+  xfree (names);
 }
 
 /* Print all of the current functions and their bindings to
@@ -2212,7 +2298,7 @@ _rl_macro_dumper_internal (print_readably, map, prefix)
 	{
 	case ISMACR:
 	  keyname = _rl_get_keyname (key);
-	  out = _rl_untranslate_macro_value ((char *)map[key].function);
+	  out = _rl_untranslate_macro_value ((char *)map[key].function, 0);
 
 	  if (print_readably)
 	    fprintf (rl_outstream, "\"%s%s\": \"%s\"\n", prefix ? prefix : "",
@@ -2324,7 +2410,7 @@ _rl_get_string_variable_value (name)
     {
       if (_rl_isearch_terminators == 0)
 	return 0;
-      ret = _rl_untranslate_macro_value (_rl_isearch_terminators);
+      ret = _rl_untranslate_macro_value (_rl_isearch_terminators, 0);
       if (ret)
 	{
 	  strncpy (numbuf, ret, sizeof (numbuf) - 1);
@@ -2341,6 +2427,11 @@ _rl_get_string_variable_value (name)
       if (ret == 0)
 	ret = rl_get_keymap_name_from_edit_mode ();
       return (ret ? ret : "none");
+    }
+  else if (_rl_stricmp (name, "keyseq-timeout") == 0)
+    {
+      sprintf (numbuf, "%d", _rl_keyseq_timeout);    
+      return (numbuf);
     }
   else
     return (0);
