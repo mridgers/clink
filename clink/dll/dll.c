@@ -153,8 +153,8 @@ static BOOL on_dll_attach()
 
     if (!g_shell->validate())
     {
-        LOG_INFO("Shell validation failed.");
-        return FALSE;
+        LOG_INFO("Shell is non interactive.");
+        return TRUE;
     }
 
     base = GetModuleHandle(NULL);
