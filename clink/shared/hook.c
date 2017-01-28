@@ -282,6 +282,7 @@ static int get_instruction_length(void* addr)
         { 0x00005340, 0x0000ffff },  // push rbx
         { 0x00dc8b4c, 0x00ffffff },  // mov r11, rsp
         { 0x0000b848, 0x0000f8ff },  // mov reg64, imm64  = 10-byte length
+        { 0x24048B48, 0xffffffff },  // mov rax,QWORD PTR [rsp]
 #elif defined _M_IX86
         { 0x0000ff8b, 0x0000ffff },  // mov edi,edi  
 #endif
