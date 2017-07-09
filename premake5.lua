@@ -115,7 +115,7 @@ solution("clink")
     location(to)
 
     characterset("MBCS")
-    flags("Symbols")
+    symbols "on"
     flags("StaticRuntime")
     defines("HAVE_CONFIG_H")
     defines("HANDLE_MULTIBYTE")
