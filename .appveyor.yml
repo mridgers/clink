@@ -1,0 +1,24 @@
+environment:
+  matrix:
+  - TOOLSET: vs2015
+
+os: Visual Studio 2015
+
+shallow_clone: true
+
+install:
+  # Download Premake
+  - ps: Start-FileDownload 'https://github.com/premake/premake-core/releases/download/v5.0.0-alpha8/premake-5.0.0-alpha8-windows.zip' 'premake.zip'
+
+  # Extract it in-place; premake5.exe is at the top level.
+  - 7z x premake.zip
+
+  # Generate solution files using premake.
+  - premake5.exe %TOOLSET%
+
+configuration:
+  - Debug
+  - Release
+
+build:
+  project: .build/$(TOOLSET)/clink.sln
