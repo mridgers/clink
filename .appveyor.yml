@@ -8,7 +8,7 @@ shallow_clone: true
 
 install:
   # Download Premake
-  - ps: Start-FileDownload 'https://github.com/premake/premake-core/releases/download/v5.0.0-alpha8/premake-5.0.0-alpha8-windows.zip' 'premake.zip'
+  - ps: Start-FileDownload 'https://github.com/premake/premake-core/releases/download/v5.0.0-alpha11/premake-5.0.0-alpha11-windows.zip' 'premake.zip'
 
   # Extract it in-place; premake5.exe is at the top level.
   - 7z x premake.zip
