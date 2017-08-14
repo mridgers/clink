@@ -1,3 +1,4 @@
+version: 0.4.9-{build}
 environment:
   matrix:
   - TOOLSET: vs2015
@@ -5,6 +6,9 @@ environment:
 os: Visual Studio 2015
 
 shallow_clone: true
+
+matrix:
+  fast_finish: true
 
 install:
   # Download Premake
@@ -22,3 +26,14 @@ configuration:
 
 build:
   project: .build/$(TOOLSET)/clink.sln
+
+artifacts:
+  - path: .build\$(TOOLSET)\bin\$(configuration)\
+    type: zip
+    name: clink_0.4.9
+
+  # - path: clink_0.4.9-{build}_pdb.zip
+  #   name: clink_0.4.9-{build}_pdb.zip
+
+  # - path: clink_0.4.9-{build}_setup.exe
+  #   name: clink_0.4.9-{build}_setup.exe
