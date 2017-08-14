@@ -30,7 +30,7 @@ build:
 artifacts:
   - path: .build\$(TOOLSET)\bin\$(configuration)\
     type: zip
-    name: clink_0.4.9
+    name: clink_$(APPVEYOR_BUILD_VERSION)
 
   # - path: clink_0.4.9-{build}_pdb.zip
   #   name: clink_0.4.9-{build}_pdb.zip
