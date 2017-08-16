@@ -1,11 +1,9 @@
 version: 0.4.9-{build}
 environment:
   matrix:
-  - TOOLSET: vs2015
+  - TOOLSET: vs2017
 
-os: Visual Studio 2015
-
-shallow_clone: true
+os: Visual Studio 2017
 
 matrix:
   fast_finish: true
@@ -21,19 +19,10 @@ install:
   - premake5.exe %TOOLSET%
 
 configuration:
-  - Debug
   - Release
 
-build:
-  project: .build/$(TOOLSET)/clink.sln
+build_script:
+  - premake5.exe clink_release
 
-artifacts:
-  - path: .build\$(TOOLSET)\bin\$(configuration)\
-    type: zip
-    name: clink_$(APPVEYOR_BUILD_VERSION)
-
-  # - path: clink_0.4.9-{build}_pdb.zip
-  #   name: clink_0.4.9-{build}_pdb.zip
-
-  # - path: clink_0.4.9-{build}_setup.exe
-  #   name: clink_0.4.9-{build}_setup.exe
+after_build:
+   - ps: Get-ChildItem .build\release\**\*.zip | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }

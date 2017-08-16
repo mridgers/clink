@@ -138,7 +138,7 @@ newaction {
         local x64_ok = true;
         local toolchain = "ERROR"
         if have_msbuild then
-            toolchain = _OPTIONS["clink_vs_ver"] or "vs2013"
+            toolchain = _OPTIONS["clink_vs_ver"] or "vs2017"
             exec(premake .. " --clink_ver=" .. clink_ver .. " " .. toolchain)
 
             ret = exec("msbuild /m /v:q /p:configuration=release /p:platform=win32 .build/" .. toolchain .. "/clink.sln")
