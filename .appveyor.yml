@@ -26,9 +26,10 @@ configuration:
 build_script:
   - premake5.exe clink_release
 
-after_build:
-   - ps: Get-ChildItem .build\release\**\*.zip | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
-
 artifacts:
-  - path: installer/clink.nsi
-    name: clink
+  - path: .build/release/**/clink_DEV.zip
+    name: clink_DEV
+  - path: .build/release/**/clink_DEV_pdb.zip
+    name: clink_DEV_pdb
+  - path: .build/release/**/clink_DEV_setup.exe
+    name: clink_DEV_setup
