@@ -1,10 +1,9 @@
 version: 0.4.9-{build}
 environment:
   matrix:
-  - TOOLSET: vs2017
+    - TOOLSET: vs2017
 
 os: Visual Studio 2017
-
 matrix:
   fast_finish: true
 
@@ -14,6 +13,9 @@ install:
 
   # Extract it in-place; premake5.exe is at the top level.
   - 7z x premake.zip
+
+  ## Add NSIS to PATH
+  - cmd: set PATH=%PATH%;C:\Program Files (x86)\NSIS\;
 
   # Generate solution files using premake.
   - premake5.exe %TOOLSET%
@@ -26,3 +28,7 @@ build_script:
 
 after_build:
    - ps: Get-ChildItem .build\release\**\*.zip | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
+
+artifacts:
+  - path: installer/clink.nsi
+    name: clink
