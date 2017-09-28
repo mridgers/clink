@@ -1,5 +1,5 @@
 /* Copyright (c) 2012 Martin Ridgers
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -187,12 +187,22 @@ int begin_doskey(wchar_t* chars, unsigned max_chars)
 
         // Check it exists.
         if (!GetConsoleAliasW(alias, exe_path, 1, exe))
-            return 0;
+        {
+            if (GetLastError() == ERROR_NOT_FOUND)
+                return 0;
+            //for other error, we fall through to use
+            //larget buffer to retry, since in non legacy mode cmd
+            //it will report INVALID_PARAMETER for not enough buffer
+        }
 
         // It does. Allocate space and fetch it.
         bytes = max_chars * sizeof(wchar_t);
         g_state.alias_text = malloc(bytes * 2);
-        GetConsoleAliasW(alias, g_state.alias_text, bytes, exe);
+        if (!GetConsoleAliasW(alias, g_state.alias_text, bytes, exe))
+        {
+            free(g_state.alias_text);
+            return 0;
+        }
 
         // Copy the input and tokenise it. Lots of pointer aliasing here...
         g_state.input = g_state.alias_text + max_chars;
