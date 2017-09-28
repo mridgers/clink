@@ -47,13 +47,13 @@ function useXpToolset(base, cfg)
     local p = "v110_xp"
     if _ACTION > "vs2012" then
         p = "v120_xp"
-    end 
+    end
 
     if _ACTION > "vs2010" then
         _p(2,'<PlatformToolset>%s</PlatformToolset>', p)
     end
 end
-premake.override(premake.vstudio.vc2010, 'platformToolset', useXpToolset)
+--premake.override(premake.vstudio.vc2010, 'platformToolset', useXpToolset)
 
 --------------------------------------------------------------------------------
 -- Work around a bug in Premake5
