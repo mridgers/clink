@@ -73,7 +73,7 @@ int continue_doskey(wchar_t* chars, unsigned max_chars)
 {
     wchar_t* read = g_state.alias_next;
 
-    if (g_state.alias_text == NULL)
+    if (g_state.alias_text == NULL || read == NULL)
         return 0;
 
     if (*read == '\0')
