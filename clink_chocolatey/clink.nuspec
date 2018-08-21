@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <metadata>
+    <id>clink</id>
+    <title>clink</title>
+    <version>0.4.4</version>
+    <authors>mridgers</authors>
+    <owners>mridgers</owners>
+    <summary>Bash's powerful command line editing in cmd.exe</summary>
+    <description>Clink combines the native Windows shell cmd.exe with the powerful command line editing features of the GNU Readline library, which provides rich completion, history, and line-editing capabilities. Readline is best known for its use in the well-known Unix shell Bash, the standard shell for Mac OS X and many Linux distributions.</description>
+    <projectUrl>http://mridgers.github.io/clink/</projectUrl>
+    <tags>clink cmd bash</tags>
+    <licenseUrl>https://github.com/mridgers/clink/blob/master/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance> <!-- or true if you require the user to accept the License before installing -->
+    <iconUrl>http://mridgers.github.io/clink/images/clink.png</iconUrl>
+  </metadata>
+</package>
