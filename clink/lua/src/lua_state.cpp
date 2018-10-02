@@ -33,6 +33,7 @@ static setting_str g_lua_path(
 
 //------------------------------------------------------------------------------
 void clink_lua_initialise(lua_state&);
+void io_lua_initialise(lua_state&);
 void os_lua_initialise(lua_state&);
 void path_lua_initialise(lua_state&);
 void settings_lua_initialise(lua_state&);
@@ -90,6 +91,7 @@ void lua_state::initialise()
         lua_load_script(self, lib, debugger);
 
     clink_lua_initialise(self);
+    io_lua_initialise(self);
     os_lua_initialise(self);
     path_lua_initialise(self);
     settings_lua_initialise(self);
