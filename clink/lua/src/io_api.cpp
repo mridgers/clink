@@ -319,7 +319,7 @@ static int popen2(lua_State* state)
 
     // Launch the process.
     STARTUPINFOW si = { sizeof(si) };
-    si.hStdError = nullptr;
+    si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
     si.hStdOutput = pipes.stdout_write;
     si.hStdInput = pipes.stdin_read;
     si.dwFlags = STARTF_USESTDHANDLES;
