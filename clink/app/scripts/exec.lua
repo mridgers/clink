@@ -107,7 +107,7 @@ function exec_generator:generate(line_state, match_builder)
     local suffices = os.getenv("pathext"):explode(";")
     for _, suffix in ipairs(suffices) do
         for _, dir in ipairs(paths) do
-            for _, file in ipairs(os.globfiles(dir.."*"..suffix)) do
+            for file in os.globfiles(dir.."*"..suffix) do
                 added = match_builder:addmatch(file) or added
             end
         end

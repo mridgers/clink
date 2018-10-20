@@ -176,25 +176,32 @@ static int glob_impl(lua_State* state, bool dirs_only)
     if (mask == nullptr)
         return 0;
 
-    lua_createtable(state, 0, 0);
-
     if (path::is_separator(mask[0]) && path::is_separator(mask[1]))
         if (!g_glob_unc.get())
-            return 1;
+            return 0;
 
-    globber globber(mask);
-    globber.files(!dirs_only);
-    globber.hidden(g_glob_hidden.get());
-    globber.system(g_glob_system.get());
+    auto impl = [] (lua_State* state) -> int {
+        int self_index = lua_upvalueindex(1);
+        auto* glbbr = (globber*)lua_touserdata(state, self_index);
 
-    int i = 1;
-    str<288> file;
-    while (globber.next(file, false))
-    {
+        str<288> file;
+        if (!glbbr->next(file, false))
+        {
+            delete glbbr;
+            return 0;
+        }
+
         lua_pushstring(state, file.c_str());
-        lua_rawseti(state, -2, i++);
-    }
+        return 1;
+    };
 
+    globber* glbbr = new globber(mask);
+    glbbr->files(!dirs_only);
+    glbbr->hidden(g_glob_hidden.get());
+    glbbr->system(g_glob_system.get());
+
+    lua_pushlightuserdata(state, glbbr);
+    lua_pushcclosure(state, impl, 1);
     return 1;
 }
 
