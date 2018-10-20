@@ -60,27 +60,43 @@ int match_builder_lua::set_prefix_included(lua_State* state)
 
 //------------------------------------------------------------------------------
 /// -name:  builder:addmatches
-/// -arg:   matches:table
+/// -arg:   matches:table or function
 /// -ret:   integer, boolean
 /// This is the equivalent of calling builder:addmatch() in a for-loop. Returns
 /// the number of matches added and a boolean indicating if all matches were
-/// added successfully.
+/// added successfully. If matches is a function is called until it returns nil.
 int match_builder_lua::add_matches(lua_State* state)
 {
-    if (lua_gettop(state) <= 0 || !lua_istable(state, 1))
-    {
-        lua_pushinteger(state, 0);
-        lua_pushboolean(state, 0);
-        return 2;
-    }
-
     int count = 0;
-    int total = int(lua_rawlen(state, 1));
-    for (int i = 1; i <= total; ++i)
+    int total = -1;
+
+    if (lua_gettop(state) > 0)
     {
-        lua_rawgeti(state, 1, i);
-        count += !!add_match_impl(state, -1);
-        lua_pop(state, 1);
+        if (lua_istable(state, 1))
+        {
+            total = int(lua_rawlen(state, 1));
+            for (int i = 1; i <= total; ++i)
+            {
+                lua_rawgeti(state, 1, i);
+                count += !!add_match_impl(state, -1);
+                lua_pop(state, 1);
+            }
+        }
+        else if (lua_isfunction(state, 1))
+        {
+            for (total = 0;; ++total)
+            {
+                lua_pushvalue(state, 1);
+                lua_call(state, 0, 1);
+                if (lua_isnil(state, -1))
+                    break;
+
+                count += !!add_match_impl(state, -1);
+                lua_pop(state, 1);
+            }
+        }
+
+        return 2;
     }
 
     lua_pushinteger(state, count);
