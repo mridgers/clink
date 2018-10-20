@@ -253,8 +253,8 @@ int popen2_lua::lines(lua_State* state)
 
     auto impl = [] (lua_State* state) -> int {
         int self_index = lua_upvalueindex(1);
-        void* self = lua_touserdata(state, self_index);
-        return self ? ((popen2_lua*)self)->read_line(state, false) : 0;
+        auto* self = (popen2_lua*)lua_touserdata(state, self_index);
+        return self->read_line(state, false);
     };
 
     lua_pushvalue(state, 1);
