@@ -117,7 +117,7 @@ static BOOL WINAPI single_char_read(
 }
 
 //------------------------------------------------------------------------------
-void tag_prompt()
+static void tag_prompt()
 {
     // Tag the prompt so we can detect when cmd.exe writes to the terminal.
     wchar_t buffer[256];
