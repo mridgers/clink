@@ -69,7 +69,7 @@ newaction {
     trigger = "release",
     description = "Creates a release of Clink.",
     execute = function ()
-        local premake = _PREMAKE_COMMAND
+        local premake = '"'.._PREMAKE_COMMAND..'"'
         local root_dir = path.getabsolute(".build/release").."/"
 
         -- Check we have the tools we need.
