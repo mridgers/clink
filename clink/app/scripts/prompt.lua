@@ -36,7 +36,7 @@ function clink._filter_prompt(prompt)
         print("")
         print(ret)
         print(debug.traceback())
-        return false
+        return "\nPROMPT_LUA_ERROR>"
     end
 
     return ret
