@@ -130,8 +130,8 @@ void* process::inject_module(const char* dll_path)
 void* process::remote_call(void* function, const void* param, int param_size)
 {
     // Open the process so we can operate on it.
-    handle process_handle = OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_CREATE_THREAD,
-        FALSE, m_pid);
+    unsigned int flags = PROCESS_QUERY_INFORMATION|PROCESS_CREATE_THREAD;
+    handle process_handle = OpenProcess(flags, FALSE, m_pid);
     if (!process_handle)
         return nullptr;
 
