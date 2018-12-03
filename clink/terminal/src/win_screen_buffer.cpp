@@ -159,10 +159,10 @@ void win_screen_buffer::set_cursor(int column, int row)
     int width = (window.Right - window.Left) + 1;
     int height = (window.Bottom - window.Top) + 1;
 
-    column = clamp(column, 0, width);
-    row = clamp(row, 0, height);
+    SHORT s_column = clamp(column, 0, width);
+    SHORT s_row = clamp(row, 0, height);
 
-    COORD xy = { window.Left + column, window.Top + row };
+    COORD xy = { window.Left + s_column, window.Top + s_row };
     SetConsoleCursorPosition(m_handle, xy);
 }
 
@@ -172,11 +172,10 @@ void win_screen_buffer::move_cursor(int dx, int dy)
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     GetConsoleScreenBufferInfo(m_handle, &csbi);
 
-    COORD xy = {
-        clamp(csbi.dwCursorPosition.X + dx, 0, csbi.dwSize.X - 1),
-        clamp(csbi.dwCursorPosition.Y + dy, 0, csbi.dwSize.Y - 1),
-    };
-    SetConsoleCursorPosition(m_handle, xy);
+    SHORT s_dx = clamp(csbi.dwCursorPosition.X + dx, 0, csbi.dwSize.X - 1);
+    SHORT s_dy = clamp(csbi.dwCursorPosition.Y + dy, 0, csbi.dwSize.Y - 1);
+
+    SetConsoleCursorPosition(m_handle, { s_dx, s_dy });
 }
 
 //------------------------------------------------------------------------------
