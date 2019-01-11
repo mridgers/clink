@@ -88,27 +88,6 @@ process::arch process::get_arch() const
 }
 
 //------------------------------------------------------------------------------
-void process::pause(bool suspend)
-{
-    handle th32 = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, m_pid);
-    if (!th32)
-        return;
-
-    THREADENTRY32 te = { sizeof(te) };
-    BOOL ok = Thread32First(th32, &te);
-    while (ok != FALSE)
-    {
-        if (te.th32OwnerProcessID == m_pid)
-        {
-            handle thread = OpenThread(THREAD_ALL_ACCESS, FALSE, te.th32ThreadID);
-            suspend ? SuspendThread(thread) : ResumeThread(thread);
-        }
-
-        ok = Thread32Next(th32, &te);
-    }
-}
-
-//------------------------------------------------------------------------------
 void* process::inject_module(const char* dll_path)
 {
     // Check we can inject into the target.
@@ -180,8 +159,6 @@ void* process::remote_call(void* function, const void* param, int param_size)
     static_assert(sizeof(thunk_ptrs) == sizeof(thunk_data), "");
     static_assert((offsetof(thunk_data, in) & 7) == 0, "");
 
-    pause();
-
     // The 'remote call' is actually a thread that's created in the process and
     // then waited on for completion.
     DWORD thread_id;
@@ -189,12 +166,10 @@ void* process::remote_call(void* function, const void* param, int param_size)
         (LPTHREAD_START_ROUTINE)region.base, remote_thunk_data, 0, &thread_id);
     if (!remote_thread)
     {
-        unpause();
         return 0;
     }
 
     WaitForSingleObject(remote_thread, INFINITE);
-    unpause();
 
     void* call_ret = nullptr;
     vm.read(&call_ret, remote_thunk_data + offsetof(thunk_data, out), sizeof(call_ret));

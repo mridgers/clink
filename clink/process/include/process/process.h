@@ -20,12 +20,9 @@ public:
     int                         get_parent_pid() const;
     void*                       inject_module(const char* dll);
     template <typename T> void* remote_call(void* function, T const& param);
-    void                        pause();
-    void                        unpause();
 
 private:
     void*                       remote_call(void* function, const void* param, int param_size);
-    void                        pause(bool suspend);
     int                         m_pid;
 
     struct handle
@@ -49,16 +46,4 @@ template <typename T>
 void* process::remote_call(void* function, T const& param)
 {
     return remote_call(function, &param, sizeof(param));
-}
-
-//------------------------------------------------------------------------------
-inline void process::pause()
-{
-    pause(true);
-}
-
-//------------------------------------------------------------------------------
-inline void process::unpause()
-{
-    pause(false);
 }
