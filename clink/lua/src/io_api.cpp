@@ -328,7 +328,7 @@ static int popen2(lua_State* state)
     wstr<> command_line;
     command_line = lua_tostring(state, 1);
     BOOL ok = CreateProcessW(nullptr, command_line.data(), nullptr, nullptr, TRUE,
-        NORMAL_PRIORITY_CLASS, nullptr, nullptr, &si, &pi);
+        CREATE_NEW_PROCESS_GROUP|NORMAL_PRIORITY_CLASS, nullptr, nullptr, &si, &pi);
     if (ok == FALSE)
         return 0;
 
