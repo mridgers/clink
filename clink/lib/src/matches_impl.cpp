@@ -112,7 +112,7 @@ unsigned int matches_impl::store_impl::get_size(const char* str) const
 matches_impl::matches_impl(unsigned int store_size)
 : m_store(min(store_size, 0x10000u))
 {
-    m_infos.reserve(1024);
+    m_infos.reserve(1023);
 }
 
 //------------------------------------------------------------------------------

@@ -124,6 +124,7 @@ void str_impl<TYPE>::set_growable(bool state)
 template <typename TYPE>
 bool str_impl<TYPE>::reserve(unsigned int new_size)
 {
+    ++new_size;
     if (m_size >= new_size)
         return true;
 
@@ -272,7 +273,7 @@ bool str_impl<TYPE>::concat(const TYPE* src, int n)
         n = str_len(src);
 
     int len = length();
-    reserve(len + n + 1);
+    reserve(len + n);
 
     int remaining = m_size - len - 1;
 
