@@ -111,6 +111,7 @@ void app_context::get_binaries_dir(str_base& out) const
         out.reserve(size);
         ReadFile(origin, out.data(), size, &read, nullptr);
         CloseHandle(origin);
+        out.truncate(size);
     }
     else
     {
