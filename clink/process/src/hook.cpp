@@ -356,7 +356,7 @@ funcptr_t hook_jmp(void* base, const char* func_name, funcptr_t hook)
     GetModuleFileName(HMODULE(base), module_name, sizeof_array(module_name));
 
     // Get the address of the function we're going to hook.
-    funcptr_t func_addr = pe_info(module).get_export(func_name);
+    funcptr_t func_addr = pe_info(base).get_export(func_name);
     if (func_addr == nullptr)
     {
         LOG("Failed to find function '%s' in '%s'", func_name, module_name);
