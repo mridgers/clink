@@ -84,7 +84,14 @@ TEST_CASE("Lua os.globfiles(nil)")
 
     lua_pushliteral(state, "globfiles");
     lua_rawget(state, -2);
+
     lua_call(state, 0, 1);
+    REQUIRE(lua_iscfunction(state, -1));
+
+    lua_pushvalue(state, -1);
+    lua_call(state, 0, 1);
+    REQUIRE(lua_isnil(state, -1));
+    lua_pop(state, 1);
 
     REQUIRE(lua_gettop(state) == 2);
     lua_pop(state, 2);

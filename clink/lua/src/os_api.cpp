@@ -172,13 +172,18 @@ static int copy(lua_State* state)
 //------------------------------------------------------------------------------
 static int glob_impl(lua_State* state, bool dirs_only)
 {
+    auto not_ok = [=] () {
+        lua_pushcclosure(state, [] (lua_State*) -> int { return 0; }, 0);
+        return 1;
+    };
+
     const char* mask = get_string(state, 1);
     if (mask == nullptr)
-        return 0;
+        return not_ok();
 
     if (path::is_separator(mask[0]) && path::is_separator(mask[1]))
         if (!g_glob_unc.get())
-            return 0;
+            return not_ok();
 
     auto impl = [] (lua_State* state) -> int {
         int self_index = lua_upvalueindex(1);
