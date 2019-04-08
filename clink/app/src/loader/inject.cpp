@@ -23,7 +23,15 @@ void    puts_help(const char**, int);
 static void copy_dll(str_base& dll_path)
 {
     str<280> target_path;
-    if (!os::get_temp_dir(target_path))
+    {
+        wstr<280> dir;
+        if (SHGetFolderPathW(0, CSIDL_LOCAL_APPDATA, nullptr, 0, dir.data()) == S_OK)
+        {
+            target_path = dir.c_str();
+        }
+    }
+
+    if (target_path.empty() && !os::get_temp_dir(target_path))
     {
         LOG("Unable to get temp path");
         return;
