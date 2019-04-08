@@ -288,10 +288,16 @@ tab_completer::state tab_completer::print(const context& context, bool single_ro
             // Move the cursor to the next column
             if (x)
             {
-                int visible_chars = matches.get_cell_count(index);
-                for (int i = m_longest - visible_chars + column_pad; i >= 0;)
+                int spaces_needed = column_pad;
+                if (total_rows > 1)
                 {
-                    const char spaces[] = "                ";
+                    int visible_chars = matches.get_cell_count(index);
+                    spaces_needed = m_longest - visible_chars + column_pad;
+                }
+
+                for (int i = spaces_needed; i >= 0;)
+                {
+                    const char spaces[] = "                            ";
                     printer.print(spaces, min<int>(sizeof_array(spaces) - 1, i));
                     i -= sizeof_array(spaces) - 1;
                 }
