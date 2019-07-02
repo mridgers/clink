@@ -507,7 +507,8 @@ static char* call_readline_impl(const char* prompt)
 
     // Make sure that EOL wrap is on. Readline's told the terminal supports it.
     {
-        int stdout_flags = ENABLE_PROCESSED_OUTPUT|ENABLE_WRAP_AT_EOL_OUTPUT;
+        int stdout_flags = ENABLE_PROCESSED_OUTPUT|ENABLE_WRAP_AT_EOL_OUTPUT|
+            ENABLE_VIRTUAL_TERMINAL_PROCESSING;
         HANDLE handle_stdout = GetStdHandle(STD_OUTPUT_HANDLE);
         SetConsoleMode(handle_stdout, stdout_flags);
     }
