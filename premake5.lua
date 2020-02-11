@@ -87,7 +87,7 @@ workspace("clink")
 
     characterset("MBCS")
     flags("NoManifest")
-    flags("StaticRuntime")
+    staticruntime("on")
     rtti("off")
     symbols("on")
     exceptionhandling("off")
@@ -104,7 +104,7 @@ workspace("clink")
 
     configuration("final")
         optimize("full")
-        flags("NoFramePointer")
+        omitframepointer("on")
         flags("NoBufferSecurityCheck")
 
     configuration({"final", "vs*"})
