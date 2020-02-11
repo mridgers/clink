@@ -274,7 +274,7 @@ void host_cmd::edit_line(const wchar_t* prompt, wchar_t* chars, int max_chars)
 
         if (g_ctrld_exits.get())
         {
-            wstr_base(chars, max_chars) = L"exit";
+            wstr_base(chars, max_chars) = L"exit 0";
             break;
         }
 
