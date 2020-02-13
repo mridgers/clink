@@ -77,7 +77,7 @@ static void shutdown_clink()
 }
 
 //------------------------------------------------------------------------------
-bool initialise_clink(const app_context::desc& app_desc)
+bool __stdcall initialise_clink(const app_context::desc& app_desc)
 {
     seh_scope seh;
 

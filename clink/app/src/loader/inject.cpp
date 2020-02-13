@@ -16,8 +16,8 @@
 #include <process/vm.h>
 
 //------------------------------------------------------------------------------
-bool    initialise_clink(const app_context::desc&);
-void    puts_help(const char**, int);
+bool __stdcall  initialise_clink(const app_context::desc&);
+void            puts_help(const char**, int);
 
 //------------------------------------------------------------------------------
 static void copy_dll(str_base& dll_path)
