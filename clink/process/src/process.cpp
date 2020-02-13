@@ -6,6 +6,7 @@
 #include "vm.h"
 #include "pe.h"
 
+#include <core/base.h>
 #include <core/path.h>
 #include <core/str.h>
 
@@ -149,14 +150,42 @@ void* process::remote_call(void* function, const void* param, int param_size)
 #   pragma warning(pop)
 #endif
 
-    const auto& thunk = [] (thunk_data& data) {
+#if 1
+#   if ARCHITECTURE == 86
+    unsigned char thunk[] = {
+        //0xcc,
+        0x8b, 0x44, 0x24, 0x04,
+        0x8d, 0x48, 0x08,
+        0x51,
+        0xff, 0x10,
+        0x8b, 0x4c, 0x24, 0x04,
+        0x89, 0x41, 0x04,
+        0xc3,
+    };
+#   elif ARCHITECTURE == 64
+    unsigned char thunk[] = {
+        //0xcc,
+        0x57,
+        0x48, 0x83, 0xec, 0x20,
+        0x48, 0x89, 0xcf,
+        0x48, 0x83, 0xc1, 0x10,
+        0xff, 0x17,
+        0x48, 0x89, 0x47, 0x08,
+        0x48, 0x83, 0xc4, 0x20,
+        0x5f,
+        0xc3,
+    };
+#   endif
+#else
+    const auto& thunk_impl = [] (thunk_data& data) {
         data.out = data.func(data.in);
     };
+    auto* thunk = static_cast<void (__stdcall*)(thunk_data&)>(thunk_impl);
+#endif
 
-    auto* stdcall_thunk = static_cast<void (__stdcall*)(thunk_data&)>(thunk);
     static int thunk_size;
     if (!thunk_size)
-        for (const auto* c = (unsigned char*)stdcall_thunk; ++thunk_size, *c++ != 0xc3;);
+        for (const auto* c = (unsigned char*)thunk; ++thunk_size, *c++ != 0xc3;);
 
     vm vm(m_pid);
     vm::region region = vm.alloc(1, vm::access_write);
@@ -171,7 +200,7 @@ void* process::remote_call(void* function, const void* param, int param_size)
         return addr;
     };
 
-    vm_write((void*)stdcall_thunk, thunk_size);
+    vm_write((void*)thunk, thunk_size);
     void* thunk_ptrs[2] = { function };
     char* remote_thunk_data = (char*)vm_write(thunk_ptrs, sizeof(thunk_ptrs));
     vm_write(param, param_size);
