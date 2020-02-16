@@ -70,7 +70,12 @@ static void load_user_inputrc()
         {
             if (!rl_read_init_file(path.c_str()))
             {
-                LOG("Found Readline inputrc at '%s'", path.c_str());
+                static bool once = false;
+                if (!once)
+                {
+                    once = true;
+                    LOG("Found Readline inputrc at '%s'", path.c_str());
+                }
                 break;
             }
 
