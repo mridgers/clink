@@ -156,6 +156,7 @@ rl_module::rl_module(const char* shell_name)
         { "\\e[5~",   "history-search-backward" }, // pgup
         { "\\e[6~",   "history-search-forward" },  // pgdn
         { "\\C-z",    "undo" },
+        { "\\C-w",    "backward-kill-word" },
     };
 
     for (int i = 0; i < sizeof_array(ext_key_binds); ++i)
