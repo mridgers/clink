@@ -89,4 +89,12 @@ TEST_CASE("File match generator")
         tester.set_expected_matches("only", "file1", "file2");
         tester.run();
     }
+
+    SECTION("Suffix dedupe")
+    {
+        tester.set_input("dir1/ next" "\x1b" "b" "\x1b" "[D" "on" DO_COMPLETE);
+        tester.set_expected_output("dir1\\only next");
+        //__debugbreak();
+        tester.run();
+    }
 }

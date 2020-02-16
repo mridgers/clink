@@ -461,8 +461,16 @@ void line_editor_impl::accept_match(unsigned int index)
             m_buffer.insert(quote);
         }
 
-        char suffix_str[2] = { suffix };
-        m_buffer.insert(suffix_str);
+        // Just move the cursor if the suffix will duplicate the character under
+        // the cursor.
+        unsigned int cursor = m_buffer.get_cursor();
+        if (cursor >= m_buffer.get_length() || m_buffer.get_buffer()[cursor] != suffix)
+        {
+            char suffix_str[2] = { suffix };
+            m_buffer.insert(suffix_str);
+        }
+        else
+            m_buffer.set_cursor(cursor + 1);
     }
 }
 
