@@ -97,7 +97,7 @@ newaction {
             if have_msbuild then
                 target = target or "build"
 
-                toolchain = "vs"..(_OPTIONS["vsver"] or "2017")
+                toolchain = "vs"..(_OPTIONS["vsver"] or "2019")
                 exec(premake .. " " .. toolchain)
                 os.chdir(".build/" .. toolchain)
 
