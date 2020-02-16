@@ -420,7 +420,7 @@ void line_editor_impl::accept_match(unsigned int index)
     m_buffer.remove(word_start, m_buffer.get_cursor());
     m_buffer.set_cursor(word_start);
 
-    // Readd the word plus the match.
+    // Read the word plus the match.
     if (needs_quote && !end_word.quoted)
     {
         char quote[2] = { m_desc.quote_pair[0] };
