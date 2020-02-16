@@ -275,8 +275,8 @@ void* follow_jump(void* addr)
     if (t[0] != 0xff)
         return addr;
 
-    // Check the opcode extension from the modr/m byte.
-    if ((t[1] & 070) != 040)
+    // Check the opcode extension from the modr/m byte. We only support one.
+    if (t[1] != 0x25)
         return addr;
 
     int* imm = (int*)(t + 2);
@@ -290,7 +290,7 @@ void* follow_jump(void* addr)
         dest = *(void**)(t + 6 + *imm);
 #elif defined _M_IX86
         // dest = disp32
-        dest = (void*)(intptr_t)(*imm);
+        dest = *(void**)(intptr_t)(*imm);
 #endif
     }
 
