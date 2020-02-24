@@ -349,8 +349,12 @@ void line_editor_impl::collect_words()
     word* end_word = m_words.back();
     if (!end_word || end_word->offset + end_word->length < line_cursor)
     {
+        unsigned char delim = 0;
+        if (line_cursor)
+            delim = line_buffer[line_cursor - 1];
+
         m_words.push_back();
-        *(m_words.back()) = { line_cursor };
+        *(m_words.back()) = { line_cursor, 0, 0, delim };
     }
 
     // Adjust for quotes.
