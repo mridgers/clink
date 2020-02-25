@@ -120,9 +120,10 @@ void line_editor_tester::set_expected_output(const char* expected)
 }
 
 //------------------------------------------------------------------------------
-void line_editor_tester::run()
+void line_editor_tester::run(bool expectationless)
 {
-    bool has_expectations = m_has_matches || (m_expected_output != nullptr);
+    bool has_expectations = expectationless;
+    has_expectations |= m_has_matches || (m_expected_output != nullptr);
     REQUIRE(has_expectations);
 
     REQUIRE(m_input != nullptr);

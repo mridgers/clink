@@ -57,7 +57,7 @@ public:
     void                        set_input(const char* input);
     template <class ...T> void  set_expected_matches(T... t); // T must be const char*
     void                        set_expected_output(const char* expected);
-    void                        run();
+    void                        run(bool expectationless=false);
 
 private:
     void                        create_line_editor(const line_editor::desc* desc=nullptr);
