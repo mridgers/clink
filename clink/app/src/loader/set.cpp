@@ -179,6 +179,7 @@ int set(int argc, char** argv)
     // Load all lua state too as there is settings declared in scripts.
     host_lua lua;
     lua_load_script(lua, app, exec);
+    lua_load_script(lua, app, prompt);
     lua.load_scripts();
 
     // Loading settings _again_ now Lua's initialised ... :(
