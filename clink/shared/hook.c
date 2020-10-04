@@ -154,18 +154,18 @@ static int get_mask_size(unsigned mask)
 //------------------------------------------------------------------------------
 static char* write_rel_jmp(char* write, void* dest)
 {
-    intptr_t disp;
     struct {
         char a;
         char b[4];
     } buffer;
 
     // jmp <displacement>
-    disp = (intptr_t)dest;
+    
+    intptr_t disp = (intptr_t)dest;
     disp -= (intptr_t)write;
-    disp -= 5;
+    disp -= sizeof(buffer);
 
-    buffer.a = 0xe9;
+    buffer.a = (unsigned char)0xe9;
     *(int*)buffer.b = (int)disp;
 
     if (!write_vm(current_proc(), write, &buffer, sizeof(buffer)))
@@ -174,7 +174,7 @@ static char* write_rel_jmp(char* write, void* dest)
         return NULL;
     }
 
-    return write + 5;
+    return write + sizeof(buffer);
 }
 
 //------------------------------------------------------------------------------
@@ -185,29 +185,67 @@ static char* write_trampoline_out(char* write, void* to_hook, void* hook)
         char b[4];
         char c[sizeof(void*)];
     } inst;
-    short temp;
-    unsigned rel_addr;
-    int i;
-    char* patch;
+    const int rel_jmp_size = 5;
+    int offset = 0;
+    char* patch = (char*)to_hook;
+    unsigned char failed_bytes[125];
+    memset(failed_bytes, 0, 125);
 
-    rel_addr = 0;
-    patch = (char*)to_hook - 5;
-
-    // Check we've got a nop slide or int3 block to patch into.
-    for (i = 0; i < 5; ++i)
+    // Scan backwards for a nop slide or int3 block to patch into.
+    int viable_bytes = 0;
+    while (viable_bytes < rel_jmp_size)
     {
-        unsigned char c = patch[i];
-        if (c != 0x90 && c != 0xcc)
+        patch--;
+        offset++;
+
+        unsigned char c = *patch;
+        if (offset > 125 || c == 0xc3){
+            // if c is '0xc33, we've hit a RET, which likely means that we're in another function.
+            // Skip the rest.
+            if (c == 0xc3)
+                LOG_INFO("Hit RET");
+            LOG_INFO("No nop slide or int3 block detected nearby prior to hook target, checked %d prior bytes", offset-1);
+            LOG_INFO("Now checking bytes after hook target");
+            // reset for checking forwards
+            viable_bytes = 0;
+            offset = 0;
+            patch = (char*)to_hook;
+            break;
+        } else if (c != 0x90 && c != 0xcc)
+            viable_bytes = 0;
+        else
+            viable_bytes++;
+    }
+
+    while (viable_bytes < rel_jmp_size)
+    {
+        patch++;
+        offset--;
+
+        if (offset < -125)
         {
-            LOG_INFO("No nop slide or int3 block detected prior to hook target.");
+            LOG_INFO("No nop slide or int3 block detected nearby after hook target, checked %d later bytes", (-1 * (offset+1)));
             return NULL;
         }
+        unsigned char c = *patch;
+        if (c != 0x90 && c != 0xcc)
+            viable_bytes = 0;
+        else
+            viable_bytes++;
+    }
+
+    // If we are patching after rather than before
+    if (offset < 0){
+        // Offset is currently on the fifth byte of our patch area, so back up
+        offset += 4;
+        patch -= 4;
     }
 
     // Patch the API.
     patch = write_rel_jmp(patch, write);
-    temp = 0xf9eb;
-    if (!write_vm(current_proc(), patch, &temp, sizeof(temp)))
+    unsigned char temp[2] = { 0xeb, 0xfe };
+    temp[1] -= offset;
+    if (!write_vm(current_proc(), to_hook, &temp, sizeof(temp)))
     {
         LOG_INFO("VM write to %p failed (err = %d)", patch, GetLastError());
         return NULL;
@@ -216,6 +254,7 @@ static char* write_trampoline_out(char* write, void* to_hook, void* hook)
     // Long jmp.
     *(short*)inst.a = 0x25ff;
 
+    unsigned rel_addr = 0;
 #ifdef _M_IX86
     rel_addr = (intptr_t)write + 6;
 #endif
