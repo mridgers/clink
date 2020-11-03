@@ -188,8 +188,6 @@ static char* write_trampoline_out(char* write, void* to_hook, void* hook)
     const int rel_jmp_size = 5;
     int offset = 0;
     char* patch = (char*)to_hook;
-    unsigned char failed_bytes[125];
-    memset(failed_bytes, 0, 125);
 
     // Scan backwards for a nop slide or int3 block to patch into.
     int viable_bytes = 0;
@@ -199,11 +197,7 @@ static char* write_trampoline_out(char* write, void* to_hook, void* hook)
         offset++;
 
         unsigned char c = *patch;
-        if (offset > 125 || c == 0xc3){
-            // if c is '0xc33, we've hit a RET, which likely means that we're in another function.
-            // Skip the rest.
-            if (c == 0xc3)
-                LOG_INFO("Hit RET");
+        if (offset > 135){
             LOG_INFO("No nop slide or int3 block detected nearby prior to hook target, checked %d prior bytes", offset-1);
             LOG_INFO("Now checking bytes after hook target");
             // reset for checking forwards
@@ -222,7 +216,7 @@ static char* write_trampoline_out(char* write, void* to_hook, void* hook)
         patch++;
         offset--;
 
-        if (offset < -125)
+        if (offset < -135)
         {
             LOG_INFO("No nop slide or int3 block detected nearby after hook target, checked %d later bytes", (-1 * (offset+1)));
             return NULL;
