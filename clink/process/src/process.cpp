@@ -52,13 +52,20 @@ bool process::get_file_name(str_base& out) const
     if (!handle)
         return false;
 
-    static DWORD (WINAPI *func)(HANDLE, HMODULE, LPTSTR, DWORD) = nullptr;
+    static DWORD (WINAPI *func)(HANDLE, HMODULE, LPWSTR, DWORD) = nullptr;
     if (func == nullptr)
         if (HMODULE psapi = LoadLibrary("psapi.dll"))
-            *(FARPROC*)&func = GetProcAddress(psapi, "GetModuleFileNameExA");
+            *(FARPROC*)&func = GetProcAddress(psapi, "GetModuleFileNameExW");
 
     if (func != nullptr)
-        return (func(handle, nullptr, out.data(), out.size()) != 0);
+    {
+        wstr<270> w_out;
+        if (func(handle, nullptr, w_out.data(), w_out.size()) != 0)
+        {
+            out = w_out.c_str();
+            return true;
+        }
+    }
 
     return false;
 }
