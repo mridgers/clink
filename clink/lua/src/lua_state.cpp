@@ -129,11 +129,26 @@ bool lua_state::do_string(const char* string, int length)
 //------------------------------------------------------------------------------
 bool lua_state::do_file(const char* path)
 {
-    bool failed;
-    if (failed = !!luaL_dofile(m_state, path))
-        if (const char* error = lua_tostring(m_state, -1))
-            puts(error);
+    // Open the file
+    wstr<256> wpath(path);
+    HANDLE handle = CreateFileW(wpath.c_str(), GENERIC_READ, FILE_SHARE_READ,
+        nullptr, OPEN_EXISTING, 0, nullptr);
 
-    lua_settop(m_state, 0);
-    return !failed;
+    if (handle == INVALID_HANDLE_VALUE)
+    {
+        return false;
+    }
+
+    int file_size = GetFileSize(handle, nullptr);
+    auto* file_data = (char*)malloc(file_size + 1);
+    DWORD bytes_read = 0;
+    ReadFile(handle, file_data, file_size, &bytes_read, nullptr);
+
+    bool ok = false;
+    if (bytes_read == file_size)
+        ok = do_string(file_data, file_size);
+
+    free(file_data);
+    CloseHandle(handle);
+    return ok;
 }

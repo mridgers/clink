@@ -30,7 +30,8 @@ static LONG WINAPI exception_filter(EXCEPTION_POINTERS* info)
 
     // Write a core dump file.
     BOOL ok = FALSE;
-    HANDLE file = CreateFile(buffer.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, 0, nullptr);
+    wstr<256> wbuffer(buffer.c_str());
+    HANDLE file = CreateFileW(wbuffer.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, 0, nullptr);
     if (file != INVALID_HANDLE_VALUE)
     {
         DWORD pid = GetCurrentProcessId();
