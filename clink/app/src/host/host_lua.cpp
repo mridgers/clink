@@ -86,6 +86,3 @@ void host_lua::load_script(const char* path)
     while (lua_globs.next(buffer))
         m_state.do_file(buffer.c_str());
 }
-
-
-
