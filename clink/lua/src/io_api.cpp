@@ -47,7 +47,7 @@ public:
     unsigned int        read(unsigned int size);
 
 private:
-    bool                aquire();
+    bool                acquire();
     static const int    BUFFER_SIZE = 8192;
     char*               m_buffer = nullptr;
     unsigned int        m_buffer_size = 0;
@@ -66,7 +66,7 @@ bool handle_reader::get(unsigned int index, int& c)
 {
     index += m_cursor;
     while (index >= m_data_size)
-        if (!aquire())
+        if (!acquire())
             return false;
 
     c = unsigned(m_buffer[index]);
@@ -91,14 +91,14 @@ void handle_reader::consume(unsigned int size)
 unsigned int handle_reader::read(unsigned int size)
 {
     while (m_data_size - m_cursor < size)
-        if (!aquire())
+        if (!acquire())
             break;
 
     return m_data_size - m_cursor;
 }
 
 //------------------------------------------------------------------------------
-bool handle_reader::aquire()
+bool handle_reader::acquire()
 {
     if (!is_valid())
         return false;
