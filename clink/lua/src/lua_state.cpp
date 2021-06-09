@@ -130,9 +130,12 @@ bool lua_state::do_string(const char* string, int length)
 bool lua_state::do_file(const char* path)
 {
     // Open the file
-    wstr<256> wpath(path);
-    HANDLE handle = CreateFileW(wpath.c_str(), GENERIC_READ, FILE_SHARE_READ,
-        nullptr, OPEN_EXISTING, 0, nullptr);
+    HANDLE handle;
+    {
+        wstr<256> wpath(path);
+        handle = CreateFileW(wpath.c_str(), GENERIC_READ, FILE_SHARE_READ,
+            nullptr, OPEN_EXISTING, 0, nullptr);
+    }
 
     if (handle == INVALID_HANDLE_VALUE)
     {
