@@ -142,16 +142,45 @@ bool lua_state::do_file(const char* path)
         return false;
     }
 
-    int file_size = GetFileSize(handle, nullptr);
-    auto* file_data = (char*)malloc(file_size + 1);
-    DWORD bytes_read = 0;
-    ReadFile(handle, file_data, file_size, &bytes_read, nullptr);
+    struct io_buffer
+    {
+        HANDLE  handle;
+        char    buffer[1024];
+    } io = {
+        handle,
+    };
 
-    bool ok = false;
-    if (bytes_read == file_size)
-        ok = do_string(file_data, file_size);
+    auto read_file_func = [] (lua_State*, void* param, size_t* size) -> const char*
+    {
+        auto& io = *(io_buffer*)param;
+        DWORD bytes_read = 0;
+        BOOL ok = ReadFile(io.handle, io.buffer, sizeof(io_buffer::buffer), &bytes_read, nullptr);
+        if (ok == FALSE)
+            return nullptr;
+        *size = bytes_read;
+        return io.buffer;
+    };
 
-    free(file_data);
+    int ok;
+    {
+        str<280> at_path;
+        at_path << "@";
+        at_path << path;
+        ok = lua_load(m_state, read_file_func, &io, at_path.c_str(), nullptr);
+        if (ok != LUA_OK)
+            if (const char* error = lua_tostring(m_state, -1))
+                puts(error);
+    }
+
+    if (ok == LUA_OK)
+    {
+        ok = lua_pcall(m_state, 0, LUA_MULTRET, 0);
+        if (ok != LUA_OK)
+            if (const char* error = lua_tostring(m_state, -1))
+                puts(error);
+    }
+
+    lua_settop(m_state, 0);
     CloseHandle(handle);
-    return ok;
+    return (ok == LUA_OK);
 }
