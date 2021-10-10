@@ -3,8 +3,8 @@
 
 #include "pch.h"
 #include "hook.h"
-#include "vm.h"
 #include "pe.h"
+#include "vm.h"
 
 #include <core/base.h>
 #include <core/log.h>
