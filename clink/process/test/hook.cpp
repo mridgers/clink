@@ -51,7 +51,12 @@ HANDLE WINAPI get_std_handle(unsigned int handle_id)
 }
 
 //------------------------------------------------------------------------------
-BOOL WINAPI read_console(...)
+BOOL WINAPI read_console(
+    HANDLE input,
+    wchar_t* chars,
+    DWORD max_chars,
+    LPDWORD read_in,
+    CONSOLE_READCONSOLE_CONTROL* control)
 {
     g_visited_bits |= visitor_read_console;
     return TRUE;
