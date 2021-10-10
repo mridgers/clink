@@ -62,11 +62,13 @@ BOOL WINAPI read_console(
     return TRUE;
 }
 
-
-
 //------------------------------------------------------------------------------
-TEST_CASE("Hooks")
+__declspec(noinline) void apply_hooks()
 {
+    // The compiler can cache the IAT lookup into a register before the IAT is
+    // patched causing later calls in the same to bypass the hook. To workaround
+    // this the hooks are applied in a no-inlined function
+
     void* base = GetModuleHandle(nullptr);
 
     funcptr_t original;
@@ -86,6 +88,14 @@ TEST_CASE("Hooks")
     base = GetModuleHandle("kernel32.dll");
     original = hook_jmp(base, "ReadConsoleW", funcptr_t(read_console));
     REQUIRE(original != nullptr);
+}
+
+
+
+//------------------------------------------------------------------------------
+TEST_CASE("Hooks")
+{
+    apply_hooks();
 
     g_visited_bits = 0;
 
