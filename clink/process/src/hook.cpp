@@ -3,11 +3,15 @@
 
 #include "pch.h"
 #include "hook.h"
+#include "inst_iter.h"
 #include "pe.h"
 #include "vm.h"
 
+#include <core/array.h>
 #include <core/base.h>
 #include <core/log.h>
+
+#include <new>
 
 //------------------------------------------------------------------------------
 static void write_addr(funcptr_t* where, funcptr_t to_write)
@@ -79,192 +83,97 @@ funcptr_t hook_iat(
     return prev_addr;
 }
 
+
+
 //------------------------------------------------------------------------------
-static char* alloc_trampoline(void* hint)
+class trampoline_allocator
 {
-    size_t alloc_granularity = vm::get_block_granularity();
-    size_t page_size = vm::get_page_size();
+public:
+    static trampoline_allocator*    get(funcptr_t to_hook);
+
+    void*                           alloc(int size);
+    void                            reset_access();
+
+private:
+                                    trampoline_allocator(int prev_access);
+    unsigned int                    m_magic = magic;
+    unsigned int                    m_prev_access;
+    unsigned int                    m_used = 0;
+    static const unsigned int       magic = 0x4b4e4c43;
+};
+
+//------------------------------------------------------------------------------
+trampoline_allocator* trampoline_allocator::get(funcptr_t to_hook)
+{
+    // Find the end of the text section
+    void* text_addr = (void*)to_hook;
 
     vm vm;
-    funcptr_t trampoline = nullptr;
-    while (trampoline == nullptr)
+    vm::region region = vm.get_region(text_addr);
+    auto* text_end = (char*)(region.base) + (region.page_count * vm::get_page_size());
+
+    // Make the end of the text segment writeable
+    auto make_writeable = [&] ()
     {
-        void* vm_alloc_base = vm.get_alloc_base(hint);
-        vm_alloc_base = vm_alloc_base ? vm_alloc_base : hint;
-
-        char* tramp_page = (char*)vm_alloc_base - alloc_granularity;
-
-        trampoline = funcptr_t(VirtualAlloc(tramp_page, page_size,
-            MEM_COMMIT|MEM_RESERVE, PAGE_EXECUTE_READWRITE));
-
-        hint = tramp_page;
-    }
-
-    return (char*)trampoline;
-}
-
-//------------------------------------------------------------------------------
-static int get_mask_size(unsigned mask)
-{
-    mask &= 0x01010101;
-    mask += mask >> 16;
-    mask += mask >> 8;
-    return mask & 0x0f;
-}
-
-//------------------------------------------------------------------------------
-static char* write_rel_jmp(char* write, const void* dest)
-{
-    // jmp <displacement>
-    intptr_t disp = (intptr_t)dest;
-    disp -= (intptr_t)write;
-    disp -= 5;
-
-    struct {
-        char a;
-        char b[4];
-    } buffer;
-
-    buffer.a = (unsigned char)0xe9;
-    *(int*)buffer.b = (int)disp;
-
-    if (!vm().write(write, &buffer, sizeof(buffer)))
-    {
-        LOG("VM write to %p failed (err = %d)", write, GetLastError());
-        return nullptr;
-    }
-
-    return write + 5;
-}
-
-//------------------------------------------------------------------------------
-static char* write_trampoline_out(void* dest, void* to_hook, funcptr_t hook)
-{
-    char* write = (char*)dest;
-    char* patch = (char*)to_hook - 5;
-
-    // Check we've got a nop slide or int3 block to patch into.
-    for (int i = 0; i < 5; ++i)
-    {
-        unsigned char c = patch[i];
-        if (c != 0x90 && c != 0xcc)
-        {
-            LOG("No nop slide or int3 block detected prior to hook target.");
-            return nullptr;
-        }
-    }
-
-    // Patch the API.
-    patch = write_rel_jmp(patch, write);
-    short temp = (unsigned short)0xf9eb;
-    if (!vm().write(patch, &temp, sizeof(temp)))
-    {
-        LOG("VM write to %p failed (err = %d)", patch, GetLastError());
-        return nullptr;
-    }
-
-    // Long jmp.
-    struct {
-        char a[2];
-        char b[4];
-        char c[sizeof(funcptr_t)];
-    } inst;
-
-    *(short*)inst.a = 0x25ff;
-
-    unsigned rel_addr = 0;
-#ifdef _M_IX86
-    rel_addr = (intptr_t)write + 6;
-#endif
-
-    *(int*)inst.b = rel_addr;
-    *(funcptr_t*)inst.c = hook;
-
-    if (!vm().write(write, &inst, sizeof(inst)))
-    {
-        LOG("VM write to %p failed (err = %d)", write, GetLastError());
-        return nullptr;
-    }
-
-    return write + sizeof(inst);
-}
-
-//------------------------------------------------------------------------------
-static void* write_trampoline_in(void* dest, void* to_hook, int n)
-{
-    char* write = (char*)dest;
-
-    for (int i = 0; i < n; ++i)
-    {
-        if (!vm().write(write, (char*)to_hook + i, 1))
-        {
-            LOG("VM write to %p failed (err = %d)", write, GetLastError());
-            return nullptr;
-        }
-
-        ++write;
-    }
-
-    // If the moved instruction is JMP (e9) then the displacement is relative
-    // to its original location. As we have relocated the jump the displacement
-    // needs adjusting.
-    if (*(unsigned char*)to_hook == 0xe9)
-    {
-        int displacement = *(int*)(write - 4);
-        intptr_t old_ip = (intptr_t)to_hook + n;
-        intptr_t new_ip = (intptr_t)write;
-
-        *(int*)(write - 4) = (int)(displacement + old_ip - new_ip);
-    }
-
-    return write_rel_jmp(write, (char*)to_hook + n);
-}
-
-//------------------------------------------------------------------------------
-static int get_instruction_length(const void* addr)
-{
-    static const struct {
-        unsigned expected;
-        unsigned mask;
-    } asm_tags[] = {
-#ifdef _M_X64
-        { 0x38ec8348, 0xffffffff },  // sub rsp,38h
-        { 0x0000f3ff, 0x0000ffff },  // push rbx
-        { 0x00005340, 0x0000ffff },  // push rbx
-        { 0x00dc8b4c, 0x00ffffff },  // mov r11, rsp
-        { 0x0000b848, 0x0000f8ff },  // mov reg64, imm64  = 10-byte length
-#elif defined _M_IX86
-        { 0x0000ff8b, 0x0000ffff },  // mov edi,edi
-#endif
-        { 0x000000e9, 0x000000ff },  // jmp addr32        = 5-byte length
+        vm::region last_page = { text_end - vm::get_page_size(), 1 };
+        int prev_access = vm.get_access(last_page);
+        vm.set_access(last_page, prev_access|vm::access_write);
+        return prev_access;
     };
 
-    unsigned prolog = *(unsigned*)(addr);
-    for (int i = 0; i < sizeof_array(asm_tags); ++i)
+    // Have we already set up an allocator at the end?
+    auto* ret = (trampoline_allocator*)(text_end - sizeof(trampoline_allocator));
+    if (ret->m_magic == magic)
     {
-        unsigned expected = asm_tags[i].expected;
-        unsigned mask = asm_tags[i].mask;
-
-        if (expected != (prolog & mask))
-            continue;
-
-        int length = get_mask_size(mask);
-
-        // Checks for instructions that "expected" only partially matches.
-        if (expected == 0x0000b848)
-            length = 10;
-        else if (expected == 0xe9)
-            length = 5; // jmp [imm32]
-
-        LOG("Matched prolog %08X (mask = %08X)", prolog, mask);
-        return length;
+        make_writeable();
+        return ret;
     }
 
-    return 0;
+    // Nothing's been established yet. Make sure its all zeros and create one
+    for (auto* c = (char*)ret; c < text_end; ++c)
+        if (*c != '\0')
+            return nullptr;
+
+    int prev_access = make_writeable();
+    return new (ret) trampoline_allocator(prev_access);
 }
 
 //------------------------------------------------------------------------------
-void* follow_jump(void* addr)
+trampoline_allocator::trampoline_allocator(int prev_access)
+: m_prev_access(prev_access)
+{
+}
+
+//------------------------------------------------------------------------------
+void* trampoline_allocator::alloc(int size)
+{
+    size += 15;
+    size &= ~15;
+
+    int next_used = m_used + size;
+    auto* ptr = ((unsigned char*)this) - next_used;
+
+    for (int i = 0; i < size; ++i)
+        if (ptr[i] != 0)
+            return nullptr;
+
+    m_used = next_used;
+    return ptr;
+}
+
+//------------------------------------------------------------------------------
+void trampoline_allocator::reset_access()
+{
+    vm vm;
+    vm::region last_page = { vm.get_page(this), 1 };
+    vm.set_access(last_page, m_prev_access);
+    vm.flush_icache();
+}
+
+
+
+//------------------------------------------------------------------------------
+static void* follow_jump(void* addr)
 {
     unsigned char* t = (unsigned char*)addr;
 
@@ -306,46 +215,104 @@ static funcptr_t hook_jmp_impl(funcptr_t to_hook, funcptr_t hook)
     void* target = (void*)to_hook;
     target = follow_jump(target);
 
-    // Work out the length of the first instruction. It will be copied it into
-    // the trampoline.
-    int inst_len = get_instruction_length(target);
-    if (inst_len <= 0)
+    // Disassemble enough bytes to be able to write a jmp instruction at the
+    // start of what we want to hook.
+    int insts_size = 0;
+    fixed_array<instruction, 8> instructions;
+    for (instruction_iter iter(target);;)
     {
-        LOG("Unable to match instruction %08x", *(int*)(target));
+        instruction inst = iter.next();
+        if (!inst)
+        {
+            /* decode fail */
+            return nullptr;
+        }
+
+        if (unsigned(inst.get_rel_size() - 1) < 3)
+        {
+            /* relative immediate too small to be relocated */
+            return nullptr;
+        }
+
+        *(instructions.push_back()) = inst;
+
+        insts_size += inst.get_length();
+        if (insts_size >= 6)
+        {
+            break;
+        }
+
+        // This can't really happen but it might so better safe than sorry
+        if (instructions.full())
+        {
+            return nullptr;
+        }
+    }
+
+    // Allocate some executable memory for storing trampolines and hook address
+    auto* allocator = trampoline_allocator::get(to_hook);
+    if (allocator == nullptr)
+    {
+        /* unable to create an trampoline_allocator */
         return nullptr;
     }
 
-    // Prepare
-    void* trampoline = alloc_trampoline(target);
-    if (trampoline == nullptr)
+#if defined(_MSC_VER)
+#   pragma warning(push)
+#   pragma warning(disable : 4200)
+#endif
+    struct trampoline
     {
-        LOG("Failed to allocate a page for trampolines.");
+        funcptr_t       hook;
+        unsigned char   trampoline_in[];
+    };
+#if defined(_MSC_VER)
+#   pragma warning(pop)
+#endif
+
+    insts_size += sizeof(trampoline);
+    insts_size += 5; // for 'jmp disp32'
+    auto* tramp = (trampoline*)(allocator->alloc(insts_size));
+    if (tramp == nullptr)
+    {
+        /* unable to allocate a trampoline */
+        allocator->reset_access();
         return nullptr;
     }
 
-    // In
-    void* write = write_trampoline_in(trampoline, target, inst_len);
-    if (write == nullptr)
+    // Write trampoline in
+    const unsigned char* read_cursor = (unsigned char*)target;
+    unsigned char* write_cursor = tramp->trampoline_in;
+    for (const instruction& inst : instructions)
     {
-        LOG("Failed to write trampoline in.");
-        return nullptr;
+        inst.copy(read_cursor, write_cursor);
+        write_cursor += inst.get_length();
+        read_cursor += inst.get_length();
     }
+    *(char*)(write_cursor + 0) = (char)0xe9;
+    *(int*) (write_cursor + 1) = int(ptrdiff_t(write_cursor) - ptrdiff_t(read_cursor + 5));
 
-    // Out
+    // Write trampoline out
+    tramp->hook = hook;
+
     vm vm;
     vm::region target_region = { vm.get_page(target), 1 };
     unsigned int prev_access = vm.get_access(target_region);
     vm.set_access(target_region, vm::access_write);
-    write = write_trampoline_out(write, target, hook);
-    if (write == nullptr)
-    {
-        LOG("Failed to write trampoline out.");
-        vm.set_access(target_region, prev_access);
-        return nullptr;
-    }
+
+    write_cursor = (unsigned char*)target;
+    *(short*)(write_cursor + 0) = 0x25ff;
+#ifdef _M_X64
+    *(int*)  (write_cursor + 2) = int(ptrdiff_t(&tramp->hook) - ptrdiff_t(write_cursor) - 6);
+#else
+    *(int*)  (write_cursor + 2) = int(intptr_t(&tramp->hook));
+#endif
 
     vm.set_access(target_region, prev_access);
-    return funcptr_t(trampoline);
+
+    // Done
+    allocator->reset_access();
+    return funcptr_t((void*)(tramp->trampoline_in));
 }
 
 //------------------------------------------------------------------------------
