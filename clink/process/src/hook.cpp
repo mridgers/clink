@@ -290,7 +290,7 @@ static funcptr_t hook_jmp_impl(funcptr_t to_hook, funcptr_t hook)
         read_cursor += inst.get_length();
     }
     *(char*)(write_cursor + 0) = (char)0xe9;
-    *(int*) (write_cursor + 1) = int(ptrdiff_t(write_cursor) - ptrdiff_t(read_cursor + 5));
+    *(int*) (write_cursor + 1) = int(ptrdiff_t(read_cursor) - ptrdiff_t(write_cursor + 5));
 
     // Write trampoline out
     tramp->hook = hook;
