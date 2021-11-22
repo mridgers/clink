@@ -33,7 +33,7 @@ static const char* const khome[] = { CSI(H),  CSI(1;2H), CSI(1;3H), CSI(1;4H), C
 static const char* const kend[]  = { CSI(F),  CSI(1;2F), CSI(1;3F), CSI(1;4F), CSI(1;5F), CSI(1;6F), CSI(1;7F), CSI(1;8F) }; // end
 static const char* const kpp[]   = { CSI(5~), CSI(5;2~), CSI(5;3~), CSI(5;4~), CSI(5;5~), CSI(5;6~), CSI(5;7~), CSI(5;8~) }; // pgup
 static const char* const knp[]   = { CSI(6~), CSI(6;2~), CSI(6;3~), CSI(6;4~), CSI(6;5~), CSI(6;6~), CSI(6;7~), CSI(6;8~) }; // pgdn
-static const char* const kcbt    = CSI(Z);
+static const char* const kcbt    = CSI(Z); // back tab key
 static const char* const kdl1    = CSI(M); // delete line key
 static const char* const kfx[]   = {
     // kf1-12 : Fx unmodified
