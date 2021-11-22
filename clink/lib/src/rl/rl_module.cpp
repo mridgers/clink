@@ -155,6 +155,7 @@ rl_module::rl_module(const char* shell_name)
         { "\\e[1;5H", "backward-kill-line" },      // ctrl-home
         { "\\e[5~",   "history-search-backward" }, // pgup
         { "\\e[6~",   "history-search-forward" },  // pgdn
+        { "\\e[M",    "revert-line" },             // esc
         { "\\C-z",    "undo" },
         { "\\C-w",    "backward-kill-word" },
     };

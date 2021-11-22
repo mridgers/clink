@@ -5,9 +5,19 @@
 #include "win_terminal_in.h"
 
 #include <core/base.h>
+#include <core/settings.h>
 #include <core/str.h>
 
 #include <Windows.h>
+
+//------------------------------------------------------------------------------
+static setting_enum g_escape_remap(
+    "input.esc",
+    "Remaps the escape key",
+    "Changes how the escape key is interpreted. A value of 1 translates escape\n"
+    "into a Ctrl-C. Option 2 reverts the line (standard Windows behaviour).",
+    "raw,ctrl_c,revert_line",
+    2);
 
 //------------------------------------------------------------------------------
 #define CSI(x) "\x1b[" #x
@@ -24,6 +34,7 @@ static const char* const kend[]  = { CSI(F),  CSI(1;2F), CSI(1;3F), CSI(1;4F), C
 static const char* const kpp[]   = { CSI(5~), CSI(5;2~), CSI(5;3~), CSI(5;4~), CSI(5;5~), CSI(5;6~), CSI(5;7~), CSI(5;8~) }; // pgup
 static const char* const knp[]   = { CSI(6~), CSI(6;2~), CSI(6;3~), CSI(6;4~), CSI(6;5~), CSI(6;6~), CSI(6;7~), CSI(6;8~) }; // pgdn
 static const char* const kcbt    = CSI(Z);
+static const char* const kdl1    = CSI(M); // delete line key
 static const char* const kfx[]   = {
     // kf1-12 : Fx unmodified
     SS3(P),     SS3(Q),     SS3(R),     SS3(S),
@@ -284,6 +295,17 @@ void win_terminal_in::process_input(KEY_EVENT_RECORD const& record)
         push((terminfo::kfx + (12 * kfx_group) + key_func)[0]);
 
         return;
+    }
+
+    // Turn ESC into a "delete line" key press
+    if (key_vk == VK_ESCAPE)
+    {
+        switch (g_escape_remap.get())
+        {
+        case 1:  return push("\x03"); // ctrl-c
+        case 2:  return push(terminfo::kdl1);
+        default: break;
+        }
     }
 
     // Include an ESC character in the input stream if Alt is pressed.
