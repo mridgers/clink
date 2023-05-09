@@ -3,19 +3,19 @@
 
 #pragma once
 
-class lua_state;
-class str_base;
+class LuaState;
+class StrBase;
 
 //------------------------------------------------------------------------------
-class prompt
+class Prompt
 {
 public:
-                    prompt();
-                    prompt(prompt&& rhs);
-                    prompt(const prompt& rhs) = delete;
-                    ~prompt();
-    prompt&         operator = (prompt&& rhs);
-    prompt&         operator = (const prompt& rhs) = delete;
+                    Prompt();
+                    Prompt(Prompt&& rhs);
+                    Prompt(const Prompt& rhs) = delete;
+                    ~Prompt();
+    Prompt&         operator = (Prompt&& rhs);
+    Prompt&         operator = (const Prompt& rhs) = delete;
     void            clear();
     const wchar_t*  get() const;
     void            set(const wchar_t* chars, int char_count=0);
@@ -26,8 +26,8 @@ protected:
 };
 
 //------------------------------------------------------------------------------
-class tagged_prompt
-    : public prompt
+class TaggedPrompt
+    : public Prompt
 {
 public:
     void            set(const wchar_t* chars, int char_count=0);
@@ -38,19 +38,19 @@ private:
 };
 
 //------------------------------------------------------------------------------
-class prompt_filter
+class PromptFilter
 {
 public:
-                    prompt_filter(lua_state& lua);
-    void            filter(const char* in, str_base& out);
+                    PromptFilter(LuaState& lua);
+    void            filter(const char* in, StrBase& out);
 
 private:
-    lua_state&      m_lua;
+    LuaState&       m_lua;
 };
 
 //------------------------------------------------------------------------------
-class prompt_utils
+class PromptUtils
 {
 public:
-    static prompt   extract_from_console();
+    static Prompt   extract_from_console();
 };

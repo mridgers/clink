@@ -7,15 +7,15 @@
 #include "singleton.h"
 
 //------------------------------------------------------------------------------
-#define LOG(...)    logger::info(__FUNCTION__, __LINE__, __VA_ARGS__)
-#define ERR(...)    logger::error(__FUNCTION__, __LINE__, __VA_ARGS__)
+#define LOG(...)    Logger::info(__FUNCTION__, __LINE__, __VA_ARGS__)
+#define ERR(...)    Logger::error(__FUNCTION__, __LINE__, __VA_ARGS__)
 
 //------------------------------------------------------------------------------
-class logger
-    : public singleton<logger>
+class Logger
+    : public Singleton<Logger>
 {
 public:
-    virtual         ~logger();
+    virtual         ~Logger();
     static void     info(const char* function, int line, const char* fmt, ...);
     static void     error(const char* function, int line, const char* fmt, ...);
 
@@ -24,13 +24,13 @@ protected:
 };
 
 //------------------------------------------------------------------------------
-class file_logger
-    : public logger
+class FileLogger
+    : public Logger
 {
 public:
-                    file_logger(const char* log_path);
+                    FileLogger(const char* log_path);
     virtual void    emit(const char* function, int line, const char* fmt, va_list args) override;
 
 private:
-    str<256>        m_log_path;
+    Str<256>        m_log_path;
 };

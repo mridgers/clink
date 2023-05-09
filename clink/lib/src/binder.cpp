@@ -91,18 +91,18 @@ template <int SIZE> static bool translate_chord(const char* chord, char (&out)[S
 
 
 //------------------------------------------------------------------------------
-binder::binder()
+Binder::Binder()
 {
     // Initialise the default group.
     m_nodes[0] = { 1 };
     m_nodes[1] = { 0 };
     m_next_node = 2;
 
-    static_assert(sizeof(node) == sizeof(group_node), "Size assumption");
+    static_assert(sizeof(Node) == sizeof(GroupNode), "Size assumption");
 }
 
 //------------------------------------------------------------------------------
-int binder::get_group(const char* name)
+int Binder::get_group(const char* name)
 {
     if (name == nullptr || name[0] == '\0')
         return 1;
@@ -112,18 +112,18 @@ int binder::get_group(const char* name)
     int index = get_group_node(0)->next;
     while (index)
     {
-        const group_node* node = get_group_node(index);
-        if (*(int*)(node->hash) == hash)
+        const GroupNode* Node = get_group_node(index);
+        if (*(int*)(Node->hash) == hash)
             return index + 1;
 
-        index = node->next;
+        index = Node->next;
     }
 
     return -1;
 }
 
 //------------------------------------------------------------------------------
-int binder::create_group(const char* name)
+int Binder::create_group(const char* name)
 {
     if (name == nullptr || name[0] == '\0')
         return -1;
@@ -132,30 +132,30 @@ int binder::create_group(const char* name)
     if (index < 0)
         return -1;
 
-    // Create a new group node;
-    group_node* group = get_group_node(index);
+    // Create a new group Node;
+    GroupNode* group = get_group_node(index);
     *(int*)(group->hash) = str_hash(name);
     group->is_group = 1;
 
-    // Link the new node into the front of the list.
-    group_node* master = get_group_node(0);
+    // Link the new Node into the front of the list.
+    GroupNode* master = get_group_node(0);
     group->next = master->next;
     master->next = index;
 
-    // Next node along is the group's root.
+    // Next Node along is the group's root.
     ++index;
     m_nodes[index] = {};
     return index;
 }
 
 //------------------------------------------------------------------------------
-bool binder::bind(
+bool Binder::bind(
     unsigned int group,
     const char* chord,
-    editor_module& module,
+    EditorModule& module,
     unsigned char id)
 {
-    // Validate input
+    // Validate Input
     if (group >= sizeof_array(m_nodes))
         return false;
 
@@ -171,7 +171,7 @@ bool binder::bind(
     if (module_index < 0)
         return false;
 
-    // Add the chord of keys into the node graph.
+    // Add the chord of keys into the Node graph.
     int depth = 0;
     int head = group;
     for (; *chord; ++chord, ++depth)
@@ -180,9 +180,9 @@ bool binder::bind(
 
     --chord;
 
-    // If the insert point is already bound we'll duplicate the node at the end
+    // If the insert point is already bound we'll duplicate the Node at the end
     // of the list. Also check if this is a duplicate of the existing bind.
-    node* bindee = m_nodes + head;
+    Node* bindee = m_nodes + head;
     if (bindee->bound)
     {
         int check = head;
@@ -211,7 +211,7 @@ bool binder::bind(
 }
 
 //------------------------------------------------------------------------------
-int binder::insert_child(int parent, unsigned char key)
+int Binder::insert_child(int parent, unsigned char key)
 {
     if (int child = find_child(parent, key))
         return child;
@@ -220,15 +220,15 @@ int binder::insert_child(int parent, unsigned char key)
 }
 
 //------------------------------------------------------------------------------
-int binder::find_child(int parent, unsigned char key) const
+int Binder::find_child(int parent, unsigned char key) const
 {
-    const node* node = m_nodes + parent;
+    const Node* Node = m_nodes + parent;
 
-    int index = node->child;
-    for (; index > parent; index = node->next)
+    int index = Node->child;
+    for (; index > parent; index = Node->next)
     {
-        node = m_nodes + index;
-        if (node->key == key)
+        Node = m_nodes + index;
+        if (Node->key == key)
             return index;
     }
 
@@ -236,13 +236,13 @@ int binder::find_child(int parent, unsigned char key) const
 }
 
 //------------------------------------------------------------------------------
-int binder::add_child(int parent, unsigned char key)
+int Binder::add_child(int parent, unsigned char key)
 {
     int child = alloc_nodes();
     if (child < 0)
         return 0;
 
-    node addee = {};
+    Node addee = {};
     addee.key = key;
 
     int current_child = m_nodes[parent].child;
@@ -263,7 +263,7 @@ int binder::add_child(int parent, unsigned char key)
 }
 
 //------------------------------------------------------------------------------
-int binder::find_tail(int head)
+int Binder::find_tail(int head)
 {
     while (m_nodes[head].next > head)
         head = m_nodes[head].next;
@@ -272,7 +272,7 @@ int binder::find_tail(int head)
 }
 
 //------------------------------------------------------------------------------
-int binder::append(int head, unsigned char key)
+int Binder::append(int head, unsigned char key)
 {
     int index = alloc_nodes();
     if (index < 0)
@@ -280,7 +280,7 @@ int binder::append(int head, unsigned char key)
 
     int tail = find_tail(head);
 
-    node addee = {};
+    Node addee = {};
     addee.key = key;
     addee.next = m_nodes[tail].next;
     m_nodes[tail].next = index;
@@ -290,26 +290,26 @@ int binder::append(int head, unsigned char key)
 }
 
 //------------------------------------------------------------------------------
-const binder::node& binder::get_node(unsigned int index) const
+const Binder::Node& Binder::get_node(unsigned int index) const
 {
     if (index < sizeof_array(m_nodes))
         return m_nodes[index];
 
-    static const node zero = {};
+    static const Node zero = {};
     return zero;
 }
 
 //------------------------------------------------------------------------------
-binder::group_node* binder::get_group_node(unsigned int index)
+Binder::GroupNode* Binder::get_group_node(unsigned int index)
 {
     if (index < sizeof_array(m_nodes))
-        return (group_node*)(m_nodes + index);
+        return (GroupNode*)(m_nodes + index);
 
     return nullptr;
 }
 
 //------------------------------------------------------------------------------
-int binder::alloc_nodes(unsigned int count)
+int Binder::alloc_nodes(unsigned int count)
 {
     int next = m_next_node + count;
     if (next > sizeof_array(m_nodes))
@@ -320,13 +320,13 @@ int binder::alloc_nodes(unsigned int count)
 }
 
 //------------------------------------------------------------------------------
-int binder::add_module(editor_module& module)
+int Binder::add_module(EditorModule& module)
 {
     for (int i = 0, n = m_modules.size(); i < n; ++i)
         if (*(m_modules[i]) == &module)
             return i;
 
-    if (editor_module** slot = m_modules.push_back())
+    if (EditorModule** slot = m_modules.push_back())
     {
         *slot = &module;
         return int(slot - m_modules.front());
@@ -336,7 +336,7 @@ int binder::add_module(editor_module& module)
 }
 
 //------------------------------------------------------------------------------
-editor_module* binder::get_module(unsigned int index) const
+EditorModule* Binder::get_module(unsigned int index) const
 {
     auto b = m_modules[index];
     return b ? *b : nullptr;

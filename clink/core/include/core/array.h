@@ -5,39 +5,39 @@
 
 //------------------------------------------------------------------------------
 template <typename T>
-class array
+class Array
 {
     /* This class is really rather poor */
 
 public:
     template <int D, typename U>
-    class iter_impl
+    class IterImpl
     {
     public:
-                    iter_impl(U* u) : m_u(u)               {}
+                    IterImpl(U* u) : m_u(u)               {}
         void        operator ++ ()                         { m_u += D; }
         U&          operator * () const                    { return *m_u; }
         U&          operator -> () const                   { return *m_u; }
-        bool        operator != (const iter_impl& i) const { return i.m_u != m_u; }
+        bool        operator != (const IterImpl& i) const { return i.m_u != m_u; }
 
     private:
         U*          m_u;
     };
 
-    typedef iter_impl<1, T>         iter;
-    typedef iter_impl<1, T const>   citer;
-    typedef iter_impl<-1, T>        riter;
-    typedef iter_impl<-1, T const>  rciter;
+    typedef IterImpl<1, T>         Iter;
+    typedef IterImpl<1, T const>   Citer;
+    typedef IterImpl<-1, T>        Riter;
+    typedef IterImpl<-1, T const>  RCiter;
 
-                    array(T* ptr, unsigned int size, unsigned int capacity=0);
-    iter            begin()          { return m_ptr; }
-    iter            end()            { return m_ptr + m_size; }
-    citer           begin() const    { return m_ptr; }
-    citer           end() const      { return m_ptr + m_size; }
-    riter           rbegin()         { return m_ptr + m_size - 1; }
-    riter           rend()           { return m_ptr - 1; }
-    rciter          rbegin() const   { return m_ptr + m_size - 1; }
-    rciter          rend() const     { return m_ptr - 1; }
+                    Array(T* ptr, unsigned int size, unsigned int capacity=0);
+    Iter            begin()          { return m_ptr; }
+    Iter            end()            { return m_ptr + m_size; }
+    Citer           begin() const    { return m_ptr; }
+    Citer           end() const      { return m_ptr + m_size; }
+    Riter           rbegin()         { return m_ptr + m_size - 1; }
+    Riter           rend()           { return m_ptr - 1; }
+    RCiter          rbegin() const   { return m_ptr + m_size - 1; }
+    RCiter          rend() const     { return m_ptr - 1; }
     unsigned int    size() const     { return m_size; }
     unsigned int    capacity() const { return m_capacity; }
     bool            empty() const    { return !m_size; }
@@ -58,7 +58,7 @@ protected:
 
 //------------------------------------------------------------------------------
 template <typename T>
-array<T>::array(T* ptr, unsigned int size, unsigned int capacity)
+Array<T>::Array(T* ptr, unsigned int size, unsigned int capacity)
 : m_ptr(ptr)
 , m_size(size)
 , m_capacity(capacity ? capacity : size)
@@ -67,14 +67,14 @@ array<T>::array(T* ptr, unsigned int size, unsigned int capacity)
 
 //------------------------------------------------------------------------------
 template <typename T>
-T const* array<T>::operator [] (unsigned int index) const
+T const* Array<T>::operator [] (unsigned int index) const
 {
     return (index >= capacity()) ? nullptr : (m_ptr + index);
 }
 
 //------------------------------------------------------------------------------
 template <typename T>
-void array<T>::clear()
+void Array<T>::clear()
 {
     for (auto iter : *this)
         iter.~T();
@@ -86,11 +86,11 @@ void array<T>::clear()
 
 //------------------------------------------------------------------------------
 template <typename T, unsigned int SIZE>
-class fixed_array
-    : public array<T>
+class FixedArray
+    : public Array<T>
 {
 public:
-                fixed_array() : array<T>(m_buffer, 0, SIZE) {}
+                FixedArray() : Array<T>(m_buffer, 0, SIZE) {}
 
 private:
     T           m_buffer[SIZE];

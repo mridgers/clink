@@ -6,8 +6,8 @@
 #include "terminal_in.h"
 
 //------------------------------------------------------------------------------
-class win_terminal_in
-    : public terminal_in
+class WinTerminalIn
+    : public TerminalIn
 {
 public:
     virtual void    begin() override;

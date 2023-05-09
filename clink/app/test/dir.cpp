@@ -29,13 +29,13 @@ TEST_CASE("Directory match generation.")
         nullptr,
     };
 
-    fs_fixture fs(dir_fs);
+    FsFixture fs(dir_fs);
 
-    lua_state lua;
-    lua_match_generator lua_generator(lua);
+    LuaState lua;
+    LuaMatchGenerator lua_generator(lua);
     lua_load_script(lua, app, dir);
 
-    line_editor_tester tester;
+    LineEditorTester tester;
     tester.get_editor()->add_generator(lua_generator);
     tester.get_editor()->add_generator(file_match_generator());
 
@@ -44,7 +44,7 @@ TEST_CASE("Directory match generation.")
     {
         const char* dir_cmd = dir_cmds[i];
 
-        str<> cmd;
+        Str<> cmd;
         cmd << dir_cmd << " ";
 
         SECTION(dir_cmd)
@@ -67,7 +67,7 @@ TEST_CASE("Directory match generation.")
 
             SECTION("Single (with -/_) 2")
             {
-                str_compare_scope _(str_compare_scope::relaxed);
+                StrCompareScope _(StrCompareScope::relaxed);
 
                 cmd << "one-";
                 tester.set_input(cmd.c_str());
@@ -91,7 +91,7 @@ TEST_CASE("Directory match generation.")
                 tester.run();
             }
 
-            SECTION("No matches")
+            SECTION("No Matches")
             {
                 cmd << "f";
                 tester.set_input(cmd.c_str());

@@ -27,26 +27,26 @@ const wchar_t* g_prompt_tags[]       = { g_prompt_tag_hidden, g_prompt_tag };
 
 
 //------------------------------------------------------------------------------
-prompt::prompt()
+Prompt::Prompt()
 : m_data(nullptr)
 {
 }
 
 //------------------------------------------------------------------------------
-prompt::prompt(prompt&& rhs)
+Prompt::Prompt(Prompt&& rhs)
 : m_data(nullptr)
 {
     std::swap(m_data, rhs.m_data);
 }
 
 //------------------------------------------------------------------------------
-prompt::~prompt()
+Prompt::~Prompt()
 {
     clear();
 }
 
 //------------------------------------------------------------------------------
-prompt& prompt::operator = (prompt&& rhs)
+Prompt& Prompt::operator = (Prompt&& rhs)
 {
     clear();
     std::swap(m_data, rhs.m_data);
@@ -54,7 +54,7 @@ prompt& prompt::operator = (prompt&& rhs)
 }
 
 //------------------------------------------------------------------------------
-void prompt::clear()
+void Prompt::clear()
 {
     if (m_data != nullptr)
         free(m_data);
@@ -63,13 +63,13 @@ void prompt::clear()
 }
 
 //------------------------------------------------------------------------------
-const wchar_t* prompt::get() const
+const wchar_t* Prompt::get() const
 {
     return m_data;
 }
 
 //------------------------------------------------------------------------------
-void prompt::set(const wchar_t* chars, int char_count)
+void Prompt::set(const wchar_t* chars, int char_count)
 {
     clear();
 
@@ -85,7 +85,7 @@ void prompt::set(const wchar_t* chars, int char_count)
 }
 
 //------------------------------------------------------------------------------
-bool prompt::is_set() const
+bool Prompt::is_set() const
 {
     return (m_data != nullptr);
 }
@@ -93,23 +93,23 @@ bool prompt::is_set() const
 
 
 //------------------------------------------------------------------------------
-void tagged_prompt::set(const wchar_t* chars, int char_count)
+void TaggedPrompt::set(const wchar_t* chars, int char_count)
 {
     clear();
 
     if (int tag_length = is_tagged(chars, char_count))
-        prompt::set(chars + tag_length, char_count - tag_length);
+        Prompt::set(chars + tag_length, char_count - tag_length);
 }
 
 //------------------------------------------------------------------------------
-void tagged_prompt::tag(const wchar_t* value)
+void TaggedPrompt::tag(const wchar_t* value)
 {
     clear();
 
     // Just set 'value' if it is already tagged.
     if (is_tagged(value))
     {
-        prompt::set(value);
+        Prompt::set(value);
         return;
     }
 
@@ -122,7 +122,7 @@ void tagged_prompt::tag(const wchar_t* value)
 }
 
 //------------------------------------------------------------------------------
-int tagged_prompt::is_tagged(const wchar_t* chars, int char_count)
+int TaggedPrompt::is_tagged(const wchar_t* chars, int char_count)
 {
     if (char_count <= 0)
         char_count = int(wcslen(chars));
@@ -147,14 +147,14 @@ int tagged_prompt::is_tagged(const wchar_t* chars, int char_count)
 
 
 //------------------------------------------------------------------------------
-prompt_filter::prompt_filter(lua_state& lua)
+PromptFilter::PromptFilter(LuaState& lua)
 : m_lua(lua)
 {
     lua_load_script(lua, app, prompt);
 }
 
 //------------------------------------------------------------------------------
-void prompt_filter::filter(const char* in, str_base& out)
+void PromptFilter::filter(const char* in, StrBase& out)
 {
     lua_State* state = m_lua.get_state();
 
@@ -182,13 +182,13 @@ void prompt_filter::filter(const char* in, str_base& out)
 
 
 //------------------------------------------------------------------------------
-prompt prompt_utils::extract_from_console()
+Prompt PromptUtils::extract_from_console()
 {
     // Find where the cursor is. This will be the end of the prompt to extract.
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
     if (GetConsoleScreenBufferInfo(handle, &csbi) == FALSE)
-        return prompt();
+        return Prompt();
 
     // Work out prompt length.
     COORD cursorXy = csbi.dwCursorPosition;
@@ -197,17 +197,17 @@ prompt prompt_utils::extract_from_console()
 
     wchar_t buffer[256] = {};
     if (length >= sizeof_array(buffer))
-        return prompt();
+        return Prompt();
 
-    // Get the prompt from the terminal.
+    // Get the prompt from the Terminal.
     DWORD chars_in;
     if (!ReadConsoleOutputCharacterW(handle, buffer, length, cursorXy, &chars_in))
-        return prompt();
+        return Prompt();
 
     buffer[chars_in] = '\0';
 
     // Wrap in a prompt object and return.
-    prompt ret;
+    Prompt ret;
     ret.set(buffer);
     return ret;
 }

@@ -10,7 +10,7 @@
 
 //------------------------------------------------------------------------------
 typedef int     (dispatch_func_t)(const char*, int);
-str<>           g_clink_args;
+Str<>           g_clink_args;
 int             g_all_users  = 0;
 void            puts_help(const char**, int);
 
@@ -19,7 +19,7 @@ void            puts_help(const char**, int);
 //------------------------------------------------------------------------------
 static HKEY open_software_key(int all_users, const char* key, int wow64, int writable)
 {
-    str<512> buffer;
+    Str<512> buffer;
     buffer << "Software\\";
     if (wow64)
         buffer << "Wow6432Node\\";
@@ -272,7 +272,7 @@ static int install_autorun(const char* clink_path, int wow64)
 
     i = key_value ? (int)strlen(key_value) : 0;
     i += 2048;
-    str_base new_value((char*)malloc(i), i);
+    StrBase new_value((char*)malloc(i), i);
     new_value.clear();
 
     // Build the new autorun entry by appending clink's entry to the current one.
@@ -441,7 +441,7 @@ int autorun(int argc, char** argv)
         {}
     };
 
-    str<MAX_PATH> clink_path;
+    Str<MAX_PATH> clink_path;
 
     int i;
     int ret = 0;

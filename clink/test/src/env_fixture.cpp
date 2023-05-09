@@ -8,15 +8,15 @@
 #include <Windows.h>
 
 //------------------------------------------------------------------------------
-env_fixture::env_fixture(const char** env)
+EnvFixture::EnvFixture(const char** env)
 {
-    // Store the process' current environment so it can be restored.
+    // Store the Process' current environment so it can be restored.
     m_env_strings = GetEnvironmentStringsW();
     convert_eq_to_null(m_env_strings);
 
     clear();
 
-    // Apply the test environment.
+    // Apply the Test environment.
     while (*env)
     {
         REQUIRE(SetEnvironmentVariable(env[0], env[1]) != FALSE);
@@ -25,7 +25,7 @@ env_fixture::env_fixture(const char** env)
 }
 
 //------------------------------------------------------------------------------
-env_fixture::~env_fixture()
+EnvFixture::~EnvFixture()
 {
     clear();
 
@@ -42,7 +42,7 @@ env_fixture::~env_fixture()
 }
 
 //------------------------------------------------------------------------------
-void env_fixture::convert_eq_to_null(wchar_t* env_strings)
+void EnvFixture::convert_eq_to_null(wchar_t* env_strings)
 {
     wchar_t* env_string = env_strings;
     while (*env_string)
@@ -59,7 +59,7 @@ void env_fixture::convert_eq_to_null(wchar_t* env_strings)
 }
 
 //------------------------------------------------------------------------------
-void env_fixture::clear()
+void EnvFixture::clear()
 {
     wchar_t* env_strings = GetEnvironmentStringsW();
     convert_eq_to_null(env_strings);

@@ -15,14 +15,14 @@ extern "C" {
 }
 
 //------------------------------------------------------------------------------
-static setting_bool g_lua_debug(
+static SettingBool g_lua_debug(
     "lua.debug",
     "Enables Lua debugging",
     "Loads an simple embedded command line debugger when enabled. Breakpoints\n"
     "can added by calling pause().",
     false);
 
-static setting_str g_lua_path(
+static SettingStr g_lua_path(
     "lua.path",
     "'require' search path",
     "Value to append to package.path. Used to search for Lua scripts specified\n"
@@ -32,30 +32,30 @@ static setting_str g_lua_path(
 
 
 //------------------------------------------------------------------------------
-void clink_lua_initialise(lua_state&);
-void io_lua_initialise(lua_state&);
-void os_lua_initialise(lua_state&);
-void path_lua_initialise(lua_state&);
-void settings_lua_initialise(lua_state&);
-void string_lua_initialise(lua_state&);
+void clink_lua_initialise(LuaState&);
+void io_lua_initialise(LuaState&);
+void os_lua_initialise(LuaState&);
+void path_lua_initialise(LuaState&);
+void settings_lua_initialise(LuaState&);
+void string_lua_initialise(LuaState&);
 
 
 
 //------------------------------------------------------------------------------
-lua_state::lua_state()
+LuaState::LuaState()
 : m_state(nullptr)
 {
     initialise();
 }
 
 //------------------------------------------------------------------------------
-lua_state::~lua_state()
+LuaState::~LuaState()
 {
     shutdown();
 }
 
 //------------------------------------------------------------------------------
-void lua_state::initialise()
+void LuaState::initialise()
 {
     shutdown();
 
@@ -64,7 +64,7 @@ void lua_state::initialise()
     luaL_openlibs(m_state);
 
     // Set up the package.path value for require() statements.
-    str<280> path;
+    Str<280> path;
     if (!os::get_env("lua_path_" LUA_VERSION_MAJOR "_" LUA_VERSION_MINOR, path))
         os::get_env("lua_path", path);
 
@@ -85,7 +85,7 @@ void lua_state::initialise()
         lua_rawset(m_state, -3);
     }
 
-    lua_state& self = *this;
+    LuaState& self = *this;
 
     if (g_lua_debug.get())
         lua_load_script(self, lib, debugger);
@@ -99,7 +99,7 @@ void lua_state::initialise()
 }
 
 //------------------------------------------------------------------------------
-void lua_state::shutdown()
+void LuaState::shutdown()
 {
     if (m_state == nullptr)
         return;
@@ -109,7 +109,7 @@ void lua_state::shutdown()
 }
 
 //------------------------------------------------------------------------------
-bool lua_state::do_string(const char* string, int length)
+bool LuaState::do_string(const char* string, int length)
 {
     if (length < 0)
         length = int(strlen(string));
@@ -127,12 +127,12 @@ bool lua_state::do_string(const char* string, int length)
 }
 
 //------------------------------------------------------------------------------
-bool lua_state::do_file(const char* path)
+bool LuaState::do_file(const char* path)
 {
     // Open the file
     HANDLE handle;
     {
-        wstr<256> wpath(path);
+        Wstr<256> wpath(path);
         handle = CreateFileW(wpath.c_str(), GENERIC_READ, FILE_SHARE_READ,
             nullptr, OPEN_EXISTING, 0, nullptr);
     }
@@ -142,7 +142,7 @@ bool lua_state::do_file(const char* path)
         return false;
     }
 
-    struct io_buffer
+    struct IoBuffer
     {
         HANDLE  handle;
         char    buffer[1024];
@@ -152,9 +152,9 @@ bool lua_state::do_file(const char* path)
 
     auto read_file_func = [] (lua_State*, void* param, size_t* size) -> const char*
     {
-        auto& io = *(io_buffer*)param;
+        auto& io = *(IoBuffer*)param;
         DWORD bytes_read = 0;
-        BOOL ok = ReadFile(io.handle, io.buffer, sizeof(io_buffer::buffer), &bytes_read, nullptr);
+        BOOL ok = ReadFile(io.handle, io.buffer, sizeof(IoBuffer::buffer), &bytes_read, nullptr);
         if (ok == FALSE)
             return nullptr;
         *size = bytes_read;
@@ -163,7 +163,7 @@ bool lua_state::do_file(const char* path)
 
     int ok;
     {
-        str<280> at_path;
+        Str<280> at_path;
         at_path << "@";
         at_path << path;
         ok = lua_load(m_state, read_file_func, &io, at_path.c_str(), nullptr);

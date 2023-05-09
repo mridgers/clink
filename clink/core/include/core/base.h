@@ -43,14 +43,14 @@ template <class A> A max(A a, A b) { return (a > b) ? a : b; }
 template <class A> A clamp(A v, A m, A M) { return min(max(v, m), M); }
 
 //------------------------------------------------------------------------------
-struct no_copy
+struct NoCopy
 {
-            no_copy() = default;
-            ~no_copy() = default;
+            NoCopy() = default;
+            ~NoCopy() = default;
 
 private:
-            no_copy(const no_copy&) = delete;
-            no_copy(const no_copy&&) = delete;
-    void    operator = (const no_copy&) = delete;
-    void    operator = (const no_copy&&) = delete;
+            NoCopy(const NoCopy&) = delete;
+            NoCopy(const NoCopy&&) = delete;
+    void    operator = (const NoCopy&) = delete;
+    void    operator = (const NoCopy&&) = delete;
 };

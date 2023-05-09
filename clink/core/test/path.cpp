@@ -11,7 +11,7 @@ TEST_CASE("path::get_base_name()")
 {
     SECTION("Basic")
     {
-        str<> s;
+        Str<> s;
 
         SECTION("0") { path::get_base_name("one/two/three/filename.ext", s); }
         SECTION("1") { path::get_base_name("one/two/three/filename.ext", s); }
@@ -26,7 +26,7 @@ TEST_CASE("path::get_base_name()")
 
     SECTION("Other")
     {
-        str<> s;
+        Str<> s;
 
         path::get_base_name("one/two/three/filename...ext", s);
         REQUIRE(s.equals("filename.."));
@@ -51,7 +51,7 @@ TEST_CASE("path::get_directory()")
 {
     SECTION("Copy")
     {
-        str<> s, t;
+        Str<> s, t;
 
         SECTION("0") { t << "one/two/three/filename.ext"; }
         SECTION("1") { t << "one/two/three\\filename.ext"; }
@@ -63,7 +63,7 @@ TEST_CASE("path::get_directory()")
 
     SECTION("In-place")
     {
-        str<> s;
+        Str<> s;
 
         SECTION("0") { s << "one/two/three/filename.ext"; }
         SECTION("1") { s << "one/two\\three/filename.ext"; }
@@ -75,7 +75,7 @@ TEST_CASE("path::get_directory()")
 
     SECTION("Trailing slash")
     {
-        str<> s;
+        Str<> s;
 
         SECTION("0") { s << "one/two/three/"; }
         SECTION("1") { s << "one/two/three\\"; }
@@ -89,7 +89,7 @@ TEST_CASE("path::get_directory()")
 
     SECTION("No slash")
     {
-        str<> s;
+        Str<> s;
 
         SECTION("0") { s << "one"; }
         SECTION("1") { s << ""; }
@@ -100,7 +100,7 @@ TEST_CASE("path::get_directory()")
 
     SECTION("Root copy")
     {
-        str<> s, t;
+        Str<> s, t;
 
         SECTION("0") { t << "/"; }
         SECTION("1") { t << "\\"; }
@@ -114,7 +114,7 @@ TEST_CASE("path::get_directory()")
 
     SECTION("Root in-place")
     {
-        str<> s;
+        Str<> s;
 
         SECTION("0") { s << "/"; }
         SECTION("1") { s << "\\"; }
@@ -128,7 +128,7 @@ TEST_CASE("path::get_directory()")
 
     SECTION("Drive letter")
     {
-        str<> s;
+        Str<> s;
 
         path::get_directory("e:\\one", s);
         REQUIRE(s.equals("e:\\"));
@@ -148,7 +148,7 @@ TEST_CASE("path::get_drive()")
 {
     SECTION("Has drive")
     {
-        str<> s, t;
+        Str<> s, t;
 
         SECTION("0") { s << "e:"; }
         SECTION("1") { s << "e:/"; }
@@ -164,7 +164,7 @@ TEST_CASE("path::get_drive()")
 
     SECTION("No drive")
     {
-        str<> s, t;
+        Str<> s, t;
 
         SECTION("0") { s << ""; }
         SECTION("1") { s << ":"; }
@@ -187,7 +187,7 @@ TEST_CASE("path::get_extension()")
 {
     SECTION("Has extension")
     {
-        str<> s;
+        Str<> s;
 
         SECTION("0") { path::get_extension("one/two/three/filename.ext", s); }
         SECTION("1") { path::get_extension("one/two/three/filename.ext", s); }
@@ -202,7 +202,7 @@ TEST_CASE("path::get_extension()")
 
     SECTION("Misc")
     {
-        str<> s;
+        Str<> s;
 
         SECTION("0") { REQUIRE(!path::get_extension("..", s)); }
         SECTION("1") { REQUIRE(!path::get_extension("", s)); }
@@ -216,7 +216,7 @@ TEST_CASE("path::get_name()")
 {
     SECTION("Basic")
     {
-        str<> s;
+        Str<> s;
 
         SECTION("0") { path::get_name("one/two/three/filename.ext", s); }
         SECTION("1") { path::get_name("one/two/three\\filename.ext", s); }
@@ -305,7 +305,7 @@ TEST_CASE("path::join()")
 {
     SECTION("Basic")
     {
-        str<> s;
+        Str<> s;
 
         SECTION("0") { path::join("one/two", "three/four", s); }
         SECTION("1") { path::join("one/two/", "three/four", s); }
@@ -317,7 +317,7 @@ TEST_CASE("path::join()")
 
     SECTION("Rooted rhs")
     {
-        str<> s, t;
+        Str<> s, t;
 
         SECTION("0") { t = "/three/four"; }
         SECTION("1") { t = "\\three/four"; }
@@ -334,14 +334,14 @@ TEST_CASE("path::join()")
     {
         SECTION("Left")
         {
-            str<> s;
+            Str<> s;
             path::join("", "one\\two", s);
             REQUIRE(s.equals("one\\two"));
         }
 
         SECTION("Right")
         {
-            str<> s;
+            Str<> s;
             path::join("one\\two", "", s);
             REQUIRE(s.equals("one\\two\\"));
         }
@@ -349,7 +349,7 @@ TEST_CASE("path::join()")
 
     SECTION("Drive letter")
     {
-        str<> s;
+        Str<> s;
 
         // Absolute
         s.copy("x:/");
@@ -388,11 +388,11 @@ TEST_CASE("path::join(get_dir(), get_name())")
         out = "one/two/";
     }
 
-    str<> dir, name;
+    Str<> dir, name;
     path::get_directory(in, dir);
     path::get_name(in, name);
 
-    str<> join;
+    Str<> join;
     path::join(dir.c_str(), name.c_str(), join);
     path::normalise(join, '/');
 
@@ -402,7 +402,7 @@ TEST_CASE("path::join(get_dir(), get_name())")
 //------------------------------------------------------------------------------
 TEST_CASE("path::normalise() 1")
 {
-    str<> s;
+    Str<> s;
 
     s.copy("X://0/\\/1/2//\\3/\\\\//4//");
     path::normalise(s);
@@ -420,9 +420,9 @@ TEST_CASE("path::normalise() 1")
 //------------------------------------------------------------------------------
 TEST_CASE("path::normalise() 2")
 {
-    auto test = [] (const char* test_path, const char* expected)
+    auto Test = [] (const char* test_path, const char* expected)
     {
-        str<> out(test_path);
+        Str<> out(test_path);
         path::normalise(out, '/');
         REQUIRE(out.equals(expected), [&] () {
             puts(test_path);
@@ -431,32 +431,32 @@ TEST_CASE("path::normalise() 2")
         });
     };
 
-    test("123/xxx/xxx/../../456", "123/456");
-    test("/123/xxx/xxx/../../456", "/123/456");
-    test("a:/123/xxx/xxx/../../456", "a:/123/456");
-    test("a:/123/xxx/xxx/../../456/", "a:/123/456/");
-    test("a:/123/xxx/xxx/../../../../../../456/", "a:/456/");
-    test("a:/xxx/yyy/../../123/456", "a:/123/456");
-    test("a:/xxx/../../123/456", "a:/123/456");
-    test("a:/xxx/../../123/456", "a:/123/456");
-    test("a:/123/xxx/..", "a:/123/");
-    test("a:/123/./xxx/..", "a:/123/");
-    test("a:/123/.", "a:/123/");
+    Test("123/xxx/xxx/../../456", "123/456");
+    Test("/123/xxx/xxx/../../456", "/123/456");
+    Test("a:/123/xxx/xxx/../../456", "a:/123/456");
+    Test("a:/123/xxx/xxx/../../456/", "a:/123/456/");
+    Test("a:/123/xxx/xxx/../../../../../../456/", "a:/456/");
+    Test("a:/xxx/yyy/../../123/456", "a:/123/456");
+    Test("a:/xxx/../../123/456", "a:/123/456");
+    Test("a:/xxx/../../123/456", "a:/123/456");
+    Test("a:/123/xxx/..", "a:/123/");
+    Test("a:/123/./xxx/..", "a:/123/");
+    Test("a:/123/.", "a:/123/");
 
-    test("a:/1/2/x/../../2/3/4", "a:/1/2/3/4");
-    test("/1/x/../../2/3/4", "/2/3/4");
-    test("a://1/2//../2", "a:/1/2");
-    test("a:/1//2////../2", "a:/1/2");
-    test("a://1/../1/2", "a:/1/2");
+    Test("a:/1/2/x/../../2/3/4", "a:/1/2/3/4");
+    Test("/1/x/../../2/3/4", "/2/3/4");
+    Test("a://1/2//../2", "a:/1/2");
+    Test("a:/1//2////../2", "a:/1/2");
+    Test("a://1/../1/2", "a:/1/2");
 
-    test("a:/1/./2/", "a:/1/2/");
+    Test("a:/1/./2/", "a:/1/2/");
 
-    test("", "");
-    test("/..", "/");
+    Test("", "");
+    Test("/..", "/");
 
-    test("..", "..");
-    test("../..", "../..");
-    test("../../..", "../../..");
-    test("../xxx/../..", "../..");
-    test("../../xxx/../..", "../../..");
+    Test("..", "..");
+    Test("../..", "../..");
+    Test("../../..", "../../..");
+    Test("../xxx/../..", "../..");
+    Test("../../xxx/../..", "../../..");
 }

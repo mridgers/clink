@@ -15,14 +15,14 @@ extern "C" {
 //------------------------------------------------------------------------------
 TEST_CASE("Lua io.popen2 - read")
 {
-    // This test fs is sorted.
+    // This Test fs is sorted.
     static const char* io_test_fs[] = {
         "ad", "assumenda", "atque", "commodi", "doloremque", "est", "et", "in",
         "optio", "quia", "rem", "sunt", "tenetur", "ullam", "voluptas", nullptr,
     };
-    fs_fixture fs(io_test_fs);
+    FsFixture fs(io_test_fs);
 
-    lua_state lua;
+    LuaState lua;
     lua_State* state = lua.get_state();
 
     lua_getglobal(state, "io");
@@ -42,7 +42,7 @@ TEST_CASE("Lua io.popen2 - read")
         SECTION("read()")    { use_l_arg = false; }
         SECTION("read('l')") { use_l_arg = true; }
 
-        auto test = [state, use_l_arg] (const char* expected) {
+        auto Test = [state, use_l_arg] (const char* expected) {
             lua_pushvalue(state, -1); // read() method
             lua_pushvalue(state, -3); // file 'this' object
             if (use_l_arg)
@@ -60,7 +60,7 @@ TEST_CASE("Lua io.popen2 - read")
         };
 
         for (const char* candidate : io_test_fs)
-            test(candidate);
+            Test(candidate);
 
         lua_pop(state, 1);
     }
@@ -73,7 +73,7 @@ TEST_CASE("Lua io.popen2 - read")
         lua_pushvalue(state, -2); // file 'this' object
         lua_call(state, 1, 1);
 
-        auto test = [state] (const char* expected) {
+        auto Test = [state] (const char* expected) {
             lua_pushvalue(state, -1);
             lua_call(state, 0, 1);
             if (expected != nullptr)
@@ -90,7 +90,7 @@ TEST_CASE("Lua io.popen2 - read")
         };
 
         for (const char* candidate : io_test_fs)
-            test(candidate);
+            Test(candidate);
 
         lua_pop(state, 1);
     }
@@ -120,12 +120,12 @@ TEST_CASE("Lua io.popen2 - read")
             {
                 lua_pushvalue(state, -3);       // popen2.read()
                 lua_pushvalue(state, -5);       // file 'this' object
-                lua_pushvalue(state, -4);       // test read() arg
+                lua_pushvalue(state, -4);       // Test read() arg
                 lua_call(state, 2, 1);
                 if (lua_isnil(state, -1))
                 {
                     lua_pop(state, 1);
-                    lua_remove(state, -2);      // test read() arg
+                    lua_remove(state, -2);      // Test read() arg
                     lua_remove(state, -2);      // read()
                     break;
                 }
@@ -164,7 +164,7 @@ TEST_CASE("Lua io.popen2 - read")
 //------------------------------------------------------------------------------
 TEST_CASE("Lua io.popen2 - write")
 {
-    lua_state lua;
+    LuaState lua;
     lua_State* state = lua.get_state();
 
     lua_getglobal(state, "io");

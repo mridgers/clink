@@ -8,21 +8,21 @@
 #include <core/singleton.h>
 
 //------------------------------------------------------------------------------
-class rl_module
-    : public editor_module
-    , public singleton<rl_module>
+class RlModule
+    : public EditorModule
+    , public Singleton<RlModule>
 {
 public:
-                    rl_module(const char* shell_name);
-                    ~rl_module();
+                    RlModule(const char* shell_name);
+                    ~RlModule();
 
 private:
-    virtual void    bind_input(binder& binder) override;
-    virtual void    on_begin_line(const context& context) override;
+    virtual void    bind_input(Binder& binder) override;
+    virtual void    on_begin_line(const Context& context) override;
     virtual void    on_end_line() override;
-    virtual void    on_matches_changed(const context& context) override;
-    virtual void    on_input(const input& input, result& result, const context& context) override;
-    virtual void    on_terminal_resize(int columns, int rows, const context& context) override;
+    virtual void    on_matches_changed(const Context& context) override;
+    virtual void    on_input(const Input& Input, Result& result, const Context& context) override;
+    virtual void    on_terminal_resize(int columns, int rows, const Context& context) override;
     void            done(const char* line);
     char*           m_rl_buffer;
     int             m_prev_group;

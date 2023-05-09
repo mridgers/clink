@@ -10,11 +10,11 @@
 #include <new.h>
 
 //------------------------------------------------------------------------------
-class handle_io
+class HandleIo
 {
 public:
-                    handle_io(HANDLE h) : m_handle(h) {}
-                    ~handle_io()        { close(); }
+                    HandleIo(HANDLE h) : m_handle(h) {}
+                    ~HandleIo()         { close(); }
     bool            is_valid() const    { return m_handle != nullptr; }
     void            close();
 
@@ -23,7 +23,7 @@ protected:
 };
 
 //------------------------------------------------------------------------------
-void handle_io::close()
+void HandleIo::close()
 {
     if (m_handle == nullptr)
         return;
@@ -35,12 +35,12 @@ void handle_io::close()
 
 
 //------------------------------------------------------------------------------
-class handle_reader
-    : public handle_io
+class HandleReader
+    : public HandleIo
 {
 public:
-                        handle_reader(HANDLE h) : handle_io(h) {}
-                        ~handle_reader();
+                        HandleReader(HANDLE h) : HandleIo(h) {}
+                        ~HandleReader();
     bool                get(unsigned int index, int& c);
     const char*         get_pointer() const;
     void                consume(unsigned int size);
@@ -56,13 +56,13 @@ private:
 };
 
 //------------------------------------------------------------------------------
-handle_reader::~handle_reader()
+HandleReader::~HandleReader()
 {
     free(m_buffer);
 }
 
 //------------------------------------------------------------------------------
-bool handle_reader::get(unsigned int index, int& c)
+bool HandleReader::get(unsigned int index, int& c)
 {
     index += m_cursor;
     while (index >= m_data_size)
@@ -74,13 +74,13 @@ bool handle_reader::get(unsigned int index, int& c)
 }
 
 //------------------------------------------------------------------------------
-const char* handle_reader::get_pointer() const
+const char* HandleReader::get_pointer() const
 {
     return m_buffer + m_cursor;
 }
 
 //------------------------------------------------------------------------------
-void handle_reader::consume(unsigned int size)
+void HandleReader::consume(unsigned int size)
 {
     m_cursor = min(m_data_size, m_cursor + size);
     if (m_cursor == m_data_size)
@@ -88,7 +88,7 @@ void handle_reader::consume(unsigned int size)
 }
 
 //------------------------------------------------------------------------------
-unsigned int handle_reader::read(unsigned int size)
+unsigned int HandleReader::read(unsigned int size)
 {
     while (m_data_size - m_cursor < size)
         if (!acquire())
@@ -98,7 +98,7 @@ unsigned int handle_reader::read(unsigned int size)
 }
 
 //------------------------------------------------------------------------------
-bool handle_reader::acquire()
+bool HandleReader::acquire()
 {
     if (!is_valid())
         return false;
@@ -127,16 +127,16 @@ bool handle_reader::acquire()
 
 
 //------------------------------------------------------------------------------
-class handle_writer
-    : public handle_io
+class HandleWriter
+    : public HandleIo
 {
 public:
-                handle_writer(HANDLE h) : handle_io(h) {}
+                HandleWriter(HANDLE h) : HandleIo(h) {}
     void        write(const char* data, unsigned int size);
 };
 
 //------------------------------------------------------------------------------
-void handle_writer::write(const char* data, unsigned int size)
+void HandleWriter::write(const char* data, unsigned int size)
 {
     DWORD written;
     if (WriteFile(m_handle, data, DWORD(size), &written, nullptr) == FALSE)
@@ -146,11 +146,11 @@ void handle_writer::write(const char* data, unsigned int size)
 
 
 //------------------------------------------------------------------------------
-class popen2_lua
+class Popen2Lua
 {
 public:
-                    popen2_lua(HANDLE job, HANDLE read, HANDLE write);
-                    ~popen2_lua();
+                    Popen2Lua(HANDLE job, HANDLE read, HANDLE write);
+                    ~Popen2Lua();
     int             read(lua_State* state);
     int             lines(lua_State* state);
     int             write(lua_State* state);
@@ -159,12 +159,12 @@ private:
     int             read_line(lua_State* state, bool include_eol);
     int             read(lua_State* state, unsigned int bytes);
     HANDLE          m_job;
-    handle_reader   m_reader;
-    handle_writer   m_writer;
+    HandleReader    m_reader;
+    HandleWriter    m_writer;
 };
 
 //------------------------------------------------------------------------------
-popen2_lua::popen2_lua(HANDLE job, HANDLE read, HANDLE write)
+Popen2Lua::Popen2Lua(HANDLE job, HANDLE read, HANDLE write)
 : m_job(job)
 , m_writer(write)
 , m_reader(read)
@@ -172,14 +172,14 @@ popen2_lua::popen2_lua(HANDLE job, HANDLE read, HANDLE write)
 }
 
 //------------------------------------------------------------------------------
-popen2_lua::~popen2_lua()
+Popen2Lua::~Popen2Lua()
 {
     if (m_job != nullptr)
         CloseHandle(m_job);
 }
 
 //------------------------------------------------------------------------------
-int popen2_lua::read_line(lua_State* state, bool include_eol)
+int Popen2Lua::read_line(lua_State* state, bool include_eol)
 {
     unsigned int count = 0;
     for (int c; m_reader.get(count, c); )
@@ -208,7 +208,7 @@ int popen2_lua::read_line(lua_State* state, bool include_eol)
 }
 
 //------------------------------------------------------------------------------
-int popen2_lua::read(lua_State* state, unsigned int bytes)
+int Popen2Lua::read(lua_State* state, unsigned int bytes)
 {
     unsigned int size = m_reader.read(bytes);
     const char* data = m_reader.get_pointer();
@@ -218,7 +218,7 @@ int popen2_lua::read(lua_State* state, unsigned int bytes)
 }
 
 //------------------------------------------------------------------------------
-int popen2_lua::read(lua_State* state)
+int Popen2Lua::read(lua_State* state)
 {
     if (!m_reader.is_valid())
         return 0;
@@ -246,14 +246,14 @@ int popen2_lua::read(lua_State* state)
 }
 
 //------------------------------------------------------------------------------
-int popen2_lua::lines(lua_State* state)
+int Popen2Lua::lines(lua_State* state)
 {
     if (!m_reader.is_valid())
         return 0;
 
     auto impl = [] (lua_State* state) -> int {
         int self_index = lua_upvalueindex(1);
-        auto* self = (popen2_lua*)lua_touserdata(state, self_index);
+        auto* self = (Popen2Lua*)lua_touserdata(state, self_index);
         return self->read_line(state, false);
     };
 
@@ -263,7 +263,7 @@ int popen2_lua::lines(lua_State* state)
 }
 
 //------------------------------------------------------------------------------
-int popen2_lua::write(lua_State* state)
+int Popen2Lua::write(lua_State* state)
 {
     if (!m_writer.is_valid())
         return 0;
@@ -317,7 +317,7 @@ static int popen2(lua_State* state)
         if (!CreatePipe(&pipes.handles[i], &pipes.handles[i + 1], &sa, 0))
             return 0;
 
-    // Launch the process.
+    // Launch the Process.
     STARTUPINFOW si = { sizeof(si) };
     si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
     si.hStdOutput = pipes.stdout_write;
@@ -325,7 +325,7 @@ static int popen2(lua_State* state)
     si.dwFlags = STARTF_USESTDHANDLES;
 
     PROCESS_INFORMATION  pi;
-    wstr<> command_line;
+    Wstr<> command_line;
     command_line = lua_tostring(state, 1);
     BOOL ok = CreateProcessW(nullptr, command_line.data(), nullptr, nullptr, TRUE,
         CREATE_NEW_PROCESS_GROUP|NORMAL_PRIORITY_CLASS, nullptr, nullptr, &si, &pi);
@@ -350,8 +350,8 @@ static int popen2(lua_State* state)
     }
 
     // Create the object that popen2() returns
-    void* user_data = lua_newuserdata(state, sizeof(popen2_lua));
-    new (user_data) popen2_lua(job, pipes.stdout_read, pipes.stdin_write);
+    void* user_data = lua_newuserdata(state, sizeof(Popen2Lua));
+    new (user_data) Popen2Lua(job, pipes.stdout_read, pipes.stdin_write);
     pipes.stdout_read = nullptr;
     pipes.stdin_write = nullptr;
 
@@ -361,7 +361,7 @@ static int popen2(lua_State* state)
 
         #define BIND_METHOD(name) do {                                  \
                 auto name##_thunk = [] (lua_State* state) -> int {      \
-                    auto* self = (popen2_lua*)lua_touserdata(state, 1); \
+                    auto* self = (Popen2Lua*)lua_touserdata(state, 1); \
                     return self ? self->name(state) : 0;                \
                 };                                                      \
                 lua_pushliteral(state, #name);                          \
@@ -376,8 +376,8 @@ static int popen2(lua_State* state)
         lua_setfield(state, -2, "__index");
 
         auto gc_thunk = [] (lua_State* state) -> int {
-            auto* self = (popen2_lua*)lua_touserdata(state, 1);
-            self->~popen2_lua();
+            auto* self = (Popen2Lua*)lua_touserdata(state, 1);
+            self->~Popen2Lua();
             return 0;
         };
         lua_pushcfunction(state, gc_thunk);
@@ -392,7 +392,7 @@ static int popen2(lua_State* state)
 }
 
 //------------------------------------------------------------------------------
-void io_lua_initialise(lua_state& lua)
+void io_lua_initialise(LuaState& lua)
 {
     struct {
         const char* name;

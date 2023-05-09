@@ -29,15 +29,15 @@ unsigned int char_count(const wchar_t*);
 
 //------------------------------------------------------------------------------
 template <typename TYPE>
-class str_impl
+class StrImpl
 {
 public:
     typedef TYPE        char_t;
 
-                        str_impl(TYPE* data, unsigned int size);
-                        str_impl(const str_impl&) = delete;
-                        str_impl(const str_impl&&) = delete;
-                        ~str_impl();
+                        StrImpl(TYPE* data, unsigned int size);
+                        StrImpl(const StrImpl&) = delete;
+                        StrImpl(const StrImpl&&) = delete;
+                        ~StrImpl();
     void                attach(TYPE* data, unsigned int size);
     bool                reserve(unsigned int size);
     TYPE*               data();
@@ -57,11 +57,11 @@ public:
     bool                concat(const TYPE* src, int n=-1);
     bool                format(const TYPE* format, ...);
     TYPE                operator [] (unsigned int i) const;
-    str_impl&           operator << (const TYPE* rhs);
+    StrImpl&            operator << (const TYPE* rhs);
     template <int I>
-    str_impl&           operator << (const TYPE (&rhs)[I]);
-    str_impl&           operator << (const str_impl& rhs);
-    void                operator = (const str_impl&) = delete;
+    StrImpl&            operator << (const TYPE (&rhs)[I]);
+    StrImpl&            operator << (const StrImpl& rhs);
+    void                operator = (const StrImpl&) = delete;
 
 protected:
     void                set_growable(bool state=true);
@@ -79,7 +79,7 @@ private:
 
 //------------------------------------------------------------------------------
 template <typename TYPE>
-str_impl<TYPE>::str_impl(TYPE* data, unsigned int size)
+StrImpl<TYPE>::StrImpl(TYPE* data, unsigned int size)
 : m_data(data)
 , m_size(size)
 , m_growable(0)
@@ -90,14 +90,14 @@ str_impl<TYPE>::str_impl(TYPE* data, unsigned int size)
 
 //------------------------------------------------------------------------------
 template <typename TYPE>
-str_impl<TYPE>::~str_impl()
+StrImpl<TYPE>::~StrImpl()
 {
     free_data();
 }
 
 //------------------------------------------------------------------------------
 template <typename TYPE>
-void str_impl<TYPE>::attach(TYPE* data, unsigned int size)
+void StrImpl<TYPE>::attach(TYPE* data, unsigned int size)
 {
     if (is_growable())
     {
@@ -115,14 +115,14 @@ void str_impl<TYPE>::attach(TYPE* data, unsigned int size)
 
 //------------------------------------------------------------------------------
 template <typename TYPE>
-void str_impl<TYPE>::set_growable(bool state)
+void StrImpl<TYPE>::set_growable(bool state)
 {
     m_growable = state ? 1 : 0;
 }
 
 //------------------------------------------------------------------------------
 template <typename TYPE>
-bool str_impl<TYPE>::reserve(unsigned int new_size)
+bool StrImpl<TYPE>::reserve(unsigned int new_size)
 {
     ++new_size;
     if (m_size >= new_size)
@@ -146,7 +146,7 @@ bool str_impl<TYPE>::reserve(unsigned int new_size)
 
 //------------------------------------------------------------------------------
 template <typename TYPE>
-void str_impl<TYPE>::free_data()
+void StrImpl<TYPE>::free_data()
 {
     if (m_owns_ptr)
         free(m_data);
@@ -154,7 +154,7 @@ void str_impl<TYPE>::free_data()
 
 //------------------------------------------------------------------------------
 template <typename TYPE>
-TYPE* str_impl<TYPE>::data()
+TYPE* StrImpl<TYPE>::data()
 {
     m_length = 0;
     return m_data;
@@ -162,28 +162,28 @@ TYPE* str_impl<TYPE>::data()
 
 //------------------------------------------------------------------------------
 template <typename TYPE>
-const TYPE* str_impl<TYPE>::c_str() const
+const TYPE* StrImpl<TYPE>::c_str() const
 {
     return m_data;
 }
 
 //------------------------------------------------------------------------------
 template <typename TYPE>
-unsigned int str_impl<TYPE>::size() const
+unsigned int StrImpl<TYPE>::size() const
 {
     return m_size;
 }
 
 //------------------------------------------------------------------------------
 template <typename TYPE>
-bool str_impl<TYPE>::is_growable() const
+bool StrImpl<TYPE>::is_growable() const
 {
     return m_growable;
 }
 
 //------------------------------------------------------------------------------
 template <typename TYPE>
-unsigned int str_impl<TYPE>::length() const
+unsigned int StrImpl<TYPE>::length() const
 {
     if (!m_length & !empty())
         m_length = str_len(c_str());
@@ -193,14 +193,14 @@ unsigned int str_impl<TYPE>::length() const
 
 //------------------------------------------------------------------------------
 template <typename TYPE>
-unsigned int str_impl<TYPE>::char_count() const
+unsigned int StrImpl<TYPE>::char_count() const
 {
     return ::char_count(c_str());
 }
 
 //------------------------------------------------------------------------------
 template <typename TYPE>
-void str_impl<TYPE>::clear()
+void StrImpl<TYPE>::clear()
 {
     m_data[0] = '\0';
     m_length = 0;
@@ -208,14 +208,14 @@ void str_impl<TYPE>::clear()
 
 //------------------------------------------------------------------------------
 template <typename TYPE>
-bool str_impl<TYPE>::empty() const
+bool StrImpl<TYPE>::empty() const
 {
     return (c_str()[0] == '\0');
 }
 
 //------------------------------------------------------------------------------
 template <typename TYPE>
-void str_impl<TYPE>::truncate(unsigned int pos)
+void StrImpl<TYPE>::truncate(unsigned int pos)
 {
     if (pos >= m_size)
         return;
@@ -226,7 +226,7 @@ void str_impl<TYPE>::truncate(unsigned int pos)
 
 //------------------------------------------------------------------------------
 template <typename TYPE>
-int str_impl<TYPE>::first_of(int c) const
+int StrImpl<TYPE>::first_of(int c) const
 {
     const TYPE* r = str_chr(c_str(), c);
     return r ? int(r - c_str()) : -1;
@@ -234,7 +234,7 @@ int str_impl<TYPE>::first_of(int c) const
 
 //------------------------------------------------------------------------------
 template <typename TYPE>
-int str_impl<TYPE>::last_of(int c) const
+int StrImpl<TYPE>::last_of(int c) const
 {
     const TYPE* r = str_rchr(c_str(), c);
     return r ? int(r - c_str()) : -1;
@@ -242,21 +242,21 @@ int str_impl<TYPE>::last_of(int c) const
 
 //------------------------------------------------------------------------------
 template <typename TYPE>
-bool str_impl<TYPE>::equals(const TYPE* rhs) const
+bool StrImpl<TYPE>::equals(const TYPE* rhs) const
 {
     return (str_cmp(c_str(), rhs) == 0);
 }
 
 //------------------------------------------------------------------------------
 template <typename TYPE>
-bool str_impl<TYPE>::iequals(const TYPE* rhs) const
+bool StrImpl<TYPE>::iequals(const TYPE* rhs) const
 {
     return (str_icmp(c_str(), rhs) == 0);
 }
 
 //------------------------------------------------------------------------------
 template <typename TYPE>
-bool str_impl<TYPE>::copy(const TYPE* src)
+bool StrImpl<TYPE>::copy(const TYPE* src)
 {
     clear();
     return concat(src);
@@ -264,7 +264,7 @@ bool str_impl<TYPE>::copy(const TYPE* src)
 
 //------------------------------------------------------------------------------
 template <typename TYPE>
-bool str_impl<TYPE>::concat(const TYPE* src, int n)
+bool StrImpl<TYPE>::concat(const TYPE* src, int n)
 {
     if (src == nullptr)
         return false;
@@ -292,7 +292,7 @@ bool str_impl<TYPE>::concat(const TYPE* src, int n)
 
 //------------------------------------------------------------------------------
 template <typename TYPE>
-bool str_impl<TYPE>::format(const TYPE* format, ...)
+bool StrImpl<TYPE>::format(const TYPE* format, ...)
 {
     va_list args;
     va_start(args, format);
@@ -307,14 +307,14 @@ bool str_impl<TYPE>::format(const TYPE* format, ...)
 
 //------------------------------------------------------------------------------
 template <typename TYPE>
-TYPE str_impl<TYPE>::operator [] (unsigned int i) const
+TYPE StrImpl<TYPE>::operator [] (unsigned int i) const
 {
     return (i < length()) ? c_str()[i] : 0;
 }
 
 //------------------------------------------------------------------------------
 template <typename TYPE>
-str_impl<TYPE>& str_impl<TYPE>::operator << (const TYPE* rhs)
+StrImpl<TYPE>& StrImpl<TYPE>::operator << (const TYPE* rhs)
 {
     concat(rhs);
     return *this;
@@ -322,7 +322,7 @@ str_impl<TYPE>& str_impl<TYPE>::operator << (const TYPE* rhs)
 
 //------------------------------------------------------------------------------
 template <typename TYPE> template <int I>
-str_impl<TYPE>& str_impl<TYPE>::operator << (const TYPE (&rhs)[I])
+StrImpl<TYPE>& StrImpl<TYPE>::operator << (const TYPE (&rhs)[I])
 {
     concat(rhs, I);
     return *this;
@@ -330,7 +330,7 @@ str_impl<TYPE>& str_impl<TYPE>::operator << (const TYPE (&rhs)[I])
 
 //------------------------------------------------------------------------------
 template <typename TYPE>
-str_impl<TYPE>& str_impl<TYPE>::operator << (const str_impl& rhs)
+StrImpl<TYPE>& StrImpl<TYPE>::operator << (const StrImpl& rhs)
 {
     concat(rhs.c_str());
     return *this;
@@ -339,75 +339,75 @@ str_impl<TYPE>& str_impl<TYPE>::operator << (const str_impl& rhs)
 
 
 //------------------------------------------------------------------------------
-template <typename T> class str_iter_impl;
+template <typename T> class StrIterImpl;
 
-int to_utf8(class str_base& out, const wchar_t* utf16);
-int to_utf8(class str_base& out, str_iter_impl<wchar_t>& iter);
+int to_utf8(class StrBase& out, const wchar_t* utf16);
+int to_utf8(class StrBase& out, StrIterImpl<wchar_t>& iter);
 int to_utf8(char* out, int max_count, const wchar_t* utf16);
-int to_utf8(char* out, int max_count, str_iter_impl<wchar_t>& iter);
+int to_utf8(char* out, int max_count, StrIterImpl<wchar_t>& iter);
 
-int to_utf16(class wstr_base& out, const char* utf8);
-int to_utf16(class wstr_base& out, str_iter_impl<char>& iter);
+int to_utf16(class WstrBase& out, const char* utf8);
+int to_utf16(class WstrBase& out, StrIterImpl<char>& iter);
 int to_utf16(wchar_t* out, int max_count, const char* utf8);
-int to_utf16(wchar_t* out, int max_count, str_iter_impl<char>& iter);
+int to_utf16(wchar_t* out, int max_count, StrIterImpl<char>& iter);
 
 
 
 //------------------------------------------------------------------------------
-class str_base : public str_impl<char>
+class StrBase : public StrImpl<char>
 {
 public:
-    template <int I> str_base(char (&data)[I]) : str_impl<char>(data, I) {}
-                     str_base(char* data, int size) : str_impl<char>(data, size) {}
-                     str_base(const str_base&)         = delete;
-                     str_base(const str_base&&)        = delete;
+    template <int I> StrBase(char (&data)[I]) : StrImpl<char>(data, I) {}
+                     StrBase(char* data, int size) : StrImpl<char>(data, size) {}
+                     StrBase(const StrBase&)          = delete;
+                     StrBase(const StrBase&&)         = delete;
     int              from_utf16(const wchar_t* utf16)  { clear(); return to_utf8(*this, utf16); }
     void             operator = (const char* value)    { copy(value); }
     void             operator = (const wchar_t* value) { from_utf16(value); }
-    void             operator = (const str_base& rhs)  = delete;
+    void             operator = (const StrBase& rhs)  = delete;
 };
 
-class wstr_base : public str_impl<wchar_t>
+class WstrBase : public StrImpl<wchar_t>
 {
 public:
-    template <int I> wstr_base(char (&data)[I]) : str_impl<wchar_t>(data, I) {}
-                     wstr_base(wchar_t* data, int size) : str_impl<wchar_t>(data, size) {}
-                     wstr_base(const wstr_base&)        = delete;
-                     wstr_base(const wstr_base&&)       = delete;
+    template <int I> WstrBase(char (&data)[I]) : StrImpl<wchar_t>(data, I) {}
+                     WstrBase(wchar_t* data, int size) : StrImpl<wchar_t>(data, size) {}
+                     WstrBase(const WstrBase&)         = delete;
+                     WstrBase(const WstrBase&&)        = delete;
     int              from_utf8(const char* utf8)        { clear(); return to_utf16(*this, utf8); }
     void             operator = (const wchar_t* value)  { copy(value); }
     void             operator = (const char* value)     { from_utf8(value); }
-    void             operator = (const wstr_base&)      = delete;
+    void             operator = (const WstrBase&)       = delete;
 };
 
 
 
 //------------------------------------------------------------------------------
 template <int COUNT=128, bool GROWABLE=true>
-class str : public str_base
+class Str : public StrBase
 {
 public:
-                str() : str_base(m_data, COUNT)     { clear(); set_growable(GROWABLE); }
-    explicit    str(const char* value) : str()      { copy(value); }
-    explicit    str(const wchar_t* value) : str()   { from_utf16(value); }
-                str(const str&) = delete;
-                str(const str&&) = delete;
-    using       str_base::operator =;
+                Str() : StrBase(m_data, COUNT)     { clear(); set_growable(GROWABLE); }
+    explicit    Str(const char* value) : Str()      { copy(value); }
+    explicit    Str(const wchar_t* value) : Str()   { from_utf16(value); }
+                Str(const Str&) = delete;
+                Str(const Str&&) = delete;
+    using       StrBase::operator =;
 
 private:
     char        m_data[COUNT];
 };
 
 template <int COUNT=128, bool GROWABLE=true>
-class wstr : public wstr_base
+class Wstr : public WstrBase
 {
 public:
-                wstr() : wstr_base(m_data, COUNT)   { clear(); set_growable(GROWABLE); }
-    explicit    wstr(const wchar_t* value) : wstr() { copy(value); }
-    explicit    wstr(const char* value) : wstr()    { from_utf8(value); }
-                wstr(const wstr&) = delete;
-                wstr(const wstr&&) = delete;
-    using       wstr_base::operator =;
+                Wstr() : WstrBase(m_data, COUNT)   { clear(); set_growable(GROWABLE); }
+    explicit    Wstr(const wchar_t* value) : Wstr() { copy(value); }
+    explicit    Wstr(const char* value) : Wstr()    { from_utf8(value); }
+                Wstr(const Wstr&) = delete;
+                Wstr(const Wstr&&) = delete;
+    using       WstrBase::operator =;
 
 private:
     wchar_t     m_data[COUNT];

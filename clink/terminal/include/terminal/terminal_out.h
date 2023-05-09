@@ -6,10 +6,10 @@
 #include "attributes.h"
 
 //------------------------------------------------------------------------------
-class terminal_out
+class TerminalOut
 {
 public:
-    virtual                 ~terminal_out() = default;
+    virtual                 ~TerminalOut() = default;
     virtual void            begin() = 0;
     virtual void            end() = 0;
     virtual void            write(const char* chars, int length) = 0;
@@ -20,7 +20,7 @@ public:
 };
 
 //------------------------------------------------------------------------------
-template <int S> void terminal_out::write(const char (&chars)[S])
+template <int S> void TerminalOut::write(const char (&chars)[S])
 {
     write(chars, S);
 }

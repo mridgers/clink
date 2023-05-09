@@ -12,7 +12,7 @@
 #include <process/vm.h>
 
 //------------------------------------------------------------------------------
-app_context::desc::desc()
+AppContext::Desc::Desc()
 {
     state_dir[0] = '\0';
 }
@@ -20,10 +20,10 @@ app_context::desc::desc()
 
 
 //-----------------------------------------------------------------------------
-app_context::app_context(const desc& desc)
+AppContext::AppContext(const Desc& desc)
 : m_desc(desc)
 {
-    str_base state_dir(m_desc.state_dir);
+    StrBase state_dir(m_desc.state_dir);
 
     // The environment variable 'clink_profile' overrides all other state
     // path mechanisms.
@@ -37,7 +37,7 @@ app_context::app_context(const desc& desc)
     // Still no state directory set? Derive one.
     if (state_dir.empty())
     {
-        wstr<280> wstate_dir;
+        Wstr<280> wstate_dir;
         if (SHGetFolderPathW(0, CSIDL_LOCAL_APPDATA, nullptr, 0, wstate_dir.data()) == S_OK)
             state_dir = wstate_dir.c_str();
         else if (!os::get_env("userprofile", state_dir))
@@ -48,7 +48,7 @@ app_context::app_context(const desc& desc)
     }
 
     {
-        str<280> cwd;
+        Str<280> cwd;
         os::get_current_dir(cwd);
         path::append(cwd, state_dir.c_str());
         path::normalise(state_dir);
@@ -56,10 +56,10 @@ app_context::app_context(const desc& desc)
         os::make_dir(state_dir.c_str());
     }
 
-    m_id = process().get_pid();
+    m_id = Process().get_pid();
     if (desc.inherit_id)
     {
-        str<16, false> env_id;
+        Str<16, false> env_id;
         if (os::get_env("=clink.id", env_id))
             m_id = atoi(env_id.c_str());
     }
@@ -68,33 +68,33 @@ app_context::app_context(const desc& desc)
 }
 
 //-----------------------------------------------------------------------------
-int app_context::get_id() const
+int AppContext::get_id() const
 {
     return m_id;
 }
 
 //------------------------------------------------------------------------------
-bool app_context::is_logging_enabled() const
+bool AppContext::is_logging_enabled() const
 {
     return m_desc.log;
 }
 
 //------------------------------------------------------------------------------
-bool app_context::is_quiet() const
+bool AppContext::is_quiet() const
 {
     return m_desc.quiet;
 }
 
 //------------------------------------------------------------------------------
-void app_context::get_binaries_dir(str_base& out) const
+void AppContext::get_binaries_dir(StrBase& out) const
 {
     out.clear();
 
-    void* base = vm().get_alloc_base("");
+    void* base = Vm().get_alloc_base("");
     if (base == nullptr)
         return;
 
-    wstr<280> wout;
+    Wstr<280> wout;
     GetModuleFileNameW(HMODULE(base), wout.data(), wout.size());
     if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
         return;
@@ -123,36 +123,36 @@ void app_context::get_binaries_dir(str_base& out) const
 }
 
 //------------------------------------------------------------------------------
-void app_context::get_state_dir(str_base& out) const
+void AppContext::get_state_dir(StrBase& out) const
 {
     out.copy(m_desc.state_dir);
 }
 
 //------------------------------------------------------------------------------
-void app_context::get_log_path(str_base& out) const
+void AppContext::get_log_path(StrBase& out) const
 {
     get_state_dir(out);
     path::append(out, "clink.log");
 }
 
 //------------------------------------------------------------------------------
-void app_context::get_settings_path(str_base& out) const
+void AppContext::get_settings_path(StrBase& out) const
 {
     get_state_dir(out);
     path::append(out, "clink_settings");
 }
 
 //------------------------------------------------------------------------------
-void app_context::get_history_path(str_base& out) const
+void AppContext::get_history_path(StrBase& out) const
 {
     get_state_dir(out);
     path::append(out, "clink_history");
 }
 
 //-----------------------------------------------------------------------------
-void app_context::update_env() const
+void AppContext::update_env() const
 {
-    str<48> id_str;
+    Str<48> id_str;
     id_str.format("%d", m_id);
     os::set_env("=clink.id", id_str.c_str());
     os::set_env("=clink.profile", m_desc.state_dir);

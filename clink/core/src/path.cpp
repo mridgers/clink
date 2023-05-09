@@ -68,7 +68,7 @@ namespace path
 {
 
 //------------------------------------------------------------------------------
-void normalise(str_base& in_out, int sep)
+void normalise(StrBase& in_out, int sep)
 {
     normalise(in_out.data(), sep);
 }
@@ -156,7 +156,7 @@ const char* next_element(const char* in)
 }
 
 //------------------------------------------------------------------------------
-bool get_base_name(const char* in, str_base& out)
+bool get_base_name(const char* in, StrBase& out)
 {
     if (!get_name(in, out))
         return false;
@@ -169,14 +169,14 @@ bool get_base_name(const char* in, str_base& out)
 }
 
 //------------------------------------------------------------------------------
-bool get_directory(const char* in, str_base& out)
+bool get_directory(const char* in, StrBase& out)
 {
     int end = get_directory_end(in);
     return out.concat(in, end);
 }
 
 //------------------------------------------------------------------------------
-bool get_directory(str_base& in_out)
+bool get_directory(StrBase& in_out)
 {
     int end = get_directory_end(in_out.c_str());
     in_out.truncate(end);
@@ -184,7 +184,7 @@ bool get_directory(str_base& in_out)
 }
 
 //------------------------------------------------------------------------------
-bool get_drive(const char* in, str_base& out)
+bool get_drive(const char* in, StrBase& out)
 {
 #if defined(PLATFORM_WINDOWS)
     if ((in[1] != ':') || (unsigned(tolower(in[0]) - 'a') > ('z' - 'a')))
@@ -197,7 +197,7 @@ bool get_drive(const char* in, str_base& out)
 }
 
 //------------------------------------------------------------------------------
-bool get_drive(str_base& in_out)
+bool get_drive(StrBase& in_out)
 {
 #if defined(PLATFORM_WINDOWS)
     if ((in_out[1] != ':') || (unsigned(tolower(in_out[0]) - 'a') > ('z' - 'a')))
@@ -211,7 +211,7 @@ bool get_drive(str_base& in_out)
 }
 
 //------------------------------------------------------------------------------
-bool get_extension(const char* in, str_base& out)
+bool get_extension(const char* in, StrBase& out)
 {
     const char* dot = strrchr(in, '.');
     if (dot == nullptr)
@@ -228,7 +228,7 @@ bool get_extension(const char* in, str_base& out)
 }
 
 //------------------------------------------------------------------------------
-bool get_name(const char* in, str_base& out)
+bool get_name(const char* in, StrBase& out)
 {
     return out.concat(get_name(in));
 }
@@ -283,14 +283,14 @@ bool is_root(const char* path)
 }
 
 //------------------------------------------------------------------------------
-bool join(const char* lhs, const char* rhs, str_base& out)
+bool join(const char* lhs, const char* rhs, StrBase& out)
 {
     out << lhs;
     return append(out, rhs);
 }
 
 //------------------------------------------------------------------------------
-bool append(str_base& out, const char* rhs)
+bool append(StrBase& out, const char* rhs)
 {
     if (is_rooted(rhs))
         return out.copy(rhs);

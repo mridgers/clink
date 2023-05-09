@@ -7,7 +7,7 @@
 #include "path.h"
 
 //------------------------------------------------------------------------------
-globber::globber(const char* pattern)
+Globber::Globber(const char* pattern)
 : m_files(true)
 , m_directories(true)
 , m_dir_suffix(true)
@@ -17,7 +17,7 @@ globber::globber(const char* pattern)
 {
     // Windows: Expand if the path to complete is drive relative (e.g. 'c:foobar')
     // Drive X's current path is stored in the environment variable "=X:"
-    str<288> rooted;
+    Str<288> rooted;
     if (pattern[0] && pattern[1] == ':' && pattern[2] != '\\' && pattern[2] != '/')
     {
         char env_var[4] = { '=', pattern[0], ':', 0 };
@@ -29,7 +29,7 @@ globber::globber(const char* pattern)
         }
     }
 
-    wstr<280> wglob(pattern);
+    Wstr<280> wglob(pattern);
     m_handle = FindFirstFileW(wglob.c_str(), &m_data);
     if (m_handle == INVALID_HANDLE_VALUE)
         m_handle = nullptr;
@@ -38,19 +38,19 @@ globber::globber(const char* pattern)
 }
 
 //------------------------------------------------------------------------------
-globber::~globber()
+Globber::~Globber()
 {
     if (m_handle != nullptr)
         FindClose(m_handle);
 }
 
 //------------------------------------------------------------------------------
-bool globber::next(str_base& out, bool rooted)
+bool Globber::next(StrBase& out, bool rooted)
 {
     if (m_handle == nullptr)
         return false;
 
-    str<280> file_name(m_data.cFileName);
+    Str<280> file_name(m_data.cFileName);
 
     bool skip = false;
 
@@ -81,7 +81,7 @@ bool globber::next(str_base& out, bool rooted)
 }
 
 //------------------------------------------------------------------------------
-void globber::next_file()
+void Globber::next_file()
 {
     if (FindNextFileW(m_handle, &m_data))
         return;

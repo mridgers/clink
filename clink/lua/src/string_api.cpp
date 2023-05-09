@@ -44,7 +44,7 @@ static int explode(lua_State* state)
     if (delims == nullptr)
         delims = " ";
 
-    str_tokeniser tokens(in, delims);
+    StrTokeniser tokens(in, delims);
 
     if (const char* quote_pair = get_string(state, 3))
         tokens.add_quote_pair(quote_pair);
@@ -54,7 +54,7 @@ static int explode(lua_State* state)
     int count = 0;
     const char* start;
     int length;
-    while (str_token token = tokens.next(start, length))
+    while (StrToken token = tokens.next(start, length))
     {
         lua_pushlstring(state, start, length);
         lua_rawseti(state, -2, ++count);
@@ -64,7 +64,7 @@ static int explode(lua_State* state)
 }
 
 //------------------------------------------------------------------------------
-void string_lua_initialise(lua_state& lua)
+void string_lua_initialise(LuaState& lua)
 {
     struct {
         const char* name;

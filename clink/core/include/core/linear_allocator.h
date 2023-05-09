@@ -4,12 +4,12 @@
 #pragma once
 
 //------------------------------------------------------------------------------
-class linear_allocator
+class LinearAllocator
 {
 public:
-                          linear_allocator(int size);
-                          linear_allocator(void* buffer, int size);
-                          ~linear_allocator();
+                          LinearAllocator(int size);
+                          LinearAllocator(void* buffer, int size);
+                          ~LinearAllocator();
     void*                 alloc(int size);
     template <class T> T* calloc(int count=1);
 
@@ -21,7 +21,7 @@ private:
 };
 
 //------------------------------------------------------------------------------
-inline linear_allocator::linear_allocator(int size)
+inline LinearAllocator::LinearAllocator(int size)
 : m_buffer((char*)malloc(size))
 , m_used(0)
 , m_max(size)
@@ -30,7 +30,7 @@ inline linear_allocator::linear_allocator(int size)
 }
 
 //------------------------------------------------------------------------------
-inline linear_allocator::linear_allocator(void* buffer, int size)
+inline LinearAllocator::LinearAllocator(void* buffer, int size)
 : m_buffer((char*)buffer)
 , m_used(0)
 , m_max(size)
@@ -39,14 +39,14 @@ inline linear_allocator::linear_allocator(void* buffer, int size)
 }
 
 //------------------------------------------------------------------------------
-inline linear_allocator::~linear_allocator()
+inline LinearAllocator::~LinearAllocator()
 {
     if (m_owned)
         free(m_buffer);
 }
 
 //------------------------------------------------------------------------------
-inline void* linear_allocator::alloc(int size)
+inline void* LinearAllocator::alloc(int size)
 {
     if (size == 0)
         return nullptr;
@@ -61,7 +61,7 @@ inline void* linear_allocator::alloc(int size)
 }
 
 //------------------------------------------------------------------------------
-template <class T> T* linear_allocator::calloc(int count)
+template <class T> T* LinearAllocator::calloc(int count)
 {
     return (T*)(alloc(sizeof(T) * count));
 }

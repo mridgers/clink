@@ -11,22 +11,22 @@
 #include <core/path.h>
 #include <core/settings.h>
 
-setting_bool g_glob_hidden(
+SettingBool g_glob_hidden(
     "files.hidden",
     "Include hidden files",
-    "Includes or excludes files with the 'hidden' attribute set when generating\n"
+    "Includes or excludes files with the 'hidden' Attribute set when generating\n"
     "file lists.",
     true);
 
-setting_bool g_glob_system(
+SettingBool g_glob_system(
     "files.system",
     "Include system files",
-    "Includes or excludes files with the 'system' attribute set when generating\n"
+    "Includes or excludes files with the 'system' Attribute set when generating\n"
     "file lists.",
     false);
 
 // TODO: dream up a way around performance problems that UNC paths pose.
-setting_bool g_glob_unc(
+SettingBool g_glob_unc(
     "files.unc_paths",
     "Enables UNC/network path matches",
     "UNC (network) paths can cause Clink to stutter slightly when it tries to\n"
@@ -36,11 +36,11 @@ setting_bool g_glob_unc(
 
 
 //------------------------------------------------------------------------------
-static class : public match_generator
+static class : public MatchGenerator
 {
-    virtual bool generate(const line_state& line, match_builder& builder) override
+    virtual bool generate(const LineState& line, MatchBuilder& Builder) override
     {
-        str<288> buffer;
+        Str<288> buffer;
         line.get_end_word(buffer);
 
         if (path::is_separator(buffer[0]) && path::is_separator(buffer[1]))
@@ -49,18 +49,18 @@ static class : public match_generator
 
         buffer << "*";
 
-        globber globber(buffer.c_str());
+        Globber globber(buffer.c_str());
         globber.hidden(g_glob_hidden.get());
         globber.system(g_glob_system.get());
         while (globber.next(buffer, false))
-            builder.add_match(buffer.c_str());
+            Builder.add_match(buffer.c_str());
 
         return true;
     }
 
-    virtual int get_prefix_length(const line_state& line) const override
+    virtual int get_prefix_length(const LineState& line) const override
     {
-        str_iter end_word = line.get_end_word();
+        StrIter end_word = line.get_end_word();
         const char* start = end_word.get_pointer();
 
         const char* c = start + end_word.length();
@@ -77,7 +77,7 @@ static class : public match_generator
 
 
 //------------------------------------------------------------------------------
-match_generator& file_match_generator()
+MatchGenerator& file_match_generator()
 {
     return g_file_generator;
 }

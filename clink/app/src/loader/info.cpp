@@ -14,16 +14,16 @@ int clink_info(int argc, char** argv)
 {
     struct {
         const char* name;
-        void        (app_context::*method)(str_base&) const;
+        void        (AppContext::*method)(StrBase&) const;
     } infos[] = {
-        { "binaries",   &app_context::get_binaries_dir },
-        { "state",      &app_context::get_state_dir },
-        { "log",        &app_context::get_log_path },
-        { "settings",   &app_context::get_settings_path },
-        { "history",    &app_context::get_history_path },
+        { "binaries",   &AppContext::get_binaries_dir },
+        { "state",      &AppContext::get_state_dir },
+        { "log",        &AppContext::get_log_path },
+        { "settings",   &AppContext::get_settings_path },
+        { "history",    &AppContext::get_history_path },
     };
 
-    const auto* context = app_context::get();
+    const auto* context = AppContext::get();
     const int spacing = 8;
 
     // Version information
@@ -33,7 +33,7 @@ int clink_info(int argc, char** argv)
     // Paths
     for (const auto& info : infos)
     {
-        str<280> out;
+        Str<280> out;
         (context->*info.method)(out);
         printf("%-*s : %s\n", spacing, info.name, out.c_str());
     }
@@ -54,7 +54,7 @@ int clink_info(int argc, char** argv)
         labeled = true;
         printf("%-*s : %%%s%%\n", spacing, label, env_var);
 
-        str<280> out;
+        Str<280> out;
         if (!os::get_env(env_var, out))
         {
             printf("%-*s     (unset)\n", spacing, "");

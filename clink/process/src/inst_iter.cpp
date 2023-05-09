@@ -119,11 +119,11 @@ static int disassemble_modrm(const unsigned char* cursor)
 }
 
 //------------------------------------------------------------------------------
-static instruction disassemble(const unsigned char* ptr)
+static Instruction disassemble(const unsigned char* ptr)
 {
     const unsigned char* cursor = ptr;
     
-    auto end = [&] () -> instruction {
+    auto end = [&] () -> Instruction {
         return {int(intptr_t(cursor - ptr))};
     };
 
@@ -188,8 +188,8 @@ static instruction disassemble(const unsigned char* ptr)
 
         int rel_offset = int(intptr_t(old_cursor - ptr));
         int rel_size = int(intptr_t(cursor - old_cursor));
-        cursor += (rel_offset << instruction::rel_offset_shift);
-        cursor += (rel_size << instruction::rel_size_shift);
+        cursor += (rel_offset << Instruction::rel_offset_shift);
+        cursor += (rel_size << Instruction::rel_size_shift);
 
         return end();
     }
@@ -202,8 +202,8 @@ static instruction disassemble(const unsigned char* ptr)
     {
         int rel_offset = int(intptr_t(cursor + 1 - ptr)); // +1 to skip modrm
         int rel_size = 4;
-        cursor += (rel_offset << instruction::rel_offset_shift);
-        cursor += (rel_size << instruction::rel_size_shift);
+        cursor += (rel_offset << Instruction::rel_offset_shift);
+        cursor += (rel_size << Instruction::rel_size_shift);
         modrm_length = -modrm_length;
     }
 #endif
@@ -232,7 +232,7 @@ static instruction disassemble(const unsigned char* ptr)
 
 
 //------------------------------------------------------------------------------
-void instruction::copy(const unsigned char* from, unsigned char* to) const
+void Instruction::copy(const unsigned char* from, unsigned char* to) const
 {
     memcpy(to, from, get_length());
 
@@ -268,15 +268,15 @@ void instruction::copy(const unsigned char* from, unsigned char* to) const
 
 
 //------------------------------------------------------------------------------
-instruction_iter::instruction_iter(const void* data)
+InstructionIter::InstructionIter(const void* data)
 : m_data((const unsigned char*)data)
 {
 }
 
 //------------------------------------------------------------------------------
-instruction instruction_iter::next()
+Instruction InstructionIter::next()
 {
-    instruction ret = disassemble(m_data);
+    Instruction ret = disassemble(m_data);
     m_data += ret.get_length();
     return ret;
 }

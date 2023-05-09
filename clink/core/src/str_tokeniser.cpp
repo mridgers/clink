@@ -8,7 +8,7 @@
 
 //------------------------------------------------------------------------------
 template <>
-str_token str_tokeniser_impl<char>::next(str_impl<char>& out)
+StrToken StrTokeniserImpl<char>::next(StrImpl<char>& out)
 {
     const char* start;
     int length;
@@ -23,7 +23,7 @@ str_token str_tokeniser_impl<char>::next(str_impl<char>& out)
 
 //------------------------------------------------------------------------------
 template <>
-str_token str_tokeniser_impl<wchar_t>::next(str_impl<wchar_t>& out)
+StrToken StrTokeniserImpl<wchar_t>::next(StrImpl<wchar_t>& out)
 {
     const wchar_t* start;
     int length;
@@ -38,53 +38,53 @@ str_token str_tokeniser_impl<wchar_t>::next(str_impl<wchar_t>& out)
 
 //------------------------------------------------------------------------------
 template <>
-str_token str_tokeniser_impl<char>::next(const char*& start, int& length)
+StrToken StrTokeniserImpl<char>::next(const char*& start, int& length)
 {
     return next_impl(start, length);
 }
 
 //------------------------------------------------------------------------------
 template <>
-str_token str_tokeniser_impl<wchar_t>::next(const wchar_t*& start, int& length)
+StrToken StrTokeniserImpl<wchar_t>::next(const wchar_t*& start, int& length)
 {
     return next_impl(start, length);
 }
 
 //------------------------------------------------------------------------------
 template <>
-str_token str_tokeniser_impl<char>::next(str_iter_impl<char>& out)
+StrToken StrTokeniserImpl<char>::next(StrIterImpl<char>& out)
 {
     const char* start;
     int length;
     if (auto ret = next_impl(start, length))
     {
-        new (&out) str_iter_impl<char>(start, length);
+        new (&out) StrIterImpl<char>(start, length);
         return ret;
     }
 
-    return str_token::invalid_delim;
+    return StrToken::invalid_delim;
 }
 
 //------------------------------------------------------------------------------
 template <>
-str_token str_tokeniser_impl<wchar_t>::next(str_iter_impl<wchar_t>& out)
+StrToken StrTokeniserImpl<wchar_t>::next(StrIterImpl<wchar_t>& out)
 {
     const wchar_t* start;
     int length;
     if (auto ret = next_impl(start, length))
     {
-        new (&out) str_iter_impl<wchar_t>(start, length);
+        new (&out) StrIterImpl<wchar_t>(start, length);
         return ret;
     }
 
-    return str_token::invalid_delim;
+    return StrToken::invalid_delim;
 }
 
 //------------------------------------------------------------------------------
 template <typename T>
-int str_tokeniser_impl<T>::get_right_quote(int left) const
+int StrTokeniserImpl<T>::get_right_quote(int left) const
 {
-    for (const quote& iter : m_quotes)
+    for (const Quote& iter : m_quotes)
         if (iter.left == left)
             return iter.right;
 
@@ -93,7 +93,7 @@ int str_tokeniser_impl<T>::get_right_quote(int left) const
 
 //------------------------------------------------------------------------------
 template <typename T>
-str_token str_tokeniser_impl<T>::next_impl(const T*& out_start, int& out_length)
+StrToken StrTokeniserImpl<T>::next_impl(const T*& out_start, int& out_length)
 {
     // Skip initial delimiters.
     char delim = 0;
@@ -129,9 +129,9 @@ str_token str_tokeniser_impl<T>::next_impl(const T*& out_start, int& out_length)
 
     const T* end = m_iter.get_pointer();
 
-    // Empty string? Must be the end of the input. We're done here.
+    // Empty string? Must be the end of the Input. We're done here.
     if (start == end)
-        return str_token::invalid_delim;
+        return StrToken::invalid_delim;
 
     // Set the output and return.
     out_start = start;

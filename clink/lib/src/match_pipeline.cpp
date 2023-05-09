@@ -17,14 +17,14 @@
 //------------------------------------------------------------------------------
 static unsigned int normal_selector(
     const char* needle,
-    const match_store& store,
-    match_info* infos,
+    const MatchStore& Store,
+    MatchInfo* infos,
     int count)
 {
     int select_count = 0;
     for (int i = 0; i < count; ++i)
     {
-        const char* name = store.get(infos[i].store_id);
+        const char* name = Store.get(infos[i].store_id);
         int j = str_compare(needle, name);
         infos[i].select = (j < 0 || !needle[j]);
         ++select_count;
@@ -34,11 +34,11 @@ static unsigned int normal_selector(
 }
 
 //------------------------------------------------------------------------------
-static void alpha_sorter(const match_store& store, match_info* infos, int count)
+static void alpha_sorter(const MatchStore& Store, MatchInfo* infos, int count)
 {
-    auto predicate = [&] (const match_info& lhs, const match_info& rhs) {
-        const char* l = store.get(lhs.store_id);
-        const char* r = store.get(rhs.store_id);
+    auto predicate = [&] (const MatchInfo& lhs, const MatchInfo& rhs) {
+        const char* l = Store.get(lhs.store_id);
+        const char* r = Store.get(rhs.store_id);
         return (stricmp(l, r) < 0);
     };
 
@@ -48,36 +48,36 @@ static void alpha_sorter(const match_store& store, match_info* infos, int count)
 
 
 //------------------------------------------------------------------------------
-match_pipeline::match_pipeline(matches_impl& matches)
+MatchPipeline::MatchPipeline(MatchesImpl& matches)
 : m_matches(matches)
 {
 }
 
 //------------------------------------------------------------------------------
-void match_pipeline::reset() const
+void MatchPipeline::reset() const
 {
     m_matches.reset();
 }
 
 //------------------------------------------------------------------------------
-void match_pipeline::generate(
-    const line_state& state,
-    const array<match_generator*>& generators) const
+void MatchPipeline::generate(
+    const LineState& state,
+    const Array<MatchGenerator*>& generators) const
 {
-    match_builder builder(m_matches);
+    MatchBuilder builder(m_matches);
     for (auto* generator : generators)
         if (generator->generate(state, builder))
             break;
 }
 
 //------------------------------------------------------------------------------
-void match_pipeline::fill_info() const
+void MatchPipeline::fill_info() const
 {
     int count = m_matches.get_info_count();
     if (!count)
         return;
 
-    match_info* info = m_matches.get_infos();
+    MatchInfo* info = m_matches.get_infos();
     for (int i = 0; i < count; ++i, ++info)
     {
         const char* displayable = m_matches.get_displayable(i);
@@ -86,7 +86,7 @@ void match_pipeline::fill_info() const
 }
 
 //------------------------------------------------------------------------------
-void match_pipeline::select(const char* needle) const
+void MatchPipeline::select(const char* needle) const
 {
     int count = m_matches.get_info_count();
     if (!count)
@@ -100,7 +100,7 @@ void match_pipeline::select(const char* needle) const
 }
 
 //------------------------------------------------------------------------------
-void match_pipeline::sort() const
+void MatchPipeline::sort() const
 {
     int count = m_matches.get_match_count();
     if (!count)

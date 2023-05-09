@@ -3,17 +3,17 @@
 
 #pragma once
 
-class line_state;
-class match_builder;
+class LineState;
+class MatchBuilder;
 
 //------------------------------------------------------------------------------
-class match_generator
+class MatchGenerator
 {
 public:
-    virtual bool    generate(const line_state& line, match_builder& builder) = 0;
-    virtual int     get_prefix_length(const line_state& line) const = 0;
+    virtual bool    generate(const LineState& line, MatchBuilder& Builder) = 0;
+    virtual int     get_prefix_length(const LineState& line) const = 0;
 
 private:
 };
 
-match_generator& file_match_generator();
+MatchGenerator& file_match_generator();

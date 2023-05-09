@@ -65,7 +65,7 @@ for _, i in ipairs(merge_tests) do
 
     local test_name = "Merge: "..test
     local cmd = "argcmd_merge "..test
-    if type(result) == "string" then
+    if Type(result) == "string" then
         clink.test.test_output(test, cmd, cmd.." "..result.." ")
     else
         clink.test.test_matches(test, cmd.."\t", result)

@@ -13,9 +13,9 @@
 #include <process/process.h>
 
 //------------------------------------------------------------------------------
-extern setting_bool g_glob_hidden;
-extern setting_bool g_glob_system;
-extern setting_bool g_glob_unc;
+extern SettingBool g_glob_hidden;
+extern SettingBool g_glob_system;
+extern SettingBool g_glob_unc;
 
 
 
@@ -47,7 +47,7 @@ static int set_current_dir(lua_State* state)
 /// -ret:   string
 static int get_current_dir(lua_State* state)
 {
-    str<288> dir;
+    Str<288> dir;
     os::get_current_dir(dir);
 
     lua_pushstring(state, dir.c_str());
@@ -187,9 +187,9 @@ static int glob_impl(lua_State* state, bool dirs_only)
 
     auto impl = [] (lua_State* state) -> int {
         int self_index = lua_upvalueindex(1);
-        auto* glbbr = (globber*)lua_touserdata(state, self_index);
+        auto* glbbr = (Globber*)lua_touserdata(state, self_index);
 
-        str<288> file;
+        Str<288> file;
         if (!glbbr->next(file, false))
         {
             delete glbbr;
@@ -200,7 +200,7 @@ static int glob_impl(lua_State* state, bool dirs_only)
         return 1;
     };
 
-    globber* glbbr = new globber(mask);
+    Globber* glbbr = new Globber(mask);
     glbbr->files(!dirs_only);
     glbbr->hidden(g_glob_hidden.get());
     glbbr->system(g_glob_system.get());
@@ -238,7 +238,7 @@ static int get_env(lua_State* state)
     if (name == nullptr)
         return 0;
 
-    str<128> value;
+    Str<128> value;
     if (!os::get_env(name, value))
         return 0;
 
@@ -307,8 +307,8 @@ static int get_env_names(lua_State* state)
 /// -ret:   string
 static int get_host(lua_State* state)
 {
-    str<280> host;
-    if (process().get_file_name(host))
+    Str<280> host;
+    if (Process().get_file_name(host))
         return 0;
 
     lua_pushstring(state, host.c_str());
@@ -323,19 +323,19 @@ static int get_aliases(lua_State* state)
     lua_createtable(state, 0, 0);
 
 #if !defined(__MINGW32__) && !defined(__MINGW64__)
-    str<280> path;
-    if (!process().get_file_name(path))
+    Str<280> path;
+    if (!Process().get_file_name(path))
         return 1;
 
     // Not const because Windows' alias API won't accept it.
     char* name = (char*)path::get_name(path.c_str());
 
-    // Get the aliases (aka. doskey macros).
+    // Get the aliases (aka. Doskey macros).
     int buffer_size = GetConsoleAliasesLength(name);
     if (buffer_size == 0)
         return 1;
 
-    str<> buffer;
+    Str<> buffer;
     buffer.reserve(buffer_size);
     if (GetConsoleAliases(buffer.data(), buffer.size(), name) == 0)
         return 1;
@@ -360,7 +360,7 @@ static int get_aliases(lua_State* state)
 }
 
 //------------------------------------------------------------------------------
-void os_lua_initialise(lua_state& lua)
+void os_lua_initialise(LuaState& lua)
 {
     struct {
         const char* name;

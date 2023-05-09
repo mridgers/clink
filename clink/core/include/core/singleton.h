@@ -7,11 +7,11 @@
 
 //------------------------------------------------------------------------------
 template <class T>
-class singleton
+class Singleton
 {
 public:
-                singleton();
-                ~singleton();
+                Singleton();
+                ~Singleton();
     static T*   get();
 
 private:
@@ -19,26 +19,26 @@ private:
 };
 
 //------------------------------------------------------------------------------
-template <class T> singleton<T>::singleton()
+template <class T> Singleton<T>::Singleton()
 {
     assert(get_store() == nullptr);
     get_store() = (T*)this;
 }
 
 //------------------------------------------------------------------------------
-template <class T> singleton<T>::~singleton()
+template <class T> Singleton<T>::~Singleton()
 {
     get_store() = nullptr;
 }
 
 //------------------------------------------------------------------------------
-template <class T> T* singleton<T>::get()
+template <class T> T* Singleton<T>::get()
 {
     return get_store();
 }
 
 //------------------------------------------------------------------------------
-template <class T> T*& singleton<T>::get_store()
+template <class T> T*& Singleton<T>::get_store()
 {
     static T* instance;
     return instance;

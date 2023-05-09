@@ -13,15 +13,15 @@ extern "C" {
 //------------------------------------------------------------------------------
 TEST_CASE("Lua os.glob*")
 {
-    // This test fs is sorted.
+    // This Test fs is sorted.
     static const char* glob_test_fs[] = {
         "zero", "one",
         "dir_zero\\", "dir_one\\",
         nullptr,
     };
-    fs_fixture fs(glob_test_fs);
+    FsFixture fS(glob_test_fs);
 
-    lua_state lua;
+    LuaState lua;
     lua_State* state = lua.get_state();
 
     lua_getglobal(state, "os");
@@ -77,7 +77,7 @@ TEST_CASE("Lua os.glob*")
 
 TEST_CASE("Lua os.globfiles(nil)")
 {
-    lua_state lua;
+    LuaState lua;
     lua_State* state = lua.get_state();
 
     lua_getglobal(state, "os");

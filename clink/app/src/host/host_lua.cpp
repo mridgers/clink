@@ -17,7 +17,7 @@ extern "C" {
 }
 
 //------------------------------------------------------------------------------
-static setting_str g_clink_path(
+static SettingStr g_clink_path(
     "clink.path",
     "Paths to load Lua completion scripts from",
     "These paths will be searched for Lua scripts that provide custom\n"
@@ -25,13 +25,13 @@ static setting_str g_clink_path(
     "");
 
 //------------------------------------------------------------------------------
-host_lua::host_lua()
+HostLua::HostLua()
 : m_generator(m_state)
 {
-    str<280> bin_path;
-    app_context::get()->get_binaries_dir(bin_path);
+    Str<280> bin_path;
+    AppContext::get()->get_binaries_dir(bin_path);
 
-    str<280> exe_path;
+    Str<280> exe_path;
     exe_path << bin_path << "\\" CLINK_EXE;
 
     lua_State* state = m_state.get_state();
@@ -40,47 +40,47 @@ host_lua::host_lua()
 }
 
 //------------------------------------------------------------------------------
-host_lua::operator lua_state& ()
+HostLua::operator LuaState& ()
 {
     return m_state;
 }
 
 //------------------------------------------------------------------------------
-host_lua::operator match_generator& ()
+HostLua::operator MatchGenerator& ()
 {
     return m_generator;
 }
 
 //------------------------------------------------------------------------------
-void host_lua::load_scripts()
+void HostLua::load_scripts()
 {
     const char* setting_clink_path = g_clink_path.get();
     load_scripts(setting_clink_path);
 
-    str<256> env_clink_path;
+    Str<256> env_clink_path;
     os::get_env("clink_path", env_clink_path);
     load_scripts(env_clink_path.c_str());
 }
 
 //------------------------------------------------------------------------------
-void host_lua::load_scripts(const char* paths)
+void HostLua::load_scripts(const char* paths)
 {
     if (paths == nullptr || paths[0] == '\0')
         return;
 
-    str<280> token;
-    str_tokeniser tokens(paths, ";");
+    Str<280> token;
+    StrTokeniser tokens(paths, ";");
     while (tokens.next(token))
         load_script(token.c_str());
 }
 
 //------------------------------------------------------------------------------
-void host_lua::load_script(const char* path)
+void HostLua::load_script(const char* path)
 {
-    str<280> buffer;
+    Str<280> buffer;
     path::join(path, "*.lua", buffer);
 
-    globber lua_globs(buffer.c_str());
+    Globber lua_globs(buffer.c_str());
     lua_globs.directories(false);
 
     while (lua_globs.next(buffer))

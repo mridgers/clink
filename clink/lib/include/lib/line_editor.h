@@ -3,21 +3,21 @@
 
 #pragma once
 
-class editor_module;
-class line_buffer;
-class match_generator;
-class terminal_in;
-class terminal_out;
+class EditorModule;
+class LineBuffer;
+class MatchGenerator;
+class TerminalIn;
+class TerminalOut;
 
 //------------------------------------------------------------------------------
-class line_editor
+class LineEditor
 {
 public:
-    struct desc
+    struct Desc
     {
         // Required.
-        terminal_in*    input = nullptr;
-        terminal_out*   output = nullptr;
+        TerminalIn*     input = nullptr;
+        TerminalOut*    output = nullptr;
 
         // Optional.
         const char*     shell_name = "clink";
@@ -28,9 +28,9 @@ public:
         const char*     auto_quote_chars = " ";
     };
 
-    virtual             ~line_editor() = default;
-    virtual bool        add_module(editor_module& module) = 0;
-    virtual bool        add_generator(match_generator& generator) = 0;
+    virtual             ~LineEditor() = default;
+    virtual bool        add_module(EditorModule& module) = 0;
+    virtual bool        add_generator(MatchGenerator& generator) = 0;
     virtual bool        get_line(char* out, int out_size) = 0;
     virtual bool        edit(char* out, int out_size) = 0;
     virtual bool        update() = 0;
@@ -39,7 +39,7 @@ public:
 
 
 //------------------------------------------------------------------------------
-line_editor*            line_editor_create(const line_editor::desc& desc);
-void                    line_editor_destroy(line_editor* editor);
-editor_module*          tab_completer_create();
-void                    tab_completer_destroy(editor_module* completer);
+LineEditor*             line_editor_create(const LineEditor::Desc& desc);
+void                    line_editor_destroy(LineEditor* editor);
+EditorModule*           tab_completer_create();
+void                    tab_completer_destroy(EditorModule* completer);

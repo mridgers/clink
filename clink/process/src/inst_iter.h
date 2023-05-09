@@ -4,7 +4,7 @@
 #pragma once
 
 //------------------------------------------------------------------------------
-class instruction
+class Instruction
 {
 public:
     enum
@@ -13,7 +13,7 @@ public:
         rel_size_shift      = 16,
     };
 
-                        instruction() = default;
+                        Instruction() = default;
     explicit            operator bool () const  { return get_length() != 0; }
     bool                is_relative() const     { return (m_value > 0xff); }
     int                 get_rel_size() const    { return (m_value >> rel_size_shift) & 0xff; }
@@ -22,17 +22,17 @@ public:
     void                copy(const unsigned char* from, unsigned char* to) const;
 
 private:
-    friend instruction  disassemble(const unsigned char* ptr);
-                        instruction(int value) : m_value(value) {}
+    friend Instruction  disassemble(const unsigned char* ptr);
+                        Instruction(int value) : m_value(value) {}
     int                 m_value = 0;
 };
 
 //------------------------------------------------------------------------------
-class instruction_iter
+class InstructionIter
 {
 public:
-                            instruction_iter(const void* data);
-    instruction             next();
+                            InstructionIter(const void* data);
+    Instruction             next();
 
 private:
     const unsigned char*    m_data;

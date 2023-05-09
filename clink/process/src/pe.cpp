@@ -8,26 +8,26 @@
 #include <Windows.h>
 
 //------------------------------------------------------------------------------
-pe_info::pe_info(void* base)
+PeInfo::PeInfo(void* base)
 : m_base(base)
 {
 }
 
 //------------------------------------------------------------------------------
-void* pe_info::rva_to_addr(unsigned int rva) const
+void* PeInfo::rva_to_addr(unsigned int rva) const
 {
     return (char*)(uintptr_t)rva + (uintptr_t)m_base;
 }
 
 //------------------------------------------------------------------------------
-IMAGE_NT_HEADERS* pe_info::get_nt_headers() const
+IMAGE_NT_HEADERS* PeInfo::get_nt_headers() const
 {
     IMAGE_DOS_HEADER* dos_header = (IMAGE_DOS_HEADER*)m_base;
     return (IMAGE_NT_HEADERS*)((char*)m_base + dos_header->e_lfanew);
 }
 
 //------------------------------------------------------------------------------
-void* pe_info::get_data_directory(int index, int* size) const
+void* PeInfo::get_data_directory(int index, int* size) const
 {
     IMAGE_NT_HEADERS* nt = get_nt_headers();
     IMAGE_DATA_DIRECTORY* data_dir = nt->OptionalHeader.DataDirectory + index;
@@ -44,7 +44,7 @@ void* pe_info::get_data_directory(int index, int* size) const
 }
 
 //------------------------------------------------------------------------------
-pe_info::funcptr_t* pe_info::import_by_addr(IMAGE_IMPORT_DESCRIPTOR* iid, const void* func_addr) const
+PeInfo::funcptr_t* PeInfo::import_by_addr(IMAGE_IMPORT_DESCRIPTOR* iid, const void* func_addr) const
 {
     void** at = (void**)rva_to_addr(iid->FirstThunk);
     while (*at != 0)
@@ -62,7 +62,7 @@ pe_info::funcptr_t* pe_info::import_by_addr(IMAGE_IMPORT_DESCRIPTOR* iid, const 
 }
 
 //------------------------------------------------------------------------------
-pe_info::funcptr_t* pe_info::import_by_name(IMAGE_IMPORT_DESCRIPTOR* iid, const void* func_name) const
+PeInfo::funcptr_t* PeInfo::import_by_name(IMAGE_IMPORT_DESCRIPTOR* iid, const void* func_name) const
 {
     void** at = (void**)rva_to_addr(iid->FirstThunk);
     intptr_t* nt = (intptr_t*)rva_to_addr(iid->OriginalFirstThunk);
@@ -87,19 +87,19 @@ pe_info::funcptr_t* pe_info::import_by_name(IMAGE_IMPORT_DESCRIPTOR* iid, const 
 }
 
 //------------------------------------------------------------------------------
-pe_info::funcptr_t* pe_info::get_import_by_name(const char* dll, const char* func_name) const
+PeInfo::funcptr_t* PeInfo::get_import_by_name(const char* dll, const char* func_name) const
 {
-    return iterate_imports(dll, func_name, &pe_info::import_by_name);
+    return iterate_imports(dll, func_name, &PeInfo::import_by_name);
 }
 
 //------------------------------------------------------------------------------
-pe_info::funcptr_t* pe_info::get_import_by_addr(const char* dll, funcptr_t func_addr) const
+PeInfo::funcptr_t* PeInfo::get_import_by_addr(const char* dll, funcptr_t func_addr) const
 {
-    return iterate_imports(dll, (const void*)func_addr, &pe_info::import_by_addr);
+    return iterate_imports(dll, (const void*)func_addr, &PeInfo::import_by_addr);
 }
 
 //------------------------------------------------------------------------------
-pe_info::funcptr_t pe_info::get_export(const char* func_name) const
+PeInfo::funcptr_t PeInfo::get_export(const char* func_name) const
 {
     if (m_base == nullptr)
         return nullptr;
@@ -129,7 +129,7 @@ pe_info::funcptr_t pe_info::get_export(const char* func_name) const
 }
 
 //------------------------------------------------------------------------------
-pe_info::funcptr_t* pe_info::iterate_imports(
+PeInfo::funcptr_t* PeInfo::iterate_imports(
     const char* dll,
     const void* param,
     import_iter_t iter_func) const

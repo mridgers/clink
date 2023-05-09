@@ -11,7 +11,7 @@ TEST_CASE("settings : basic")
 {
     auto* first = settings::first();
     {
-        setting_bool test("!one", "", "", false);
+        SettingBool test("!one", "", "", false);
         REQUIRE(settings::first() == &test);
     }
     REQUIRE(settings::first() == first);
@@ -40,10 +40,10 @@ TEST_CASE("settings : list")
     };
 
     for (int i = 0, n = sizeof_array(names); i < n; ++i)
-        new setting_int(names[i], "", nullptr, i);
+        new SettingInt(names[i], "", nullptr, i);
 
     // Check they're in the order we expect.
-    setting* iter = settings::first();
+    Setting* iter = settings::first();
     const char* last_name = iter->get_name();
     iter = iter->next();
     for (; iter != nullptr; last_name = iter->get_name(), iter = iter->next())
@@ -70,7 +70,7 @@ TEST_CASE("settings : list")
 //------------------------------------------------------------------------------
 TEST_CASE("settings : bool")
 {
-    setting_bool test("one", "", "", true);
+    SettingBool test("one", "", "", true);
 
     REQUIRE(test.set("0"));     REQUIRE(!test.get());
     REQUIRE(test.set("000"));   REQUIRE(!test.get());
@@ -84,7 +84,7 @@ TEST_CASE("settings : bool")
     REQUIRE(test.set("True")); REQUIRE(test.get());
     REQUIRE(test.set("TrUe")); REQUIRE(test.get());
 
-    str<> out;
+    Str<> out;
     test.get(out);
     REQUIRE(out.equals("True"));
 
@@ -98,13 +98,13 @@ TEST_CASE("settings : bool")
 //------------------------------------------------------------------------------
 TEST_CASE("settings : int")
 {
-    setting_int test("one", "", "", 1);
+    SettingInt test("one", "", "", 1);
 
     REQUIRE(test.set("100")); REQUIRE(test.get() == 100);
     REQUIRE(test.set("101")); REQUIRE(test.get() == 101);
     REQUIRE(test.set("102")); REQUIRE(test.get() == 102);
 
-    str<> out;
+    Str<> out;
     test.get(out);
     REQUIRE(out.equals("102"));
 
@@ -120,7 +120,7 @@ TEST_CASE("settings : int")
 //------------------------------------------------------------------------------
 TEST_CASE("settings : str")
 {
-    setting_str test("one", "", "", "abc");
+    SettingStr test("one", "", "", "abc");
 
     REQUIRE(strcmp(test.get(), "abc") == 0);
     REQUIRE(test.set("Abc")); REQUIRE(strcmp(test.get(), "Abc") == 0);
@@ -131,11 +131,11 @@ TEST_CASE("settings : str")
 //------------------------------------------------------------------------------
 TEST_CASE("settings : enum")
 {
-    setting_enum test("one", "", "", "zero,one,two", 1);
+    SettingEnum test("one", "", "", "zero,one,two", 1);
 
     REQUIRE(test.get() == 1);
 
-    str<> out;
+    Str<> out;
     const char* options[] = { "zero", "one", "two" };
     for (int i = 0; i < sizeof_array(options); ++i)
     {

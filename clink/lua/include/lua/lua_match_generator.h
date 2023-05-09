@@ -5,23 +5,23 @@
 
 #include <lib/match_generator.h>
 
-class lua_state;
+class LuaState;
 
 //------------------------------------------------------------------------------
-class lua_match_generator
-    : public match_generator
+class LuaMatchGenerator
+    : public MatchGenerator
 {
 public:
-                    lua_match_generator(lua_state& state);
-    virtual         ~lua_match_generator();
+                    LuaMatchGenerator(LuaState& state);
+    virtual         ~LuaMatchGenerator();
 
 private:
-    virtual bool    generate(const line_state& line, match_builder& builder) override;
-    virtual int     get_prefix_length(const line_state& line) const override;
+    virtual bool    generate(const LineState& line, MatchBuilder& Builder) override;
+    virtual int     get_prefix_length(const LineState& line) const override;
     void            initialise();
     void            print_error(const char* error) const;
-    void            lua_pushlinestate(const line_state& line);
+    void            lua_pushlinestate(const LineState& line);
     bool            load_script(const char* script);
     void            load_scripts(const char* path);
-    lua_state&      m_state;
+    LuaState&       m_state;
 };

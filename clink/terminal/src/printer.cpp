@@ -8,15 +8,15 @@
 #include <core/str.h>
 
 //------------------------------------------------------------------------------
-printer::printer(terminal_out& terminal)
-: m_terminal(terminal)
-, m_set_attr(attributes::defaults)
-, m_next_attr(attributes::defaults)
+Printer::Printer(TerminalOut& Terminal)
+: m_terminal(Terminal)
+, m_set_attr(Attributes::defaults)
+, m_next_attr(Attributes::defaults)
 {
 }
 
 //------------------------------------------------------------------------------
-void printer::print(const char* data, int bytes)
+void Printer::print(const char* data, int bytes)
 {
     if (bytes <= 0)
         return;
@@ -28,39 +28,39 @@ void printer::print(const char* data, int bytes)
 }
 
 //------------------------------------------------------------------------------
-void printer::print(const attributes attr, const char* data, int bytes)
+void Printer::print(const Attributes attr, const char* data, int bytes)
 {
-    attributes prev_attr = set_attributes(attr);
+    Attributes prev_attr = set_attributes(attr);
     print(data, bytes);
     set_attributes(prev_attr);
 }
 
 //------------------------------------------------------------------------------
-unsigned int printer::get_columns() const
+unsigned int Printer::get_columns() const
 {
     return m_terminal.get_columns();
 }
 
 //------------------------------------------------------------------------------
-unsigned int printer::get_rows() const
+unsigned int Printer::get_rows() const
 {
     return m_terminal.get_rows();
 }
 
 //------------------------------------------------------------------------------
-attributes printer::set_attributes(const attributes attr)
+Attributes Printer::set_attributes(const Attributes attr)
 {
-    attributes prev_attr = m_next_attr;
-    m_next_attr = attributes::merge(m_next_attr, attr);
+    Attributes prev_attr = m_next_attr;
+    m_next_attr = Attributes::merge(m_next_attr, attr);
     return prev_attr;
 }
 
 //------------------------------------------------------------------------------
-void printer::flush_attributes()
+void Printer::flush_attributes()
 {
-    attributes diff = attributes::diff(m_set_attr, m_next_attr);
+    Attributes diff = Attributes::diff(m_set_attr, m_next_attr);
 
-    str<64, false> params;
+    Str<64, false> params;
     auto add_param = [&] (const char* x) {
         if (!params.empty())
             params << ";";
@@ -119,28 +119,28 @@ void printer::flush_attributes()
 }
 
 //------------------------------------------------------------------------------
-attributes printer::get_attributes() const
+Attributes Printer::get_attributes() const
 {
     return m_next_attr;
 }
 
 //------------------------------------------------------------------------------
-void printer::insert(int count)
+void Printer::insert(int count)
 {
 }
 
 //------------------------------------------------------------------------------
-void printer::move_cursor(int dc, int dr)
+void Printer::move_cursor(int dc, int dr)
 {
 }
 
 //------------------------------------------------------------------------------
-void printer::set_cursor(cursor_state state)
+void Printer::set_cursor(CursorState state)
 {
 }
 
 //------------------------------------------------------------------------------
-printer::cursor_state printer::get_cursor() const
+Printer::CursorState Printer::get_cursor() const
 {
     return 0;
 }

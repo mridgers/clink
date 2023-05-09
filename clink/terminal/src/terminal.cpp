@@ -10,15 +10,15 @@
 #include <core/base.h>
 
 //------------------------------------------------------------------------------
-terminal terminal_create(screen_buffer* screen)
+Terminal terminal_create(ScreenBuffer* screen)
 {
 #if defined(PLATFORM_WINDOWS)
     if (screen == nullptr)
-        screen = new win_screen_buffer(); // TODO: this leaks.
+        screen = new WinScreenBuffer(); // TODO: this leaks.
 
     return {
-        new win_terminal_in(),
-        new ecma48_terminal_out(*screen),
+        new WinTerminalIn(),
+        new Ecma48TerminalOut(*screen),
     };
 #else
     return {};
@@ -26,7 +26,7 @@ terminal terminal_create(screen_buffer* screen)
 }
 
 //------------------------------------------------------------------------------
-void terminal_destroy(const terminal& terminal)
+void terminal_destroy(const Terminal& terminal)
 {
     delete terminal.out;
     delete terminal.in;

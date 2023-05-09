@@ -12,19 +12,19 @@ extern "C" {
 
 //------------------------------------------------------------------------------
 template <class T>
-class lua_bindable
+class LuaBindable
 {
 public:
     typedef int         (T::*method_t)(lua_State*);
 
-    struct method
+    struct Method
     {
         const char*     name;
         method_t        ptr;
     };
 
-                        lua_bindable(const char* name, const method* methods);
-                        ~lua_bindable();
+                        LuaBindable(const char* name, const Method* methods);
+                        ~LuaBindable();
     void                push(lua_State* state);
 
 private:
@@ -32,14 +32,14 @@ private:
     void                bind();
     void                unbind();
     const char*         m_name;
-    const method*       m_methods;
+    const Method*       m_methods;
     lua_State*          m_state;
     int                 m_registry_ref;
 };
 
 //------------------------------------------------------------------------------
 template <class T>
-lua_bindable<T>::lua_bindable(const char* name, const method* methods)
+LuaBindable<T>::LuaBindable(const char* name, const Method* methods)
 : m_name(name)
 , m_methods(methods)
 , m_state(nullptr)
@@ -49,19 +49,19 @@ lua_bindable<T>::lua_bindable(const char* name, const method* methods)
 
 //------------------------------------------------------------------------------
 template <class T>
-lua_bindable<T>::~lua_bindable()
+LuaBindable<T>::~LuaBindable()
 {
     unbind();
 }
 
 //------------------------------------------------------------------------------
 template <class T>
-void lua_bindable<T>::bind()
+void LuaBindable<T>::bind()
 {
     void* self = lua_newuserdata(m_state, sizeof(void*));
     *(void**)self = this;
 
-    str<48> mt_name;
+    Str<48> mt_name;
     mt_name << m_name << "_mt";
     if (luaL_newmetatable(m_state, mt_name.c_str()))
     {
@@ -73,10 +73,10 @@ void lua_bindable<T>::bind()
             auto* ptr = (method_t*)lua_newuserdata(m_state, sizeof(method_t));
             *ptr = methods->ptr;
 
-            if (luaL_newmetatable(m_state, "lua_bindable"))
+            if (luaL_newmetatable(m_state, "LuaBindable"))
             {
                 lua_pushliteral(m_state, "__call");
-                lua_pushcfunction(m_state, &lua_bindable<T>::call);
+                lua_pushcfunction(m_state, &LuaBindable<T>::call);
                 lua_rawset(m_state, -3);
             }
 
@@ -95,7 +95,7 @@ void lua_bindable<T>::bind()
 
 //------------------------------------------------------------------------------
 template <class T>
-void lua_bindable<T>::unbind()
+void LuaBindable<T>::unbind()
 {
     if (m_state == nullptr || m_registry_ref == LUA_NOREF)
         return;
@@ -112,7 +112,7 @@ void lua_bindable<T>::unbind()
 
 //------------------------------------------------------------------------------
 template <class T>
-void lua_bindable<T>::push(lua_State* state)
+void LuaBindable<T>::push(lua_State* state)
 {
     m_state = state;
 
@@ -124,7 +124,7 @@ void lua_bindable<T>::push(lua_State* state)
 
 //------------------------------------------------------------------------------
 template <class T>
-int lua_bindable<T>::call(lua_State* state)
+int LuaBindable<T>::call(lua_State* state)
 {
     auto* const* self = (T* const*)lua_touserdata(state, 2);
     if (self == nullptr || *self == nullptr)

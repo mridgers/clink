@@ -7,48 +7,48 @@
 #include "screen_buffer.h"
 
 //------------------------------------------------------------------------------
-ecma48_terminal_out::ecma48_terminal_out(screen_buffer& screen)
+Ecma48TerminalOut::Ecma48TerminalOut(ScreenBuffer& screen)
 : m_screen(screen)
 {
 }
 
 //------------------------------------------------------------------------------
-void ecma48_terminal_out::begin()
+void Ecma48TerminalOut::begin()
 {
     m_screen.begin();
 }
 
 //------------------------------------------------------------------------------
-void ecma48_terminal_out::end()
+void Ecma48TerminalOut::end()
 {
     m_screen.end();
 }
 
 //------------------------------------------------------------------------------
-void ecma48_terminal_out::flush()
+void Ecma48TerminalOut::flush()
 {
     m_screen.flush();
 }
 
 //------------------------------------------------------------------------------
-int ecma48_terminal_out::get_columns() const
+int Ecma48TerminalOut::get_columns() const
 {
     return m_screen.get_columns();
 }
 
 //------------------------------------------------------------------------------
-int ecma48_terminal_out::get_rows() const
+int Ecma48TerminalOut::get_rows() const
 {
     return m_screen.get_rows();
 }
 
 //------------------------------------------------------------------------------
-void ecma48_terminal_out::write_c1(const ecma48_code& code)
+void Ecma48TerminalOut::write_c1(const Ecma48Code& code)
 {
-    if (code.get_code() != ecma48_code::c1_csi)
+    if (code.get_code() != Ecma48Code::c1_csi)
         return;
 
-    ecma48_code::csi<32> csi;
+    Ecma48Code::Csi<32> csi;
     code.decode_csi(csi);
 
     if (csi.private_use)
@@ -79,24 +79,24 @@ void ecma48_terminal_out::write_c1(const ecma48_code& code)
 }
 
 //------------------------------------------------------------------------------
-void ecma48_terminal_out::write_c0(int c0)
+void Ecma48TerminalOut::write_c0(int c0)
 {
     switch (c0)
     {
-    case ecma48_code::c0_bel:
+    case Ecma48Code::c0_bel:
         // TODO: flash cursor.
         break;
 
-    case ecma48_code::c0_bs:
+    case Ecma48Code::c0_bs:
         m_screen.move_cursor(-1, 0);
         break;
 
-    case ecma48_code::c0_cr:
+    case Ecma48Code::c0_cr:
         m_screen.move_cursor(INT_MIN, 0);
         break;
 
-    case ecma48_code::c0_ht: // TODO: perhaps there should be a next_tab_stop() method?
-    case ecma48_code::c0_lf: // TODO: shouldn't expect screen_buffer impl to react to '\n' characters.
+    case Ecma48Code::c0_ht: // TODO: perhaps there should be a next_tab_stop() method?
+    case Ecma48Code::c0_lf: // TODO: shouldn't expect ScreenBuffer impl to react to '\n' characters.
         {
             char c = char(c0);
             m_screen.write(&c, 1);
@@ -106,22 +106,22 @@ void ecma48_terminal_out::write_c0(int c0)
 }
 
 //------------------------------------------------------------------------------
-void ecma48_terminal_out::write(const char* chars, int length)
+void Ecma48TerminalOut::write(const char* chars, int length)
 {
-    ecma48_iter iter(chars, m_state, length);
-    while (const ecma48_code& code = iter.next())
+    Ecma48Iter iter(chars, m_state, length);
+    while (const Ecma48Code& code = iter.next())
     {
         switch (code.get_type())
         {
-        case ecma48_code::type_chars:
+        case Ecma48Code::type_chars:
             m_screen.write(code.get_pointer(), code.get_length());
             break;
 
-        case ecma48_code::type_c0:
+        case Ecma48Code::type_c0:
             write_c0(code.get_code());
             break;
 
-        case ecma48_code::type_c1:
+        case Ecma48Code::type_c1:
             write_c1(code);
             break;
         }
@@ -129,20 +129,20 @@ void ecma48_terminal_out::write(const char* chars, int length)
 }
 
 //------------------------------------------------------------------------------
-void ecma48_terminal_out::set_attributes(const ecma48_code::csi_base& csi)
+void Ecma48TerminalOut::set_attributes(const Ecma48Code::CsiBase& csi)
 {
     // Empty parameters to 'CSI SGR' implies 0 (reset).
     if (csi.param_count == 0)
-        return m_screen.set_attributes(attributes::defaults);
+        return m_screen.set_attributes(Attributes::defaults);
 
     // Process each code that is supported.
-    attributes attr;
+    Attributes attr;
     for (int i = 0; i < csi.param_count; ++i)
     {
         unsigned int param = csi.params[i];
 
         // Resets
-        if (param == 0)  { attr = attributes::defaults; continue; }
+        if (param == 0)  { attr = Attributes::defaults; continue; }
         if (param == 49) { attr.reset_bg();             continue; }
         if (param == 39) { attr.reset_fg();             continue; }
 
@@ -181,7 +181,7 @@ void ecma48_terminal_out::set_attributes(const ecma48_code::csi_base& csi)
 }
 
 //------------------------------------------------------------------------------
-void ecma48_terminal_out::erase_in_display(const ecma48_code::csi_base& csi)
+void Ecma48TerminalOut::erase_in_display(const Ecma48Code::CsiBase& csi)
 {
     /* CSI ? Ps J : Erase in Display (DECSED).
             Ps = 0  -> Selective Erase Below (default).
@@ -191,14 +191,14 @@ void ecma48_terminal_out::erase_in_display(const ecma48_code::csi_base& csi)
 
     switch (csi.get_param(0))
     {
-    case 0: m_screen.clear(screen_buffer::clear_type_after);    break;
-    case 1: m_screen.clear(screen_buffer::clear_type_before);   break;
-    case 2: m_screen.clear(screen_buffer::clear_type_all);      break;
+    case 0: m_screen.clear(ScreenBuffer::clear_type_after);     break;
+    case 1: m_screen.clear(ScreenBuffer::clear_type_before);    break;
+    case 2: m_screen.clear(ScreenBuffer::clear_type_all);       break;
     }
 }
 
 //------------------------------------------------------------------------------
-void ecma48_terminal_out::erase_in_line(const ecma48_code::csi_base& csi)
+void Ecma48TerminalOut::erase_in_line(const Ecma48Code::CsiBase& csi)
 {
     /* CSI Ps K : Erase in Line (EL).
             Ps = 0  -> Erase to Right (default).
@@ -207,14 +207,14 @@ void ecma48_terminal_out::erase_in_line(const ecma48_code::csi_base& csi)
 
     switch (csi.get_param(0))
     {
-    case 0: m_screen.clear_line(screen_buffer::clear_type_after);   break;
-    case 1: m_screen.clear_line(screen_buffer::clear_type_before);  break;
-    case 2: m_screen.clear_line(screen_buffer::clear_type_all);     break;
+    case 0: m_screen.clear_line(ScreenBuffer::clear_type_after);    break;
+    case 1: m_screen.clear_line(ScreenBuffer::clear_type_before);   break;
+    case 2: m_screen.clear_line(ScreenBuffer::clear_type_all);      break;
     }
 }
 
 //------------------------------------------------------------------------------
-void ecma48_terminal_out::set_cursor(const ecma48_code::csi_base& csi)
+void Ecma48TerminalOut::set_cursor(const Ecma48Code::CsiBase& csi)
 {
     /* CSI Ps ; Ps H : Cursor Position [row;column] (default = [1,1]) (CUP). */
     int row = csi.get_param(0, 1);
@@ -223,7 +223,7 @@ void ecma48_terminal_out::set_cursor(const ecma48_code::csi_base& csi)
 }
 
 //------------------------------------------------------------------------------
-void ecma48_terminal_out::insert_chars(const ecma48_code::csi_base& csi)
+void Ecma48TerminalOut::insert_chars(const Ecma48Code::CsiBase& csi)
 {
     /* CSI Ps @  Insert Ps (Blank) Character(s) (default = 1) (ICH). */
     int count = csi.get_param(0, 1);
@@ -231,7 +231,7 @@ void ecma48_terminal_out::insert_chars(const ecma48_code::csi_base& csi)
 }
 
 //------------------------------------------------------------------------------
-void ecma48_terminal_out::delete_chars(const ecma48_code::csi_base& csi)
+void Ecma48TerminalOut::delete_chars(const Ecma48Code::CsiBase& csi)
 {
     /* CSI Ps P : Delete Ps Character(s) (default = 1) (DCH). */
     int count = csi.get_param(0, 1);
@@ -239,7 +239,7 @@ void ecma48_terminal_out::delete_chars(const ecma48_code::csi_base& csi)
 }
 
 //------------------------------------------------------------------------------
-void ecma48_terminal_out::set_private_mode(const ecma48_code::csi_base& csi)
+void Ecma48TerminalOut::set_private_mode(const Ecma48Code::CsiBase& csi)
 {
     /* CSI ? Pm h : DEC Private Mode Set (DECSET).
             Ps = 5  -> Reverse Video (DECSCNM).
@@ -256,7 +256,7 @@ void ecma48_terminal_out::set_private_mode(const ecma48_code::csi_base& csi)
 }
 
 //------------------------------------------------------------------------------
-void ecma48_terminal_out::reset_private_mode(const ecma48_code::csi_base& csi)
+void Ecma48TerminalOut::reset_private_mode(const Ecma48Code::CsiBase& csi)
 {
     /* CSI ? Pm l : DEC Private Mode Reset (DECRST).
             Ps = 5  -> Normal Video (DECSCNM).

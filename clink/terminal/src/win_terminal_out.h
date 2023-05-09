@@ -6,8 +6,8 @@
 #include "terminal_out.h"
 
 //------------------------------------------------------------------------------
-class win_terminal_out
-    : public terminal_out
+class WinTerminalOut
+    : public TerminalOut
 {
 public:
     virtual void    begin() override;

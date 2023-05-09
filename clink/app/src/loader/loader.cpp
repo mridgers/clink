@@ -48,7 +48,7 @@ static void show_usage()
     const char* help_usage = "Usage: [options] <verb> [verb_options]\n";
     const char* help_verbs[] = {
         "Verbs:",          "",
-        "inject",          "Injects Clink into a process",
+        "inject",          "Injects Clink into a Process",
         "autorun",         "Manage Clink's entry in cmd.exe's autorun",
         "set",             "Adjust Clink's settings",
         "history",         "List and operate on the command history",
@@ -109,7 +109,7 @@ static int dispatch_verb(const char* verb, int argc, char** argv)
 //------------------------------------------------------------------------------
 int loader(int argc, char** argv)
 {
-    seh_scope seh;
+    SehScope seh;
 
     struct option options[] = {
         { "help",    no_argument,       nullptr, 'h' },
@@ -125,7 +125,7 @@ int loader(int argc, char** argv)
         return 0;
     }
 
-    app_context::desc app_desc;
+    AppContext::Desc app_desc;
     app_desc.inherit_id = true;
 
     // Parse arguments
@@ -135,7 +135,7 @@ int loader(int argc, char** argv)
         switch (arg)
         {
         case 'p':
-            str_base(app_desc.state_dir).copy(optarg);
+            StrBase(app_desc.state_dir).copy(optarg);
             break;
 
         case 'v':
@@ -155,7 +155,7 @@ int loader(int argc, char** argv)
     int ret = 0;
     if (optind < argc)
     {
-        app_context app_context(app_desc);
+        AppContext app_context(app_desc);
         ret = dispatch_verb(argv[optind], argc - optind, argv + optind);
     }
     else

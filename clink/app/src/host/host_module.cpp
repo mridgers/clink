@@ -11,7 +11,7 @@
 #include <terminal/printer.h>
 
 //------------------------------------------------------------------------------
-static setting_enum g_paste_crlf(
+static SettingEnum g_paste_crlf(
     "clink.paste_crlf",
     "Strips CR and LF chars on paste",
     "Setting this to a value >0 will make Clink strip CR and LF characters\n"
@@ -20,37 +20,37 @@ static setting_enum g_paste_crlf(
     "delete,space",
     1);
 
-static setting_str g_key_paste(
+static SettingStr g_key_paste(
     "keybind.paste",
     "Inserts clipboard contents",
     "^v");
 
-static setting_str g_key_ctrlc(
+static SettingStr g_key_ctrlc(
     "keybind.ctrlc",
     "Cancels current line edit",
     "^c");
 
-static setting_str g_key_copy_line(
+static SettingStr g_key_copy_line(
     "keybind.copy_line",
     "Copies line to clipboard",
     "\\M-C-c");
 
-static setting_str g_key_copy_cwd(
+static SettingStr g_key_copy_cwd(
     "keybind.copy_cwd",
     "Copies current directory",
     "\\M-C");
 
-static setting_str g_key_up_dir(
+static SettingStr g_key_up_dir(
     "keybind.up_dir",
     "Goes up a directory (default = Ctrl-PgUp)",
     "\\e[5;5~");
 
-static setting_str g_key_dotdot(
+static SettingStr g_key_dotdot(
     "keybind.dotdot",
     "Inserts ..\\",
     "\\M-a");
 
-static setting_str g_key_expand_env(
+static SettingStr g_key_expand_env(
     "keybind.expand_env",
     "Expands %envvar% under cursor",
     "\\M-C-e");
@@ -59,8 +59,8 @@ static setting_str g_key_expand_env(
 
 //------------------------------------------------------------------------------
 static void ctrl_c(
-    editor_module::result& result,
-    const editor_module::context& context)
+    EditorModule::Result& result,
+    const EditorModule::Context& context)
 {
     context.buffer.reset();
     context.printer.print("\n^C\n");
@@ -98,7 +98,7 @@ static void strip_crlf(char* line)
 }
 
 //------------------------------------------------------------------------------
-static void paste(line_buffer& buffer)
+static void paste(LineBuffer& buffer)
 {
     if (OpenClipboard(nullptr) == FALSE)
         return;
@@ -106,7 +106,7 @@ static void paste(line_buffer& buffer)
     HANDLE clip_data = GetClipboardData(CF_UNICODETEXT);
     if (clip_data != nullptr)
     {
-        str<1024> utf8;
+        Str<1024> utf8;
         to_utf8(utf8, (wchar_t*)clip_data);
 
         strip_crlf(utf8.data());
@@ -137,15 +137,15 @@ static void copy_impl(const char* value, int length)
 }
 
 //------------------------------------------------------------------------------
-static void copy_line(const line_buffer& buffer)
+static void copy_line(const LineBuffer& buffer)
 {
     copy_impl(buffer.get_buffer(), buffer.get_length());
 }
 
 //------------------------------------------------------------------------------
-static void copy_cwd(const line_buffer& buffer)
+static void copy_cwd(const LineBuffer& buffer)
 {
-    str<270> cwd;
+    Str<270> cwd;
     unsigned int length = GetCurrentDirectory(cwd.size(), cwd.data());
     if (length < cwd.size())
     {
@@ -156,7 +156,7 @@ static void copy_cwd(const line_buffer& buffer)
 }
 
 //------------------------------------------------------------------------------
-static void up_directory(editor_module::result& result, line_buffer& buffer)
+static void up_directory(EditorModule::Result& result, LineBuffer& buffer)
 {
     buffer.begin_undo_group();
     buffer.remove(0, ~0u);
@@ -166,7 +166,7 @@ static void up_directory(editor_module::result& result, line_buffer& buffer)
 }
 
 //------------------------------------------------------------------------------
-static void get_word_bounds(const line_buffer& buffer, int* left, int* right)
+static void get_word_bounds(const LineBuffer& buffer, int* left, int* right)
 {
     const char* str = buffer.get_buffer();
     unsigned int cursor = buffer.get_cursor();
@@ -200,18 +200,18 @@ static void get_word_bounds(const line_buffer& buffer, int* left, int* right)
 }
 
 //------------------------------------------------------------------------------
-static void expand_env_vars(line_buffer& buffer)
+static void expand_env_vars(LineBuffer& buffer)
 {
     // Extract the word under the cursor.
     int word_left, word_right;
     get_word_bounds(buffer, &word_left, &word_right);
 
-    str<1024> in;
+    Str<1024> in;
     in << (buffer.get_buffer() + word_left);
     in.truncate(word_right - word_left);
 
     // Do the environment variable expansion.
-    str<1024> out;
+    Str<1024> out;
     if (!ExpandEnvironmentStrings(in.c_str(), out.data(), out.size()))
         return;
 
@@ -224,7 +224,7 @@ static void expand_env_vars(line_buffer& buffer)
 }
 
 //------------------------------------------------------------------------------
-static void insert_dot_dot(line_buffer& buffer)
+static void insert_dot_dot(LineBuffer& buffer)
 {
     if (unsigned int cursor = buffer.get_cursor())
     {
@@ -253,13 +253,13 @@ enum
 
 
 //------------------------------------------------------------------------------
-host_module::host_module(const char* host_name)
+HostModule::HostModule(const char* host_name)
 : m_host_name(host_name)
 {
 }
 
 //------------------------------------------------------------------------------
-void host_module::bind_input(binder& binder)
+void HostModule::bind_input(Binder& binder)
 {
     int default_group = binder.get_group();
     binder.bind(default_group, g_key_paste.get(), bind_id_paste);
@@ -274,24 +274,24 @@ void host_module::bind_input(binder& binder)
 }
 
 //------------------------------------------------------------------------------
-void host_module::on_begin_line(const context& context)
+void HostModule::on_begin_line(const Context& context)
 {
 }
 
 //------------------------------------------------------------------------------
-void host_module::on_end_line()
+void HostModule::on_end_line()
 {
 }
 
 //------------------------------------------------------------------------------
-void host_module::on_matches_changed(const context& context)
+void HostModule::on_matches_changed(const Context& context)
 {
 }
 
 //------------------------------------------------------------------------------
-void host_module::on_input(const input& input, result& result, const context& context)
+void HostModule::on_input(const Input& Input, Result& result, const Context& context)
 {
-    switch (input.id)
+    switch (Input.id)
     {
     case bind_id_paste:         paste(context.buffer);                break;
     case bind_id_ctrlc:         ctrl_c(result, context);              break;
@@ -304,6 +304,6 @@ void host_module::on_input(const input& input, result& result, const context& co
 }
 
 //------------------------------------------------------------------------------
-void host_module::on_terminal_resize(int columns, int rows, const context& context)
+void HostModule::on_terminal_resize(int columns, int rows, const Context& context)
 {
 }

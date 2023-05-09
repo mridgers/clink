@@ -23,17 +23,17 @@ int input_echo(int argc, char** argv)
         }
     }
 
-    terminal terminal = terminal_create();
-    terminal_in& input = *terminal.in;
-    input.begin();
+    Terminal terminal = terminal_create();
+    TerminalIn& Input = *terminal.in;
+    Input.begin();
 
     bool quit = false;
     while (!quit)
     {
-        input.select();
+        Input.select();
         while (1)
         {
-            int c = input.read();
+            int c = Input.read();
             if (c < 0)
                 break;
 
@@ -51,6 +51,6 @@ int input_echo(int argc, char** argv)
         puts("");
     }
 
-    input.end();
+    Input.end();
     return 0;
 }

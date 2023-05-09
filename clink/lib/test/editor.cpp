@@ -9,27 +9,27 @@
 #include <core/array.h>
 
 //------------------------------------------------------------------------------
-struct delim_module
-    : public editor_module
+struct DelimModule
+    : public EditorModule
 {
-    virtual void    bind_input(binder& binder) override {}
-    virtual void    on_begin_line(const context& context) override {}
+    virtual void    bind_input(Binder& binder) override {}
+    virtual void    on_begin_line(const Context& context) override {}
     virtual void    on_end_line() override {}
-    virtual void    on_matches_changed(const context& context) override;
-    virtual void    on_input(const input& input, result& result, const context& context) override {}
-    virtual void    on_terminal_resize(int columns, int rows, const context& context) override {}
+    virtual void    on_matches_changed(const Context& context) override;
+    virtual void    on_input(const Input& Input, Result& result, const Context& context) override {}
+    virtual void    on_terminal_resize(int columns, int rows, const Context& context) override {}
     unsigned char   delim = 'a';
 };
 
 //------------------------------------------------------------------------------
-void delim_module::on_matches_changed(const context& context)
+void DelimModule::on_matches_changed(const Context& context)
 {
-    const line_state& line = context.line;
+    const LineState& line = context.line;
 
     unsigned int word_count = line.get_word_count();
     REQUIRE(word_count > 0);
 
-    const word* word = line.get_words().back();
+    const Word* word = line.get_words().back();
     delim = word->delim;
 }
 
@@ -38,12 +38,12 @@ void delim_module::on_matches_changed(const context& context)
 //------------------------------------------------------------------------------
 TEST_CASE("editor")
 {
-    line_editor::desc desc;
+    LineEditor::Desc desc;
     desc.word_delims = " =";
-    line_editor_tester tester(desc);
+    LineEditorTester tester(desc);
 
-    delim_module module;
-    line_editor* editor = tester.get_editor();
+    DelimModule module;
+    LineEditor* editor = tester.get_editor();
     editor->add_module(module);
 
     SECTION("first")

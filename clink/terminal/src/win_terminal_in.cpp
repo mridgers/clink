@@ -11,7 +11,7 @@
 #include <Windows.h>
 
 //------------------------------------------------------------------------------
-static setting_enum g_escape_remap(
+static SettingEnum g_escape_remap(
     "input.esc",
     "Remaps the escape key",
     "Changes how the escape key is interpreted. A value of 1 translates escape\n"
@@ -115,7 +115,7 @@ static void adjust_cursor_on_resize(COORD prev_position)
 
 
 //------------------------------------------------------------------------------
-void win_terminal_in::begin()
+void WinTerminalIn::begin()
 {
     m_buffer_count = 0;
     m_stdin = GetStdHandle(STD_INPUT_HANDLE);
@@ -124,7 +124,7 @@ void win_terminal_in::begin()
 }
 
 //------------------------------------------------------------------------------
-void win_terminal_in::end()
+void WinTerminalIn::end()
 {
     set_cursor_visibility(true);
     SetConsoleMode(m_stdin, m_prev_mode);
@@ -132,51 +132,51 @@ void win_terminal_in::end()
 }
 
 //------------------------------------------------------------------------------
-void win_terminal_in::select()
+void WinTerminalIn::select()
 {
     if (!m_buffer_count)
         read_console();
 }
 
 //------------------------------------------------------------------------------
-int win_terminal_in::read()
+int WinTerminalIn::read()
 {
     unsigned int dimensions = get_dimensions();
     if (dimensions != m_dimensions)
     {
         m_dimensions = dimensions;
-        return terminal_in::input_terminal_resize;
+        return TerminalIn::input_terminal_resize;
     }
 
     if (!m_buffer_count)
-        return terminal_in::input_none;
+        return TerminalIn::input_none;
 
     unsigned char c = pop();
     switch (c)
     {
-    case input_none_byte:       return terminal_in::input_none;
-    case input_timeout_byte:    return terminal_in::input_timeout;
-    case input_abort_byte:      return terminal_in::input_abort;
+    case input_none_byte:       return TerminalIn::input_none;
+    case input_timeout_byte:    return TerminalIn::input_timeout;
+    case input_abort_byte:      return TerminalIn::input_abort;
     default:                    return c;
     }
 }
 
 //------------------------------------------------------------------------------
-void win_terminal_in::read_console()
+void WinTerminalIn::read_console()
 {
     // Clear 'processed input' flag so key presses such as Ctrl-C and Ctrl-S
     // aren't swallowed. We also want events about window size changes.
-    struct mode_scope {
+    struct ModeScope {
         HANDLE  handle;
         DWORD   prev_mode;
 
-        mode_scope(HANDLE handle) : handle(handle)
+        ModeScope(HANDLE handle) : handle(handle)
         {
             GetConsoleMode(handle, &prev_mode);
             SetConsoleMode(handle, ENABLE_WINDOW_INPUT);
         }
 
-        ~mode_scope()
+        ~ModeScope()
         {
             SetConsoleMode(handle, prev_mode);
         }
@@ -184,20 +184,20 @@ void win_terminal_in::read_console()
 
     // Hide the cursor unless we're accepting input so we don't have to see it
     // jump around as the screen's drawn.
-    struct cursor_scope {
-        cursor_scope()  { set_cursor_visibility(true); }
-        ~cursor_scope() { set_cursor_visibility(false); }
+    struct CursorScope {
+        CursorScope()   { set_cursor_visibility(true); }
+        ~CursorScope() { set_cursor_visibility(false); }
     } _cs;
 
     // Conhost restarts the cursor blink when writing to the console. It restarts
-    // hidden which means that if you type faster than the blink the cursor turns
+    // hidden which means that if you Type faster than the blink the cursor turns
     // invisible. Fortunately, moving the cursor restarts the blink on visible.
     HANDLE stdout_handle = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     GetConsoleScreenBufferInfo(stdout_handle, &csbi);
     SetConsoleCursorPosition(stdout_handle, csbi.dwCursorPosition);
 
-    // Read input records sent from the terminal (aka conhost) until some
+    // Read input records sent from the Terminal (aka conhost) until some
     // input has beeen buffered.
     unsigned int buffer_count = m_buffer_count;
     while (buffer_count == m_buffer_count)
@@ -243,7 +243,7 @@ void win_terminal_in::read_console()
 }
 
 //------------------------------------------------------------------------------
-void win_terminal_in::process_input(KEY_EVENT_RECORD const& record)
+void WinTerminalIn::process_input(KEY_EVENT_RECORD const& record)
 {
     static const int CTRL_PRESSED = LEFT_CTRL_PRESSED|RIGHT_CTRL_PRESSED;
     static const int ALT_PRESSED = LEFT_ALT_PRESSED|RIGHT_ALT_PRESSED;
@@ -269,7 +269,7 @@ void win_terminal_in::process_input(KEY_EVENT_RECORD const& record)
     // If the input was formed using AltGr or LeftAlt-LeftCtrl then things get
     // tricky. But there's always a Ctrl bit set, even if the user didn't press
     // a ctrl key. We can use this and the knowledge that Ctrl-modified keys
-    // aren't printable to clear appropriate AltGr flags.
+    // aren't printable to clear appropriate AltGr Flags.
     if (key_char > 0x1f && (key_flags & CTRL_PRESSED))
     {
         key_flags &= ~CTRL_PRESSED;
@@ -391,7 +391,7 @@ void win_terminal_in::process_input(KEY_EVENT_RECORD const& record)
 }
 
 //------------------------------------------------------------------------------
-void win_terminal_in::push(const char* seq)
+void WinTerminalIn::push(const char* seq)
 {
     static const unsigned int mask = sizeof_array(m_buffer) - 1;
 
@@ -404,7 +404,7 @@ void win_terminal_in::push(const char* seq)
 }
 
 //------------------------------------------------------------------------------
-void win_terminal_in::push(unsigned int value)
+void WinTerminalIn::push(unsigned int value)
 {
     static const unsigned int mask = sizeof_array(m_buffer) - 1;
 
@@ -431,7 +431,7 @@ void win_terminal_in::push(unsigned int value)
 }
 
 //------------------------------------------------------------------------------
-unsigned char win_terminal_in::pop()
+unsigned char WinTerminalIn::pop()
 {
     if (!m_buffer_count)
         return input_none_byte;

@@ -29,10 +29,10 @@ char* tgetstr(char*, char**);
 #define CTRL_R "\x12"
 
 //------------------------------------------------------------------------------
-struct test_history_db
-    : public history_db
+struct TestHistoryDb
+    : public HistoryDb
 {
-    test_history_db()
+    TestHistoryDb()
     {
         initialise();
     }
@@ -41,11 +41,11 @@ struct test_history_db
 //------------------------------------------------------------------------------
 int count_files()
 {
-    globber file_iter("*");
+    Globber file_iter("*");
     file_iter.hidden(true);
 
     int file_count = 0;
-    for (str<1, false> unused; file_iter.next(unused); ++file_count);
+    for (Str<1, false> unused; file_iter.next(unused); ++file_count);
 
     return file_count;
 }
@@ -85,7 +85,7 @@ TEST_CASE("history db")
 
     // Start with an empty state dir.
     const char* empty_fs[] = { nullptr };
-    fs_fixture fs(empty_fs);
+    FsFixture fs(empty_fs);
     REQUIRE(count_files() == 0);
 
     // This sets the state id to something explicit.
@@ -93,19 +93,19 @@ TEST_CASE("history db")
         "=clink.id", "493",
         nullptr
     };
-    env_fixture env(env_desc);
+    EnvFixture env(env_desc);
 
-    app_context::desc context_desc;
+    AppContext::Desc context_desc;
     context_desc.inherit_id = true;
-    str_base(context_desc.state_dir).copy(fs.get_root());
-    app_context context(context_desc);
+    StrBase(context_desc.state_dir).copy(fs.get_root());
+    AppContext context(context_desc);
 
     SECTION("Alive file")
     {
         // Shared
         settings::find("history.shared")->set("true");
         {
-            test_history_db history;
+            TestHistoryDb history;
             expect_files({master_path, alive_path});
         }
         expect_files({master_path});
@@ -113,7 +113,7 @@ TEST_CASE("history db")
         // Sessioned
         settings::find("history.shared")->set("false");
         {
-            test_history_db history;
+            TestHistoryDb history;
             expect_files({master_path, session_path, alive_path});
         }
         expect_files({master_path});
@@ -128,7 +128,7 @@ TEST_CASE("history db")
 
         // Write a lot of lines, check it only goes to main file.
         {
-            test_history_db history;
+            TestHistoryDb history;
             REQUIRE(count_files() == 2);
 
             while (line_bytes < 64 * 1024)
@@ -145,7 +145,7 @@ TEST_CASE("history db")
 
         // Clear the history.
         {
-            test_history_db history;
+            TestHistoryDb history;
             history.clear();
             REQUIRE(os::get_file_size(master_path) == 0);
         }
@@ -160,7 +160,7 @@ TEST_CASE("history db")
 
         int line_bytes = 0;
         {
-            test_history_db history;
+            TestHistoryDb history;
             REQUIRE(count_files() == 3);
 
             REQUIRE(history.add(line_set0[0]));
@@ -177,7 +177,7 @@ TEST_CASE("history db")
 
     SECTION("line iter")
     {
-        str<> lines;
+        Str<> lines;
         for (char i = 0; i < 8; ++i)
         {
             char c = 'a' + (i * 2);
@@ -189,14 +189,14 @@ TEST_CASE("history db")
         fwrite(lines.c_str(), lines.length(), 1, out);
         fclose(out);
 
-        test_history_db history;
+        TestHistoryDb history;
 
         char buffer[256];
-        str_iter line;
+        StrIter line;
         int j = 0;
         for (int i = 0; i < sizeof_array(buffer); ++i)
         {
-            history_db::iter iter = history.read_lines(buffer, i);
+            HistoryDb::Iter iter = history.read_lines(buffer, i);
             char c = 'a';
             while (iter.next(line))
             {
@@ -216,19 +216,19 @@ TEST_CASE("history rl")
 {
     // Start with an empty state dir.
     const char* empty_fs[] = { nullptr };
-    fs_fixture fs(empty_fs);
+    FsFixture fs(empty_fs);
 
     // This sets the state id to something explicit.
     static const char* env_desc[] = {
         "=clink.id", "493",
         nullptr
     };
-    env_fixture env(env_desc);
+    EnvFixture env(env_desc);
 
-    app_context::desc context_desc;
+    AppContext::Desc context_desc;
     context_desc.inherit_id = true;
-    str_base(context_desc.state_dir).copy(fs.get_root());
-    app_context context(context_desc);
+    StrBase(context_desc.state_dir).copy(fs.get_root());
+    AppContext context(context_desc);
 
     // Fill the history. reload() call will fill Readline.
     static const char* history_lines[] = {
@@ -237,7 +237,7 @@ TEST_CASE("history rl")
         "cmd3 arg1 arg2 arg3 arg4",
     };
 
-    test_history_db history;
+    TestHistoryDb history;
     for (const char* line : history_lines)
         history.add(line);
     history.load_rl_history();
@@ -245,7 +245,7 @@ TEST_CASE("history rl")
     // Here be the tests.
     SECTION("Navigation")
     {
-        line_editor_tester tester;
+        LineEditorTester tester;
 
         SECTION("Ctrl-P 1")
         {
@@ -292,7 +292,7 @@ TEST_CASE("history rl")
 
     SECTION("Search")
     {
-        line_editor_tester tester;
+        LineEditorTester tester;
 
         SECTION("Ctrl-R Ctrl-E")
         {
@@ -320,7 +320,7 @@ TEST_CASE("history rl")
             char kh_cap[] = "kh";
             char* kh = tgetstr(kh_cap, nullptr);
 
-            str<> input;
+            Str<> input;
             input << CTRL_R << "cmd2" << kh;
 
             tester.set_input(input.c_str());
@@ -331,35 +331,35 @@ TEST_CASE("history rl")
 
     SECTION("Expansion")
     {
-        str<> out;
+        Str<> out;
 
         SECTION("!0")
         {
-            REQUIRE(history.expand("!0", out) == history_db::expand_error);
+            REQUIRE(history.expand("!0", out) == HistoryDb::expand_error);
             REQUIRE(out.empty());
         }
 
         SECTION("!!")
         {
-            REQUIRE(history.expand("!!", out) == history_db::expand_ok);
+            REQUIRE(history.expand("!!", out) == HistoryDb::expand_ok);
             REQUIRE(out.equals(history_lines[2]));
         }
 
         SECTION("!string")
         {
-            REQUIRE(history.expand("!cmd2", out) == history_db::expand_ok);
+            REQUIRE(history.expand("!cmd2", out) == HistoryDb::expand_ok);
             REQUIRE(out.equals(history_lines[1]));
         }
 
         SECTION("!1")
         {
-            REQUIRE(history.expand("!1", out) == history_db::expand_ok);
+            REQUIRE(history.expand("!1", out) == HistoryDb::expand_ok);
             REQUIRE(out.equals(history_lines[0]));
         }
 
         SECTION("!#")
         {
-            REQUIRE(history.expand("one two !#", out) == history_db::expand_ok);
+            REQUIRE(history.expand("one two !#", out) == HistoryDb::expand_ok);
             REQUIRE(out.equals("one two one two "));
         }
 
@@ -367,61 +367,61 @@ TEST_CASE("history rl")
         {
             history.add("one two");
             history.load_rl_history();
-            REQUIRE(history.expand("three !?one", out) == history_db::expand_ok);
+            REQUIRE(history.expand("three !?one", out) == HistoryDb::expand_ok);
             REQUIRE(out.equals("three one two"));
         }
 
         SECTION("!$")
         {
-            REQUIRE(history.expand("cmdX !$", out) == history_db::expand_ok);
+            REQUIRE(history.expand("cmdX !$", out) == HistoryDb::expand_ok);
             REQUIRE(out.equals("cmdX arg4"));
         }
 
         SECTION("!!:$")
         {
-            REQUIRE(history.expand("cmdX !!:$", out) == history_db::expand_ok);
+            REQUIRE(history.expand("cmdX !!:$", out) == HistoryDb::expand_ok);
             REQUIRE(out.equals("cmdX arg4"));
         }
 
         SECTION("!!:N-$")
         {
-            REQUIRE(history.expand("cmdX !!:3-$", out) == history_db::expand_ok);
+            REQUIRE(history.expand("cmdX !!:3-$", out) == HistoryDb::expand_ok);
             REQUIRE(out.equals("cmdX arg3 arg4"));
         }
 
         SECTION("!!:N*")
         {
-            REQUIRE(history.expand("cmdX !!:2*", out) == history_db::expand_ok);
+            REQUIRE(history.expand("cmdX !!:2*", out) == HistoryDb::expand_ok);
             REQUIRE(out.equals("cmdX arg2 arg3 arg4"));
         }
 
         SECTION("!!:N")
         {
-            REQUIRE(history.expand("cmdX !!:2", out) == history_db::expand_ok);
+            REQUIRE(history.expand("cmdX !!:2", out) == HistoryDb::expand_ok);
             REQUIRE(out.equals("cmdX arg2"));
         }
 
         SECTION("!!:-N")
         {
-            REQUIRE(history.expand("cmdX !!:-1", out) == history_db::expand_ok);
+            REQUIRE(history.expand("cmdX !!:-1", out) == HistoryDb::expand_ok);
             REQUIRE(out.equals("cmdX cmd3 arg1"));
         }
 
         SECTION("^X^Y^")
         {
-            REQUIRE(history.expand("^arg1^123^", out) == history_db::expand_ok);
+            REQUIRE(history.expand("^arg1^123^", out) == HistoryDb::expand_ok);
             REQUIRE(out.equals("cmd3 123 arg2 arg3 arg4"));
         }
 
         SECTION("!X:s/Y/Z")
         {
-            REQUIRE(history.expand("!cmd1:s/arg1/123", out) == history_db::expand_ok);
+            REQUIRE(history.expand("!cmd1:s/arg1/123", out) == HistoryDb::expand_ok);
             REQUIRE(out.equals("cmd1 123 arg2 arg3 arg4"));
         }
 
         SECTION("!?X?:")
         {
-            REQUIRE(history.expand("cmdX !?extra?:*", out) == history_db::expand_ok);
+            REQUIRE(history.expand("cmdX !?extra?:*", out) == HistoryDb::expand_ok);
             REQUIRE(out.equals("cmdX arg1 arg2 arg3 arg4 extra"));
         }
     }

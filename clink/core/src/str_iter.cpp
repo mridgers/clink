@@ -6,7 +6,7 @@
 
 //------------------------------------------------------------------------------
 template <>
-int str_iter_impl<char>::next()
+int StrIterImpl<char>::next()
 {
     if (!more())
         return 0;
@@ -39,7 +39,7 @@ int str_iter_impl<char>::next()
 
 //------------------------------------------------------------------------------
 template <>
-int str_iter_impl<wchar_t>::next()
+int StrIterImpl<wchar_t>::next()
 {
     if (!more())
         return 0;
@@ -64,14 +64,14 @@ int str_iter_impl<wchar_t>::next()
 
 //------------------------------------------------------------------------------
 template <>
-unsigned int str_iter_impl<char>::length() const
+unsigned int StrIterImpl<char>::length() const
 {
     return (unsigned int)((m_ptr <= m_end) ? m_end - m_ptr : strlen(m_ptr));
 }
 
 //------------------------------------------------------------------------------
 template <>
-unsigned int str_iter_impl<wchar_t>::length() const
+unsigned int StrIterImpl<wchar_t>::length() const
 {
     return (unsigned int)((m_ptr <= m_end) ? m_end - m_ptr : wcslen(m_ptr));
 }

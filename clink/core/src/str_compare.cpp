@@ -4,23 +4,23 @@
 #include "pch.h"
 #include "str_compare.h"
 
-threadlocal int str_compare_scope::ts_mode = str_compare_scope::exact;
+threadlocal int StrCompareScope::ts_mode = StrCompareScope::exact;
 
 //------------------------------------------------------------------------------
-str_compare_scope::str_compare_scope(int mode)
+StrCompareScope::StrCompareScope(int mode)
 {
     m_prev_mode = ts_mode;
     ts_mode = mode;
 }
 
 //------------------------------------------------------------------------------
-str_compare_scope::~str_compare_scope()
+StrCompareScope::~StrCompareScope()
 {
     ts_mode = m_prev_mode;
 }
 
 //------------------------------------------------------------------------------
-int str_compare_scope::current()
+int StrCompareScope::current()
 {
     return ts_mode;
 }

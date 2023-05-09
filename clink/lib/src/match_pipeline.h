@@ -3,22 +3,22 @@
 
 #pragma once
 
-class line_state;
-class match_generator;
-class matches_impl;
-template <typename T> class array;
+class LineState;
+class MatchGenerator;
+class MatchesImpl;
+template <typename T> class Array;
 
 //------------------------------------------------------------------------------
-class match_pipeline
+class MatchPipeline
 {
 public:
-                        match_pipeline(matches_impl& matches);
+                        MatchPipeline(MatchesImpl& matches);
     void                reset() const;
-    void                generate(const line_state& state, const array<match_generator*>& generators) const;
+    void                generate(const LineState& state, const Array<MatchGenerator*>& generators) const;
     void                fill_info() const;
     void                select(const char* needle) const;
     void                sort() const;
 
 private:
-    matches_impl&       m_matches;
+    MatchesImpl&        m_matches;
 };

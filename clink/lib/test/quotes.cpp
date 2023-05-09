@@ -23,13 +23,13 @@ TEST_CASE("Quoting")
         nullptr,
     };
 
-    fs_fixture fs(space_fs);
+    FsFixture fs(space_fs);
 
     SECTION("Double quotes")
     {
-        line_editor_tester tester;
+        LineEditorTester tester;
 
-        line_editor* editor = tester.get_editor();
+        LineEditor* editor = tester.get_editor();
         editor->add_generator(file_match_generator());
 
         SECTION("None")
@@ -69,7 +69,7 @@ TEST_CASE("Quoting")
 
         SECTION("Prefix (case mapped)")
         {
-            str_compare_scope _(str_compare_scope::relaxed);
+            StrCompareScope _(StrCompareScope::relaxed);
             tester.set_input("pre-s" DO_COMPLETE);
             tester.set_expected_output("\"pre_space");
             tester.run();
@@ -99,11 +99,11 @@ TEST_CASE("Quoting")
 
     SECTION("Matched pair")
     {
-        line_editor::desc desc;
+        LineEditor::Desc desc;
         desc.quote_pair = "()";
-        line_editor_tester tester(desc);
+        LineEditorTester tester(desc);
 
-        line_editor* editor = tester.get_editor();
+        LineEditor* editor = tester.get_editor();
         editor->add_generator(file_match_generator());
 
         SECTION("None")
@@ -144,11 +144,11 @@ TEST_CASE("Quoting")
 
     SECTION("No quote pair")
     {
-        line_editor::desc desc;
+        LineEditor::Desc desc;
         desc.quote_pair = nullptr;
-        line_editor_tester tester(desc);
+        LineEditorTester tester(desc);
 
-        line_editor* editor = tester.get_editor();
+        LineEditor* editor = tester.get_editor();
         editor->add_generator(file_match_generator());
 
         SECTION("None")

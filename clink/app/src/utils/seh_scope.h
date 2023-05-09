@@ -4,11 +4,11 @@
 #pragma once
 
 //------------------------------------------------------------------------------
-class seh_scope
+class SehScope
 {
 public:
-                seh_scope();
-                ~seh_scope();
+                SehScope();
+                ~SehScope();
 
 private:
     void*       m_prev_filter;

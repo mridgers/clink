@@ -10,7 +10,7 @@
 #include <Windows.h>
 
 //------------------------------------------------------------------------------
-void win_terminal_out::begin()
+void WinTerminalOut::begin()
 {
     m_stdout = GetStdHandle(STD_OUTPUT_HANDLE);
     GetConsoleMode(m_stdout, &m_prev_mode);
@@ -21,7 +21,7 @@ void win_terminal_out::begin()
 }
 
 //------------------------------------------------------------------------------
-void win_terminal_out::end()
+void WinTerminalOut::end()
 {
     SetConsoleTextAttribute(m_stdout, m_default_attr);
     SetConsoleMode(m_stdout, m_prev_mode);
@@ -29,9 +29,9 @@ void win_terminal_out::end()
 }
 
 //------------------------------------------------------------------------------
-void win_terminal_out::write(const char* chars, int length)
+void WinTerminalOut::write(const char* chars, int length)
 {
-    str_iter iter(chars, length);
+    StrIter iter(chars, length);
     while (length > 0)
     {
         wchar_t wbuf[384];
@@ -48,7 +48,7 @@ void win_terminal_out::write(const char* chars, int length)
 }
 
 //------------------------------------------------------------------------------
-void win_terminal_out::flush()
+void WinTerminalOut::flush()
 {
     // When writing to the console conhost.exe will restart the cursor blink
     // timer and hide it which can be disorientating, especially when moving
@@ -59,7 +59,7 @@ void win_terminal_out::flush()
 }
 
 //------------------------------------------------------------------------------
-int win_terminal_out::get_columns() const
+int WinTerminalOut::get_columns() const
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     GetConsoleScreenBufferInfo(m_stdout, &csbi);
@@ -67,7 +67,7 @@ int win_terminal_out::get_columns() const
 }
 
 //------------------------------------------------------------------------------
-int win_terminal_out::get_rows() const
+int WinTerminalOut::get_rows() const
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     GetConsoleScreenBufferInfo(m_stdout, &csbi);

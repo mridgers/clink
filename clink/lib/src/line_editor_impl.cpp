@@ -24,20 +24,20 @@ inline char get_closing_quote(const char* quote_pair)
 
 
 //------------------------------------------------------------------------------
-line_editor* line_editor_create(const line_editor::desc& desc)
+LineEditor* line_editor_create(const LineEditor::Desc& desc)
 {
-    // Check there's at least a terminal.
+    // Check there's at least a Terminal.
     if (desc.input == nullptr)
         return nullptr;
 
     if (desc.output == nullptr)
         return nullptr;
 
-    return new line_editor_impl(desc);
+    return new LineEditorImpl(desc);
 }
 
 //------------------------------------------------------------------------------
-void line_editor_destroy(line_editor* editor)
+void line_editor_destroy(LineEditor* editor)
 {
     delete editor;
 }
@@ -45,7 +45,7 @@ void line_editor_destroy(line_editor* editor)
 
 
 //------------------------------------------------------------------------------
-line_editor_impl::line_editor_impl(const desc& desc)
+LineEditorImpl::LineEditorImpl(const Desc& desc)
 : m_module(desc.shell_name)
 , m_desc(desc)
 , m_printer(*desc.output)
@@ -57,12 +57,12 @@ line_editor_impl::line_editor_impl(const desc& desc)
 }
 
 //------------------------------------------------------------------------------
-void line_editor_impl::initialise()
+void LineEditorImpl::initialise()
 {
     if (check_flag(flag_init))
         return;
 
-    struct : public editor_module::binder {
+    struct : public EditorModule::Binder {
         virtual int get_group(const char* name) const override
         {
             return binder->get_group(name);
@@ -78,8 +78,8 @@ void line_editor_impl::initialise()
             return binder->bind(group, chord, *module, key);
         }
 
-        ::binder*       binder;
-        editor_module*  module;
+        ::Binder*       binder;
+        EditorModule*   module;
     } binder_impl;
 
     binder_impl.binder = &m_binder;
@@ -93,7 +93,7 @@ void line_editor_impl::initialise()
 }
 
 //------------------------------------------------------------------------------
-void line_editor_impl::begin_line()
+void LineEditorImpl::begin_line()
 {
     clear_flag(~flag_init);
     set_flag(flag_editing);
@@ -103,21 +103,21 @@ void line_editor_impl::begin_line()
     m_keys_size = 0;
     m_prev_key = ~0u;
 
-    match_pipeline pipeline(m_matches);
+    MatchPipeline pipeline(m_matches);
     pipeline.reset();
 
     m_desc.input->begin();
     m_desc.output->begin();
     m_buffer.begin_line();
 
-    line_state line = get_linestate();
-    editor_module::context context = get_context(line);
+    LineState line = get_linestate();
+    EditorModule::Context context = get_context(line);
     for (auto module : m_modules)
         module->on_begin_line(context);
 }
 
 //------------------------------------------------------------------------------
-void line_editor_impl::end_line()
+void LineEditorImpl::end_line()
 {
     for (auto i = m_modules.rbegin(), n = m_modules.rend(); i != n; ++i)
         i->on_end_line();
@@ -130,21 +130,21 @@ void line_editor_impl::end_line()
 }
 
 //------------------------------------------------------------------------------
-bool line_editor_impl::add_module(editor_module& module)
+bool LineEditorImpl::add_module(EditorModule& module)
 {
-    editor_module** slot = m_modules.push_back();
+    EditorModule** slot = m_modules.push_back();
     return (slot != nullptr) ? *slot = &module, true : false;
 }
 
 //------------------------------------------------------------------------------
-bool line_editor_impl::add_generator(match_generator& generator)
+bool LineEditorImpl::add_generator(MatchGenerator& generator)
 {
-    match_generator** slot = m_generators.push_back();
+    MatchGenerator** slot = m_generators.push_back();
     return (slot != nullptr) ? *slot = &generator, true : false;
 }
 
 //------------------------------------------------------------------------------
-bool line_editor_impl::get_line(char* out, int out_size)
+bool LineEditorImpl::get_line(char* out, int out_size)
 {
     if (check_flag(flag_editing))
         end_line();
@@ -153,12 +153,12 @@ bool line_editor_impl::get_line(char* out, int out_size)
         return false;
 
     const char* line = m_buffer.get_buffer();
-    str_base(out, out_size).copy(line);
+    StrBase(out, out_size).copy(line);
     return true;
 }
 
 //------------------------------------------------------------------------------
-bool line_editor_impl::edit(char* out, int out_size)
+bool LineEditorImpl::edit(char* out, int out_size)
 {
     // Update first so the init state goes through.
     while (update())
@@ -168,7 +168,7 @@ bool line_editor_impl::edit(char* out, int out_size)
 }
 
 //------------------------------------------------------------------------------
-bool line_editor_impl::update()
+bool LineEditorImpl::update()
 {
     if (!check_flag(flag_init))
         initialise();
@@ -190,21 +190,21 @@ bool line_editor_impl::update()
 }
 
 //------------------------------------------------------------------------------
-void line_editor_impl::update_input()
+void LineEditorImpl::update_input()
 {
     int key = m_desc.input->read();
 
-    if (key == terminal_in::input_terminal_resize)
+    if (key == TerminalIn::input_terminal_resize)
     {
         int columns = m_desc.output->get_columns();
         int rows = m_desc.output->get_rows();
-        line_state line = get_linestate();
-        editor_module::context context = get_context(line);
+        LineState line = get_linestate();
+        EditorModule::Context context = get_context(line);
         for (auto* module : m_modules)
             module->on_terminal_resize(columns, rows, context);
     }
 
-    if (key == terminal_in::input_abort)
+    if (key == TerminalIn::input_abort)
     {
         m_buffer.reset();
         end_line();
@@ -217,7 +217,7 @@ void line_editor_impl::update_input()
     if (!m_bind_resolver.step(key))
         return;
 
-    struct result_impl : public editor_module::result
+    struct ResultImpl : public EditorModule::Result
     {
         enum
         {
@@ -239,49 +239,49 @@ void line_editor_impl::update_input()
         unsigned char   flags;  // = 0;   <! issues about C2905
     };
 
-    while (auto binding = m_bind_resolver.next())
+    while (auto Binding = m_bind_resolver.next())
     {
         // Binding found, dispatch it off to the module.
-        result_impl result;
+        ResultImpl result;
         result.match = -1;
         result.flags = 0;
         result.group = m_bind_resolver.get_group();
 
-        str<16> chord;
-        editor_module* module = binding.get_module();
-        unsigned char id = binding.get_id();
-        binding.get_chord(chord);
+        Str<16> chord;
+        EditorModule* module = Binding.get_module();
+        unsigned char id = Binding.get_id();
+        Binding.get_chord(chord);
 
-        line_state line = get_linestate();
-        editor_module::context context = get_context(line);
-        editor_module::input input = { chord.c_str(), id };
+        LineState line = get_linestate();
+        EditorModule::Context context = get_context(line);
+        EditorModule::Input input = { chord.c_str(), id };
         module->on_input(input, result, context);
 
         m_bind_resolver.set_group(result.group);
 
-        // Process what result_impl has collected.
-        if (result.flags & result_impl::flag_pass)
+        // Process what ResultImpl has collected.
+        if (result.flags & ResultImpl::flag_pass)
             continue;
 
-        binding.claim();
+        Binding.claim();
 
-        if (result.flags & result_impl::flag_done)
+        if (result.flags & ResultImpl::flag_done)
         {
             end_line();
 
-            if (result.flags & result_impl::flag_eof)
+            if (result.flags & ResultImpl::flag_eof)
                 set_flag(flag_eof);
         }
 
         if (!check_flag(flag_editing))
             return;
 
-        if (result.flags & result_impl::flag_redraw)
+        if (result.flags & ResultImpl::flag_redraw)
             m_buffer.redraw();
 
         if (result.match >= 0)
             accept_match(result.match);
-        else if (result.flags & result_impl::flag_append_lcd)
+        else if (result.flags & ResultImpl::flag_append_lcd)
             append_match_lcd();
     }
 
@@ -289,7 +289,7 @@ void line_editor_impl::update_input()
 }
 
 //------------------------------------------------------------------------------
-void line_editor_impl::find_command_bounds(const char*& start, int& length)
+void LineEditorImpl::find_command_bounds(const char*& start, int& length)
 {
     const char* line_buffer = m_buffer.get_buffer();
     unsigned int line_cursor = m_buffer.get_cursor();
@@ -300,8 +300,8 @@ void line_editor_impl::find_command_bounds(const char*& start, int& length)
     if (m_desc.command_delims == nullptr)
         return;
 
-    str_iter token_iter(start, length);
-    str_tokeniser tokens(token_iter, m_desc.command_delims);
+    StrIter token_iter(start, length);
+    StrTokeniser tokens(token_iter, m_desc.command_delims);
     tokens.add_quote_pair(m_desc.quote_pair);
     while (tokens.next(start, length));
 
@@ -315,7 +315,7 @@ void line_editor_impl::find_command_bounds(const char*& start, int& length)
 }
 
 //------------------------------------------------------------------------------
-void line_editor_impl::collect_words()
+void LineEditorImpl::collect_words()
 {
     m_words.clear();
 
@@ -328,14 +328,14 @@ void line_editor_impl::collect_words()
 
     m_command_offset = int(command_start - line_buffer);
 
-    str_iter token_iter(command_start, command_length);
-    str_tokeniser tokens(token_iter, m_desc.word_delims);
+    StrIter token_iter(command_start, command_length);
+    StrTokeniser tokens(token_iter, m_desc.word_delims);
     tokens.add_quote_pair(m_desc.quote_pair);
     while (1)
     {
         int length = 0;
         const char* start = nullptr;
-        str_token token = tokens.next(start, length);
+        StrToken token = tokens.next(start, length);
         if (!token)
             break;
 
@@ -346,7 +346,7 @@ void line_editor_impl::collect_words()
     }
 
     // Add an empty word if the cursor is at the beginning of one.
-    word* end_word = m_words.back();
+    Word* end_word = m_words.back();
     if (!end_word || end_word->offset + end_word->length < line_cursor)
     {
         unsigned char delim = 0;
@@ -358,7 +358,7 @@ void line_editor_impl::collect_words()
     }
 
     // Adjust for quotes.
-    for (word& word : m_words)
+    for (Word& word : m_words)
     {
         if (word.length == 0)
             continue;
@@ -377,7 +377,7 @@ void line_editor_impl::collect_words()
 
     // The last word is truncated to the longest length returned by the match
     // generators. This is a little clunky but works well enough.
-    line_state line = get_linestate();
+    LineState line = get_linestate();
     end_word = m_words.back();
     int prefix_length = 0;
     const char* word_start = line_buffer + end_word->offset;
@@ -390,7 +390,7 @@ void line_editor_impl::collect_words()
 }
 
 //------------------------------------------------------------------------------
-void line_editor_impl::accept_match(unsigned int index)
+void LineEditorImpl::accept_match(unsigned int index)
 {
     if (index >= m_matches.get_match_count())
         return;
@@ -399,13 +399,13 @@ void line_editor_impl::accept_match(unsigned int index)
     if (!*match)
         return;
 
-    word end_word = *(m_words.back());
+    Word end_word = *(m_words.back());
     int word_start = end_word.offset;
     int word_end = end_word.offset + end_word.length;
 
     const char* buf_ptr = m_buffer.get_buffer();
 
-    str<288> to_insert;
+    Str<288> to_insert;
     if (!m_matches.is_prefix_included())
         to_insert.concat(buf_ptr + word_start, end_word.length);
     to_insert << match;
@@ -439,9 +439,9 @@ void line_editor_impl::accept_match(unsigned int index)
     {
         unsigned int match_length = unsigned(strlen(match));
 
-        word match_word = { 0, match_length };
-        array<word> match_words(&match_word, 1);
-        line_state match_line = { match, match_length, 0, match_words };
+        Word match_word = { 0, match_length };
+        Array<Word> match_words(&match_word, 1);
+        LineState match_line = { match, match_length, 0, match_words };
 
         int prefix_length = 0;
         for (const auto* generator : m_generators)
@@ -479,9 +479,9 @@ void line_editor_impl::accept_match(unsigned int index)
 }
 
 //------------------------------------------------------------------------------
-void line_editor_impl::append_match_lcd()
+void LineEditorImpl::append_match_lcd()
 {
-    str<288> lcd;
+    Str<288> lcd;
     m_matches.get_match_lcd(lcd);
 
     unsigned int lcd_length = lcd.length();
@@ -490,7 +490,7 @@ void line_editor_impl::append_match_lcd()
 
     unsigned int cursor = m_buffer.get_cursor();
 
-    word end_word = *(m_words.back());
+    Word end_word = *(m_words.back());
     int word_end = end_word.offset;
     if (!m_matches.is_prefix_included())
         word_end += end_word.length;
@@ -535,7 +535,7 @@ void line_editor_impl::append_match_lcd()
 }
 
 //------------------------------------------------------------------------------
-line_state line_editor_impl::get_linestate() const
+LineState LineEditorImpl::get_linestate() const
 {
     return {
         m_buffer.get_buffer(),
@@ -546,37 +546,37 @@ line_state line_editor_impl::get_linestate() const
 }
 
 //------------------------------------------------------------------------------
-editor_module::context line_editor_impl::get_context(const line_state& line) const
+EditorModule::Context LineEditorImpl::get_context(const LineState& line) const
 {
-    auto& buffer = const_cast<rl_buffer&>(m_buffer);
-    auto& pter = const_cast<printer&>(m_printer);
+    auto& buffer = const_cast<RlBuffer&>(m_buffer);
+    auto& pter = const_cast<Printer&>(m_printer);
     return { m_desc.prompt, pter, buffer, line, m_matches };
 }
 
 //------------------------------------------------------------------------------
-void line_editor_impl::set_flag(unsigned char flag)
+void LineEditorImpl::set_flag(unsigned char flag)
 {
     m_flags |= flag;
 }
 
 //------------------------------------------------------------------------------
-void line_editor_impl::clear_flag(unsigned char flag)
+void LineEditorImpl::clear_flag(unsigned char flag)
 {
     m_flags &= ~flag;
 }
 
 //------------------------------------------------------------------------------
-bool line_editor_impl::check_flag(unsigned char flag) const
+bool LineEditorImpl::check_flag(unsigned char flag) const
 {
     return ((m_flags & flag) != 0);
 }
 
 //------------------------------------------------------------------------------
-void line_editor_impl::update_internal()
+void LineEditorImpl::update_internal()
 {
     collect_words();
 
-    const word& end_word = *(m_words.back());
+    const Word& end_word = *(m_words.back());
 
     union key_t {
         struct {
@@ -596,8 +596,8 @@ void line_editor_impl::update_internal()
     // Should we generate new matches?
     if (next_key.value != prev_key.value)
     {
-        line_state line = get_linestate();
-        match_pipeline pipeline(m_matches);
+        LineState line = get_linestate();
+        MatchPipeline pipeline(m_matches);
         pipeline.reset();
         pipeline.generate(line, m_generators);
         pipeline.fill_info();
@@ -609,7 +609,7 @@ void line_editor_impl::update_internal()
     // Should we sort and select matches?
     if (next_key.value != prev_key.value)
     {
-        str<64> needle;
+        Str<64> needle;
         int needle_start = end_word.offset;
         if (!m_matches.is_prefix_included())
             needle_start += end_word.length;
@@ -624,15 +624,15 @@ void line_editor_impl::update_internal()
                 needle.truncate(i - 1);
         }
 
-        match_pipeline pipeline(m_matches);
+        MatchPipeline pipeline(m_matches);
         pipeline.select(needle.c_str());
         pipeline.sort();
 
         m_prev_key = next_key.value;
 
         // Tell all the modules that the matches changed.
-        line_state line = get_linestate();
-        editor_module::context context = get_context(line);
+        LineState line = get_linestate();
+        EditorModule::Context context = get_context(line);
         for (auto module : m_modules)
             module->on_matches_changed(context);
     }

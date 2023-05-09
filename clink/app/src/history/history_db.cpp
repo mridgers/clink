@@ -19,20 +19,20 @@ extern "C" {
 }
 
 //------------------------------------------------------------------------------
-static setting_bool g_shared(
+static SettingBool g_shared(
     "history.shared",
     "Share history between instances",
     "",
     false);
 
-static setting_bool g_ignore_space(
+static SettingBool g_ignore_space(
     "history.ignore_space",
     "Skip adding lines prefixed with whitespace",
     "Ignore lines that begin with whitespace when adding lines in to\n"
     "the history.",
     true);
 
-static setting_enum g_dupe_mode(
+static SettingEnum g_dupe_mode(
     "history.dupe_mode",
     "Controls how duplicate entries are handled",
     "If a line is a duplicate of an existing history entry Clink will\n"
@@ -42,7 +42,7 @@ static setting_enum g_dupe_mode(
     "add,ignore,erase_prev",
     2);
 
-static setting_enum g_expand_mode(
+static SettingEnum g_expand_mode(
     "history.expand_mode",
     "Sets how command history expansion is applied",
     "The '!' character in an entered line can be interpreted to introduce\n"
@@ -57,15 +57,13 @@ static setting_enum g_expand_mode(
 //------------------------------------------------------------------------------
 static int history_expand_control(char* line, int marker_pos)
 {
-    int setting, in_quote, i;
-
-    setting = g_expand_mode.get();
+    int setting = g_expand_mode.get();
     if (setting <= 1)
         return (setting <= 0);
 
     // Is marker_pos inside a quote of some kind?
-    in_quote = 0;
-    for (i = 0; i < marker_pos && *line; ++i, ++line)
+    int in_quote = 0;
+    for (int i = 0; i < marker_pos && *line; ++i, ++line)
     {
         int c = *line;
         if (c == '\'' || c == '\"')
@@ -83,16 +81,16 @@ static int history_expand_control(char* line, int marker_pos)
 }
 
 //------------------------------------------------------------------------------
-static void get_file_path(str_base& out, bool session)
+static void get_file_path(StrBase& out, bool session)
 {
     out.clear();
 
-    const auto* app = app_context::get();
+    const auto* app = AppContext::get();
     app->get_history_path(out);
 
     if (session)
     {
-        str<16> suffix;
+        Str<16> suffix;
         suffix.format("_%d", app->get_id());
         out << suffix;
     }
@@ -101,7 +99,7 @@ static void get_file_path(str_base& out, bool session)
 //------------------------------------------------------------------------------
 static void* open_file(const char* path)
 {
-    wstr<256> wpath(path);
+    Wstr<256> wpath(path);
     DWORD share_flags = FILE_SHARE_READ|FILE_SHARE_WRITE;
     void* handle = CreateFileW(wpath.c_str(), GENERIC_READ|GENERIC_WRITE, share_flags,
         nullptr, OPEN_ALWAYS, FILE_FLAG_SEQUENTIAL_SCAN, nullptr);
@@ -112,37 +110,37 @@ static void* open_file(const char* path)
 
 
 //------------------------------------------------------------------------------
-union line_id_impl
+union LineIdImpl
 {
-    explicit            line_id_impl()                  { outer = 0; }
-    explicit            line_id_impl(unsigned int o)    { offset = o; active = 1; }
-    explicit            operator bool () const          { return !!outer; }
+    explicit            LineIdImpl()                { outer = 0; }
+    explicit            LineIdImpl(unsigned int o)  { offset = o; active = 1; }
+    explicit            operator bool () const      { return !!outer; }
     struct {
         unsigned int    offset : 29;
         unsigned int    bank_index : 2;
         unsigned int    active : 1;
     };
-    history_db::line_id outer;
+    HistoryDb::LineId   outer;
 };
 
 
 
 //------------------------------------------------------------------------------
-class bank_lock
-    : public no_copy
+class BankLock
+    : public NoCopy
 {
 public:
     explicit        operator bool () const;
 
 protected:
-                    bank_lock() = default;
-                    bank_lock(void* handle, bool exclusive);
-                    ~bank_lock();
+                    BankLock() = default;
+                    BankLock(void* handle, bool exclusive);
+                    ~BankLock();
     void*           m_handle = nullptr;
 };
 
 //------------------------------------------------------------------------------
-bank_lock::bank_lock(void* handle, bool exclusive)
+BankLock::BankLock(void* handle, bool exclusive)
 : m_handle(handle)
 {
     if (m_handle == nullptr)
@@ -154,7 +152,7 @@ bank_lock::bank_lock(void* handle, bool exclusive)
 }
 
 //------------------------------------------------------------------------------
-bank_lock::~bank_lock()
+BankLock::~BankLock()
 {
     if (m_handle != nullptr)
     {
@@ -164,7 +162,7 @@ bank_lock::~bank_lock()
 }
 
 //------------------------------------------------------------------------------
-bank_lock::operator bool () const
+BankLock::operator bool () const
 {
     return (m_handle != nullptr);
 }
@@ -172,16 +170,16 @@ bank_lock::operator bool () const
 
 
 //------------------------------------------------------------------------------
-class read_lock
-    : public bank_lock
+class ReadLock
+    : public BankLock
 {
 public:
-    class file_iter : public no_copy
+    class FileIter : public NoCopy
     {
     public:
-                            file_iter() = default;
-                            file_iter(const read_lock& lock, char* buffer, int buffer_size);
-        template <int S>    file_iter(const read_lock& lock, char (&buffer)[S]);
+                            FileIter() = default;
+                            FileIter(const ReadLock& lock, char* buffer, int buffer_size);
+        template <int S>    FileIter(const ReadLock& lock, char (&buffer)[S]);
         unsigned int        next(unsigned int rollback=0);
         unsigned int        get_buffer_offset() const   { return m_buffer_offset; }
         char*               get_buffer() const          { return m_buffer; }
@@ -196,40 +194,40 @@ public:
         unsigned int        m_remaining;
     };
 
-    class line_iter : public no_copy
+    class LineIter : public NoCopy
     {
     public:
-                            line_iter() = default;
-                            line_iter(const read_lock& lock, char* buffer, int buffer_size);
-        template <int S>    line_iter(const read_lock& lock, char (&buffer)[S]);
-        line_id_impl        next(str_iter& out);
+                            LineIter() = default;
+                            LineIter(const ReadLock& lock, char* buffer, int buffer_size);
+        template <int S>    LineIter(const ReadLock& lock, char (&buffer)[S]);
+        LineIdImpl          next(StrIter& out);
 
     private:
         bool                provision();
-        file_iter           m_file_iter;
+        FileIter            m_file_iter;
         unsigned int        m_remaining = 0;
     };
 
-    explicit                read_lock() = default;
-    explicit                read_lock(void* handle, bool exclusive=false);
-    line_id_impl            find(const char* line) const;
+    explicit                ReadLock() = default;
+    explicit                ReadLock(void* handle, bool exclusive=false);
+    LineIdImpl              find(const char* line) const;
     template <class T> void find(const char* line, T&& callback) const;
 };
 
 //------------------------------------------------------------------------------
-read_lock::read_lock(void* handle, bool exclusive)
-: bank_lock(handle, exclusive)
+ReadLock::ReadLock(void* handle, bool exclusive)
+: BankLock(handle, exclusive)
 {
 }
 
 //------------------------------------------------------------------------------
-template <class T> void read_lock::find(const char* line, T&& callback) const
+template <class T> void ReadLock::find(const char* line, T&& callback) const
 {
-    char buffer[history_db::max_line_length];
-    line_iter iter(*this, buffer);
+    char buffer[HistoryDb::max_line_length];
+    LineIter iter(*this, buffer);
 
-    line_id_impl id;
-    for (str_iter read; id = iter.next(read);)
+    LineIdImpl id;
+    for (StrIter read; id = iter.next(read);)
     {
         if (strncmp(line, read.get_pointer(), read.length()) != 0)
             continue;
@@ -247,10 +245,10 @@ template <class T> void read_lock::find(const char* line, T&& callback) const
 }
 
 //------------------------------------------------------------------------------
-line_id_impl read_lock::find(const char* line) const
+LineIdImpl ReadLock::find(const char* line) const
 {
-    line_id_impl id;
-    find(line, [&] (line_id_impl inner_id) {
+    LineIdImpl id;
+    find(line, [&] (LineIdImpl inner_id) {
         id = inner_id;
         return false;
     });
@@ -260,13 +258,13 @@ line_id_impl read_lock::find(const char* line) const
 
 
 //------------------------------------------------------------------------------
-template <int S> read_lock::file_iter::file_iter(const read_lock& lock, char (&buffer)[S])
-: file_iter(lock, buffer, S)
+template <int S> ReadLock::FileIter::FileIter(const ReadLock& lock, char (&buffer)[S])
+: FileIter(lock, buffer, S)
 {
 }
 
 //------------------------------------------------------------------------------
-read_lock::file_iter::file_iter(const read_lock& lock, char* buffer, int buffer_size)
+ReadLock::FileIter::FileIter(const ReadLock& lock, char* buffer, int buffer_size)
 : m_handle(lock.m_handle)
 , m_buffer(buffer)
 , m_buffer_size(buffer_size)
@@ -278,7 +276,7 @@ read_lock::file_iter::file_iter(const read_lock& lock, char* buffer, int buffer_
 }
 
 //------------------------------------------------------------------------------
-unsigned int read_lock::file_iter::next(unsigned int rollback)
+unsigned int ReadLock::FileIter::next(unsigned int rollback)
 {
     if (!m_remaining)
         return (m_buffer[0] = '\0');
@@ -303,25 +301,25 @@ unsigned int read_lock::file_iter::next(unsigned int rollback)
 
 
 //------------------------------------------------------------------------------
-template <int S> read_lock::line_iter::line_iter(const read_lock& lock, char (&buffer)[S])
-: line_iter(lock, buffer, S)
+template <int S> ReadLock::LineIter::LineIter(const ReadLock& lock, char (&buffer)[S])
+: LineIter(lock, buffer, S)
 {
 }
 
 //------------------------------------------------------------------------------
-read_lock::line_iter::line_iter(const read_lock& lock, char* buffer, int buffer_size)
+ReadLock::LineIter::LineIter(const ReadLock& lock, char* buffer, int buffer_size)
 : m_file_iter(lock, buffer, buffer_size)
 {
 }
 
 //------------------------------------------------------------------------------
-bool read_lock::line_iter::provision()
+bool ReadLock::LineIter::provision()
 {
     return !!(m_remaining = m_file_iter.next(m_remaining));
 }
 
 //------------------------------------------------------------------------------
-line_id_impl read_lock::line_iter::next(str_iter& out)
+LineIdImpl ReadLock::LineIter::next(StrIter& out)
 {
     while (m_remaining || provision())
     {
@@ -349,45 +347,45 @@ line_id_impl read_lock::line_iter::next(str_iter& out)
         if (*start == '|')
             continue;
 
-        new (&out) str_iter(start, int(end - start));
+        new (&out) StrIter(start, int(end - start));
 
         unsigned int offset = int(start - m_file_iter.get_buffer());
-        return line_id_impl(m_file_iter.get_buffer_offset() + offset);
+        return LineIdImpl(m_file_iter.get_buffer_offset() + offset);
     }
 
-    return line_id_impl();
+    return LineIdImpl();
 }
 
 
 
 //------------------------------------------------------------------------------
-class write_lock
-    : public read_lock
+class WriteLock
+    : public ReadLock
 {
 public:
-                    write_lock() = default;
-    explicit        write_lock(void* handle);
+                    WriteLock() = default;
+    explicit        WriteLock(void* handle);
     void            clear();
     void            add(const char* line);
-    void            remove(line_id_impl id);
-    void            append(const read_lock& src);
+    void            remove(LineIdImpl id);
+    void            append(const ReadLock& src);
 };
 
 //------------------------------------------------------------------------------
-write_lock::write_lock(void* handle)
-: read_lock(handle, true)
+WriteLock::WriteLock(void* handle)
+: ReadLock(handle, true)
 {
 }
 
 //------------------------------------------------------------------------------
-void write_lock::clear()
+void WriteLock::clear()
 {
     SetFilePointer(m_handle, 0, nullptr, FILE_BEGIN);
     SetEndOfFile(m_handle);
 }
 
 //------------------------------------------------------------------------------
-void write_lock::add(const char* line)
+void WriteLock::add(const char* line)
 {
     DWORD written;
     SetFilePointer(m_handle, 0, nullptr, FILE_END);
@@ -396,7 +394,7 @@ void write_lock::add(const char* line)
 }
 
 //------------------------------------------------------------------------------
-void write_lock::remove(line_id_impl id)
+void WriteLock::remove(LineIdImpl id)
 {
     DWORD written;
     SetFilePointer(m_handle, id.offset, nullptr, FILE_BEGIN);
@@ -404,14 +402,14 @@ void write_lock::remove(line_id_impl id)
 }
 
 //------------------------------------------------------------------------------
-void write_lock::append(const read_lock& src)
+void WriteLock::append(const ReadLock& src)
 {
     DWORD written;
 
     SetFilePointer(m_handle, 0, nullptr, FILE_END);
 
-    char buffer[history_db::max_line_length];
-    read_lock::file_iter src_iter(src, buffer);
+    char buffer[HistoryDb::max_line_length];
+    ReadLock::FileIter src_iter(src, buffer);
     while (int bytes_read = src_iter.next())
         WriteFile(m_handle, buffer, bytes_read, &written, nullptr);
 }
@@ -419,23 +417,23 @@ void write_lock::append(const read_lock& src)
 
 
 //------------------------------------------------------------------------------
-class read_line_iter
+class ReadLineIter
 {
 public:
-                            read_line_iter(const history_db& db, unsigned int this_size);
-    history_db::line_id     next(str_iter& out);
+                            ReadLineIter(const HistoryDb& db, unsigned int this_size);
+    HistoryDb::LineId       next(StrIter& out);
 
 private:
     bool                    next_bank();
-    const history_db&       m_db;
-    read_lock               m_lock;
-    read_lock::line_iter    m_line_iter;
+    const HistoryDb&        m_db;
+    ReadLock                m_lock;
+    ReadLock::LineIter      m_line_iter;
     unsigned int            m_buffer_size;
     unsigned int            m_bank_index = 0;
 };
 
 //------------------------------------------------------------------------------
-read_line_iter::read_line_iter(const history_db& db, unsigned int this_size)
+ReadLineIter::ReadLineIter(const HistoryDb& db, unsigned int this_size)
 : m_db(db)
 , m_buffer_size(this_size - sizeof(*this))
 {
@@ -443,16 +441,16 @@ read_line_iter::read_line_iter(const history_db& db, unsigned int this_size)
 }
 
 //------------------------------------------------------------------------------
-bool read_line_iter::next_bank()
+bool ReadLineIter::next_bank()
 {
     while (m_bank_index < m_db.get_bank_count())
     {
         if (void* bank_handle = m_db.m_bank_handles[m_bank_index++])
         {
             char* buffer = (char*)(this + 1);
-            m_lock.~read_lock();
-            new (&m_lock) read_lock(bank_handle);
-            new (&m_line_iter) read_lock::line_iter(m_lock, buffer, m_buffer_size);
+            m_lock.~ReadLock();
+            new (&m_lock) ReadLock(bank_handle);
+            new (&m_line_iter) ReadLock::LineIter(m_lock, buffer, m_buffer_size);
             return true;
         }
     }
@@ -461,14 +459,14 @@ bool read_line_iter::next_bank()
 }
 
 //------------------------------------------------------------------------------
-history_db::line_id read_line_iter::next(str_iter& out)
+HistoryDb::LineId ReadLineIter::next(StrIter& out)
 {
     if (m_bank_index > m_db.get_bank_count())
         return 0;
 
     do
     {
-        if (line_id_impl ret = m_line_iter.next(out))
+        if (LineIdImpl ret = m_line_iter.next(out))
         {
             ret.bank_index = m_bank_index - 1;
             return ret.outer;
@@ -482,32 +480,32 @@ history_db::line_id read_line_iter::next(str_iter& out)
 
 
 //------------------------------------------------------------------------------
-history_db::iter::~iter()
+HistoryDb::Iter::~Iter()
 {
     if (impl)
-        ((read_line_iter*)impl)->~read_line_iter();
+        ((ReadLineIter*)impl)->~ReadLineIter();
 }
 
 //------------------------------------------------------------------------------
-history_db::line_id history_db::iter::next(str_iter& out)
+HistoryDb::LineId HistoryDb::Iter::next(StrIter& out)
 {
-    return impl ? ((read_line_iter*)impl)->next(out) : 0;
+    return impl ? ((ReadLineIter*)impl)->next(out) : 0;
 }
 
 
 
 //------------------------------------------------------------------------------
-history_db::history_db()
+HistoryDb::HistoryDb()
 {
     memset(m_bank_handles, 0, sizeof(m_bank_handles));
 
     // Create a self-deleting file to used to indicate this session's alive
-    str<280> path;
+    Str<280> path;
     get_file_path(path, true);
     path << "~";
 
     {
-        wstr<280> wpath(path.c_str());
+        Wstr<280> wpath(path.c_str());
         DWORD flags = FILE_FLAG_DELETE_ON_CLOSE|FILE_ATTRIBUTE_HIDDEN;
         m_alive_file = CreateFileW(wpath.c_str(), 0, 0, nullptr, CREATE_ALWAYS, flags, nullptr);
         m_alive_file = (m_alive_file == INVALID_HANDLE_VALUE) ? nullptr : m_alive_file;
@@ -515,11 +513,11 @@ history_db::history_db()
 
     history_inhibit_expansion_function = history_expand_control;
 
-    static_assert(sizeof(line_id) == sizeof(line_id_impl), "");
+    static_assert(sizeof(LineId) == sizeof(LineIdImpl), "");
 }
 
 //------------------------------------------------------------------------------
-history_db::~history_db()
+HistoryDb::~HistoryDb()
 {
     // Close alive handle
     CloseHandle(m_alive_file);
@@ -534,14 +532,14 @@ history_db::~history_db()
 }
 
 //------------------------------------------------------------------------------
-void history_db::reap()
+void HistoryDb::reap()
 {
     // Fold each session found that has no valid alive file.
-    str<280> path;
+    Str<280> path;
     get_file_path(path, false);
     path << "_*";
 
-    for (globber i(path.c_str()); i.next(path);)
+    for (Globber i(path.c_str()); i.next(path);)
     {
         path << "~";
         if (os::get_path_type(path.c_str()) == os::path_type_file)
@@ -555,8 +553,8 @@ void history_db::reap()
         {
             void* src_handle = open_file(path.c_str());
             {
-                read_lock src(src_handle);
-                write_lock dest(m_bank_handles[bank_master]);
+                ReadLock src(src_handle);
+                WriteLock dest(m_bank_handles[bank_master]);
                 if (src && dest)
                     dest.append(src);
             }
@@ -568,12 +566,12 @@ void history_db::reap()
 }
 
 //------------------------------------------------------------------------------
-void history_db::initialise()
+void HistoryDb::initialise()
 {
     if (m_bank_handles[bank_master] != nullptr)
         return;
 
-    str<280> path;
+    Str<280> path;
     get_file_path(path, false);
     m_bank_handles[bank_master] = open_file(path.c_str());
 
@@ -587,7 +585,7 @@ void history_db::initialise()
 }
 
 //------------------------------------------------------------------------------
-unsigned int history_db::get_bank_count() const
+unsigned int HistoryDb::get_bank_count() const
 {
     int count = 0;
     for (void* handle : m_bank_handles)
@@ -597,7 +595,7 @@ unsigned int history_db::get_bank_count() const
 }
 
 //------------------------------------------------------------------------------
-void* history_db::get_bank(unsigned int index) const
+void* HistoryDb::get_bank(unsigned int index) const
 {
     if (index >= get_bank_count())
         return nullptr;
@@ -606,39 +604,39 @@ void* history_db::get_bank(unsigned int index) const
 }
 
 //------------------------------------------------------------------------------
-template <typename T> void history_db::for_each_bank(T&& callback)
+template <typename T> void HistoryDb::for_each_bank(T&& callback)
 {
     for (int i = 0, n = get_bank_count(); i < n; ++i)
     {
-        write_lock lock(get_bank(i));
+        WriteLock lock(get_bank(i));
         if (lock && !callback(i, lock))
             break;
     }
 }
 
 //------------------------------------------------------------------------------
-template <typename T> void history_db::for_each_bank(T&& callback) const
+template <typename T> void HistoryDb::for_each_bank(T&& callback) const
 {
     for (int i = 0, n = get_bank_count(); i < n; ++i)
     {
-        read_lock lock(get_bank(i));
+        ReadLock lock(get_bank(i));
         if (lock && !callback(i, lock))
             break;
     }
 }
 
 //------------------------------------------------------------------------------
-void history_db::load_rl_history()
+void HistoryDb::load_rl_history()
 {
     clear_history();
 
     char buffer[max_line_length + 1];
 
-    const history_db& const_this = *this;
-    const_this.for_each_bank([&] (unsigned int, const read_lock& lock)
+    const HistoryDb& const_this = *this;
+    const_this.for_each_bank([&] (unsigned int, const ReadLock& lock)
     {
-        str_iter out;
-        read_lock::line_iter iter(lock, buffer, sizeof_array(buffer) - 1);
+        StrIter out;
+        ReadLock::LineIter iter(lock, buffer, sizeof_array(buffer) - 1);
         while (iter.next(out))
         {
             const char* line = out.get_pointer();
@@ -652,9 +650,9 @@ void history_db::load_rl_history()
 }
 
 //------------------------------------------------------------------------------
-void history_db::clear()
+void HistoryDb::clear()
 {
-    for_each_bank([] (unsigned int, write_lock& lock)
+    for_each_bank([] (unsigned int, WriteLock& lock)
     {
         lock.clear();
         return true;
@@ -662,7 +660,7 @@ void history_db::clear()
 }
 
 //------------------------------------------------------------------------------
-bool history_db::add(const char* line)
+bool HistoryDb::add(const char* line)
 {
     // Ignore empty and/or whitespace prefixed lines?
     if (!line[0] || (g_ignore_space.get() && (line[0] == ' ' || line[0] == '\t')))
@@ -673,7 +671,7 @@ bool history_db::add(const char* line)
     {
     case 1:
         // 'ignore'
-        if (line_id find_result = find(line))
+        if (LineId find_result = find(line))
             return true;
         break;
 
@@ -685,7 +683,7 @@ bool history_db::add(const char* line)
 
     // Add the line.
     void* handle = get_bank(get_bank_count() - 1);
-    write_lock lock(handle);
+    WriteLock lock(handle);
     if (!lock)
         return false;
 
@@ -694,12 +692,12 @@ bool history_db::add(const char* line)
 }
 
 //------------------------------------------------------------------------------
-int history_db::remove(const char* line)
+int HistoryDb::remove(const char* line)
 {
     int count = 0;
-    for_each_bank([line, &count] (unsigned int index, write_lock& lock)
+    for_each_bank([line, &count] (unsigned int index, WriteLock& lock)
     {
-        lock.find(line, [&] (line_id_impl id) {
+        lock.find(line, [&] (LineIdImpl id) {
             lock.remove(id);
             return true;
         });
@@ -711,16 +709,16 @@ int history_db::remove(const char* line)
 }
 
 //------------------------------------------------------------------------------
-bool history_db::remove(line_id id)
+bool HistoryDb::remove(LineId id)
 {
     if (!id)
         return false;
 
-    line_id_impl id_impl;
+    LineIdImpl id_impl;
     id_impl.outer = id;
 
     void* handle = get_bank(id_impl.bank_index);
-    write_lock lock(handle);
+    WriteLock lock(handle);
     if (!lock)
         return false;
 
@@ -729,11 +727,11 @@ bool history_db::remove(line_id id)
 }
 
 //------------------------------------------------------------------------------
-history_db::line_id history_db::find(const char* line) const
+HistoryDb::LineId HistoryDb::find(const char* line) const
 {
-    line_id_impl ret;
+    LineIdImpl ret;
 
-    for_each_bank([line, &ret] (unsigned int index, const read_lock& lock)
+    for_each_bank([line, &ret] (unsigned int index, const ReadLock& lock)
     {
         if (ret = lock.find(line))
             ret.bank_index = index;
@@ -744,7 +742,7 @@ history_db::line_id history_db::find(const char* line) const
 }
 
 //------------------------------------------------------------------------------
-history_db::expand_result history_db::expand(const char* line, str_base& out) const
+HistoryDb::ExpandResult HistoryDb::expand(const char* line, StrBase& out) const
 {
     using_history();
 
@@ -754,15 +752,15 @@ history_db::expand_result history_db::expand(const char* line, str_base& out) co
         out.copy(expanded);
 
     free(expanded);
-    return expand_result(result);
+    return ExpandResult(result);
 }
 
 //------------------------------------------------------------------------------
-history_db::iter history_db::read_lines(char* buffer, unsigned int size)
+HistoryDb::Iter HistoryDb::read_lines(char* buffer, unsigned int size)
 {
-    iter ret;
-    if (size > sizeof(read_line_iter))
-        ret.impl = uintptr_t(new (buffer) read_line_iter(*this, size));
+    Iter ret;
+    if (size > sizeof(ReadLineIter))
+        ret.impl = uintptr_t(new (buffer) ReadLineIter(*this, size));
 
     return ret;
 }

@@ -18,23 +18,23 @@
 void puts_help(const char**, int);
 
 //------------------------------------------------------------------------------
-class history_scope
+class HistoryScope
 {
 public:
-                    history_scope();
-    history_db*     operator -> ()      { return &m_history; }
-    history_db&     operator * ()       { return m_history; }
+                    HistoryScope();
+    HistoryDb*      operator -> ()      { return &m_history; }
+    HistoryDb&      operator * ()       { return m_history; }
 
 private:
-    str<280>        m_path;
-    history_db      m_history;
+    Str<280>        m_path;
+    HistoryDb       m_history;
 };
 
 //------------------------------------------------------------------------------
-history_scope::history_scope()
+HistoryScope::HistoryScope()
 {
     // Load settings.
-    app_context::get()->get_settings_path(m_path);
+    AppContext::get()->get_settings_path(m_path);
     settings::load(m_path.c_str());
 
     m_history.initialise();
@@ -45,20 +45,20 @@ history_scope::history_scope()
 //------------------------------------------------------------------------------
 static void print_history(unsigned int tail_count)
 {
-    history_scope history;
+    HistoryScope history;
 
-    str_iter line;
-    char buffer[history_db::max_line_length];
+    StrIter line;
+    char buffer[HistoryDb::max_line_length];
 
     int count = 0;
     {
-        history_db::iter iter = history->read_lines(buffer);
+        HistoryDb::Iter iter = history->read_lines(buffer);
         while (iter.next(line))
             ++count;
     }
 
     int index = 1;
-    history_db::iter iter = history->read_lines(buffer);
+    HistoryDb::Iter iter = history->read_lines(buffer);
 
     int skip = count - tail_count;
     for (int i = 0; i < skip; ++i, ++index, iter.next(line));
@@ -88,7 +88,7 @@ static bool print_history(const char* arg)
 //------------------------------------------------------------------------------
 static int add(const char* line)
 {
-    history_scope history;
+    HistoryScope history;
     history->add(line);
 
     printf("Added '%s' to history.\n", line);
@@ -98,16 +98,16 @@ static int add(const char* line)
 //------------------------------------------------------------------------------
 static int remove(int index)
 {
-    history_scope history;
+    HistoryScope history;
 
     if (index <= 0)
         return 1;
 
-    char buffer[history_db::max_line_length];
-    history_db::line_id line_id = 0;
+    char buffer[HistoryDb::max_line_length];
+    HistoryDb::LineId line_id = 0;
     {
-        str_iter line;
-        history_db::iter iter = history->read_lines(buffer);
+        StrIter line;
+        HistoryDb::Iter iter = history->read_lines(buffer);
         for (int i = index - 1; i > 0 && iter.next(line); --i);
 
         line_id = iter.next(line);
@@ -123,7 +123,7 @@ static int remove(int index)
 //------------------------------------------------------------------------------
 static int clear()
 {
-    history_scope history;
+    HistoryScope history;
     history->clear();
 
     puts("History cleared.");
@@ -133,9 +133,9 @@ static int clear()
 //------------------------------------------------------------------------------
 static int print_expansion(const char* line)
 {
-    history_scope history;
+    HistoryScope history;
     history->load_rl_history();
-    str<> out;
+    Str<> out;
     history->expand(line, out);
     puts(out.c_str());
     return 0;
@@ -167,7 +167,7 @@ static int print_help()
 }
 
 //------------------------------------------------------------------------------
-static void get_line(int start, int end, char** argv, str_base& out)
+static void get_line(int start, int end, char** argv, StrBase& out)
 {
     for (int j = start; j < end; ++j)
     {
@@ -195,7 +195,7 @@ static int history_bash(int argc, char** argv)
         case 'p': // print expansion
         case 's': // add to history
             {
-                str<> line;
+                Str<> line;
                 get_line(optind, argc, argv, line);
                 if (line.empty())
                     return print_help();
@@ -249,7 +249,7 @@ int history(int argc, char** argv)
                 return remove(atoi(argv[2]));
         }
 
-        str<> line;
+        Str<> line;
 
         // 'add' command
         if (_stricmp(verb, "add") == 0)

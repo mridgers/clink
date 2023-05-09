@@ -36,25 +36,25 @@ TEST_CASE("Executable match generation.")
         nullptr,
     };
 
-    fs_fixture path_fs(path_fs_desc);
-    fs_fixture exec_fs(exec_fs_desc);
+    FsFixture path_fs(path_fs_desc);
+    FsFixture exec_fs(exec_fs_desc);
 
-    str<260> path_env_var(path_fs.get_root());
+    Str<260> path_env_var(path_fs.get_root());
     path::append(path_env_var, "_path");
     const char* exec_env[] = {
         "path",     path_env_var.c_str(),
         "pathext",  ".exe;.py",
         nullptr,
     };
-    env_fixture env(exec_env);
+    EnvFixture env(exec_env);
 
-    lua_state lua;
-    lua_match_generator lua_generator(lua);
+    LuaState lua;
+    LuaMatchGenerator lua_generator(lua);
     lua_load_script(lua, app, exec);
 
-    line_editor::desc desc;
+    LineEditor::Desc desc;
     desc.command_delims = "&|";
-    line_editor_tester tester(desc);
+    LineEditorTester tester(desc);
     tester.get_editor()->add_generator(lua_generator);
     tester.get_editor()->add_generator(file_match_generator());
 
@@ -77,14 +77,14 @@ TEST_CASE("Executable match generation.")
 
     SECTION("PATH case mapped")
     {
-        str_compare_scope _(str_compare_scope::relaxed);
+        StrCompareScope _(StrCompareScope::relaxed);
 
         tester.set_input("one-p");
         tester.set_expected_matches("one_path.exe");
         tester.run();
     }
 
-    SECTION("PATH matches")
+    SECTION("PATH Matches")
     {
         tester.set_input("one_");
         tester.set_expected_matches("one_path.exe", "one_two.py");
@@ -165,7 +165,7 @@ TEST_CASE("Executable match generation.")
 
         SECTION("All")
         {
-            str_compare_scope _(str_compare_scope::relaxed);
+            StrCompareScope _(StrCompareScope::relaxed);
 
             settings::find("exec.dirs")->set("1");
 

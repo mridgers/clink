@@ -5,22 +5,22 @@
 
 #include <core/array.h>
 
-class editor_module;
+class EditorModule;
 
 //------------------------------------------------------------------------------
-class binder
+class Binder
 {
 public:
-                        binder();
+                        Binder();
     int                 get_group(const char* name=nullptr);
     int                 create_group(const char* name);
-    bool                bind(unsigned int group, const char* chord, editor_module& module, unsigned char id);
+    bool                bind(unsigned int group, const char* chord, EditorModule& module, unsigned char id);
 
 private:
     static const int    link_bits = 9;
     static const int    module_bits = 6;
 
-    struct node
+    struct Node
     {
         unsigned short  is_group    : 1;
         unsigned short  next        : link_bits;
@@ -35,7 +35,7 @@ private:
         unsigned char   id;
     };
 
-    struct group_node
+    struct GroupNode
     {
         unsigned short  is_group    : 1;
         unsigned short  next        : link_bits;
@@ -43,20 +43,20 @@ private:
         unsigned short  hash[2];
     };
 
-    typedef fixed_array<editor_module*, (1 << module_bits)> modules;
+    typedef FixedArray<EditorModule*, (1 << module_bits)> Modules;
 
-    friend class        bind_resolver;
+    friend class        BindResolver;
     int                 insert_child(int parent, unsigned char key);
     int                 find_child(int parent, unsigned char key) const;
     int                 add_child(int parent, unsigned char key);
     int                 find_tail(int head);
     int                 append(int head, unsigned char key);
-    const node&         get_node(unsigned int index) const;
-    group_node*         get_group_node(unsigned int index);
+    const Node&         get_node(unsigned int index) const;
+    GroupNode*          get_group_node(unsigned int index);
     int                 alloc_nodes(unsigned int count=1);
-    int                 add_module(editor_module& module);
-    editor_module*      get_module(unsigned int index) const;
-    modules             m_modules;
-    node                m_nodes[1 << link_bits];
+    int                 add_module(EditorModule& module);
+    EditorModule*       get_module(unsigned int index) const;
+    Modules             m_modules;
+    Node                m_nodes[1 << link_bits];
     unsigned int        m_next_node;
 };

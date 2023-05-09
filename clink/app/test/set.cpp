@@ -22,16 +22,16 @@ TEST_CASE("Set command.")
         nullptr
     };
 
-    fs_fixture fs;
-    env_fixture env(env_desc);
+    FsFixture fs;
+    EnvFixture env(env_desc);
 
-    lua_state lua;
-    lua_match_generator lua_generator(lua);
+    LuaState lua;
+    LuaMatchGenerator lua_generator(lua);
     lua_load_script(lua, app, set);
 
-    line_editor::desc desc;
+    LineEditor::Desc desc;
     desc.word_delims = " =";
-    line_editor_tester tester(desc);
+    LineEditorTester tester(desc);
     tester.get_editor()->add_generator(lua_generator);
 
     SECTION("Matches")
@@ -50,7 +50,7 @@ TEST_CASE("Set command.")
 
     SECTION("Case mapped")
     {
-        str_compare_scope _(str_compare_scope::relaxed);
+        StrCompareScope _(StrCompareScope::relaxed);
 
         SECTION("One match")
         {
@@ -59,7 +59,7 @@ TEST_CASE("Set command.")
             tester.run();
         }
 
-        SECTION("Many matches")
+        SECTION("Many Matches")
         {
             tester.set_input("set dash-");
             tester.set_expected_matches("dash-1", "dash_2");

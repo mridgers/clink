@@ -4,11 +4,11 @@
 #pragma once
 
 //------------------------------------------------------------------------------
-class env_fixture
+class EnvFixture
 {
 public:
-                    env_fixture(const char** env);
-                    ~env_fixture();
+                    EnvFixture(const char** env);
+                    ~EnvFixture();
 
 protected:
     void            convert_eq_to_null(wchar_t* env_strings);

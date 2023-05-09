@@ -6,10 +6,10 @@
 #include <core/str_iter.h>
 
 //------------------------------------------------------------------------------
-class history_db
+class HistoryDb
 {
 public:
-    enum expand_result
+    enum ExpandResult
     {
         // values match Readline's history_expand() return value.
         expand_error            = -1,
@@ -19,32 +19,32 @@ public:
     };
 
     static const unsigned int   max_line_length = 8192;
-    typedef unsigned int        line_id;
+    typedef unsigned int        LineId;
 
-    class iter
+    class Iter
     {
     public:
-                                ~iter();
-        line_id                 next(str_iter& out);
+                                ~Iter();
+        LineId                  next(StrIter& out);
 
     private:
-                                iter() = default;
-        friend                  history_db;
+                                Iter() = default;
+        friend                  HistoryDb;
         uintptr_t               impl = 0;
     };
 
-                                history_db();
-                                ~history_db();
+                                HistoryDb();
+                                ~HistoryDb();
     void                        initialise();
     void                        load_rl_history();
     void                        clear();
     bool                        add(const char* line);
     int                         remove(const char* line);
-    bool                        remove(line_id id);
-    line_id                     find(const char* line) const;
-    expand_result               expand(const char* line, str_base& out) const;
-    template <int S> iter       read_lines(char (&buffer)[S]);
-    iter                        read_lines(char* buffer, unsigned int buffer_size);
+    bool                        remove(LineId id);
+    LineId                      find(const char* line) const;
+    ExpandResult                expand(const char* line, StrBase& out) const;
+    template <int S> Iter       read_lines(char (&buffer)[S]);
+    Iter                        read_lines(char* buffer, unsigned int buffer_size);
 
 private:
     enum : char
@@ -55,7 +55,7 @@ private:
         bank_count,
     };
 
-    friend                      class read_line_iter;
+    friend                      class ReadLineIter;
     void                        reap();
     template <typename T> void  for_each_bank(T&& callback);
     template <typename T> void  for_each_bank(T&& callback) const;
@@ -66,7 +66,7 @@ private:
 };
 
 //------------------------------------------------------------------------------
-template <int S> history_db::iter history_db::read_lines(char (&buffer)[S])
+template <int S> HistoryDb::Iter HistoryDb::read_lines(char (&buffer)[S])
 {
     return read_lines(buffer, S);
 }

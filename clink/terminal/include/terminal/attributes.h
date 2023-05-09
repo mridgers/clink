@@ -31,10 +31,10 @@ enum : unsigned char
 #undef COLOUR_X
 
 //------------------------------------------------------------------------------
-class attributes
+class Attributes
 {
 public:
-    struct colour
+    struct Colour
     {
         union
         {
@@ -48,12 +48,12 @@ public:
             unsigned short      value;
         };
 
-        bool                    operator == (const colour& rhs) const { return value == rhs.value; }
+        bool                    operator == (const Colour& rhs) const { return value == rhs.value; }
         void                    as_888(unsigned char (&out)[3]) const;
     };
 
     template <typename T>
-    struct attribute
+    struct Attribute
     {
         explicit                operator bool () const  { return bool(set); }
         const T*                operator -> () const { return &value; }
@@ -62,14 +62,14 @@ public:
         const unsigned char     is_default : 1;
     };
 
-    enum default_e { defaults };
+    enum Default { defaults };
 
-                                attributes();
-                                attributes(default_e);
-    bool                        operator == (const attributes rhs);
-    bool                        operator != (const attributes rhs) { return !(*this == rhs); }
-    static attributes           merge(const attributes first, const attributes second);
-    static attributes           diff(const attributes from, const attributes to);
+                                Attributes();
+                                Attributes(Default);
+    bool                        operator == (const Attributes rhs);
+    bool                        operator != (const Attributes rhs) { return !(*this == rhs); }
+    static Attributes           merge(const Attributes first, const Attributes second);
+    static Attributes           diff(const Attributes from, const Attributes to);
     void                        reset_fg();
     void                        reset_bg();
     void                        set_fg(unsigned char value);
@@ -78,13 +78,13 @@ public:
     void                        set_bg(unsigned char r, unsigned char g, unsigned char b);
     void                        set_bold(bool state=true);
     void                        set_underline(bool state=true);
-    attribute<colour>           get_fg() const;
-    attribute<colour>           get_bg() const;
-    attribute<bool>             get_bold() const;
-    attribute<bool>             get_underline() const;
+    Attribute<Colour>           get_fg() const;
+    Attribute<Colour>           get_bg() const;
+    Attribute<bool>             get_bold() const;
+    Attribute<bool>             get_underline() const;
 
 private:
-    union flags
+    union Flags
     {
         struct
         {
@@ -100,11 +100,11 @@ private:
     {
         struct
         {
-            colour              m_fg;
-            colour              m_bg;
+            Colour              m_fg;
+            Colour              m_bg;
             unsigned short      m_bold : 1;
             unsigned short      m_underline : 1;
-            flags               m_flags;
+            Flags               m_flags;
             unsigned char       m_unused;
         };
         unsigned long long      m_state;

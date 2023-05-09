@@ -11,13 +11,13 @@
 static LONG WINAPI exception_filter(EXCEPTION_POINTERS* info)
 {
 #if defined(_MSC_VER)
-    str<MAX_PATH, false> buffer;
-    if (const app_context* context = app_context::get())
+    Str<MAX_PATH, false> buffer;
+    if (const AppContext* context = AppContext::get())
         context->get_state_dir(buffer);
     else
     {
-        app_context::desc desc;
-        app_context app_context(desc);
+        AppContext::Desc desc;
+        AppContext app_context(desc);
         app_context.get_state_dir(buffer);
     }
     buffer << "\\clink.dmp";
@@ -30,7 +30,7 @@ static LONG WINAPI exception_filter(EXCEPTION_POINTERS* info)
 
     // Write a core dump file.
     BOOL ok = FALSE;
-    wstr<256> wbuffer(buffer.c_str());
+    Wstr<256> wbuffer(buffer.c_str());
     HANDLE file = CreateFileW(wbuffer.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, 0, nullptr);
     if (file != INVALID_HANDLE_VALUE)
     {
@@ -94,13 +94,13 @@ static LONG WINAPI exception_filter(EXCEPTION_POINTERS* info)
 
 
 //------------------------------------------------------------------------------
-seh_scope::seh_scope()
+SehScope::SehScope()
 {
     m_prev_filter = (void*)SetUnhandledExceptionFilter(exception_filter);
 }
 
 //------------------------------------------------------------------------------
-seh_scope::~seh_scope()
+SehScope::~SehScope()
 {
     SetUnhandledExceptionFilter(LPTOP_LEVEL_EXCEPTION_FILTER(m_prev_filter));
 }

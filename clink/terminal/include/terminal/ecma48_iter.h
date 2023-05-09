@@ -9,10 +9,10 @@
 unsigned int cell_count(const char*);
 
 //------------------------------------------------------------------------------
-class ecma48_code
+class Ecma48Code
 {
 public:
-    enum type : unsigned char
+    enum Type : unsigned char
     {
         type_none,
         type_chars,
@@ -39,7 +39,7 @@ public:
         c1_sos          = 0x58,
     };
 
-    struct csi_base
+    struct CsiBase
     {
         char                final;
         char                intermediate;
@@ -50,7 +50,7 @@ public:
     };
 
     template <int PARAM_N>
-    struct csi : public csi_base
+    struct Csi : public CsiBase
     {
         static const int    max_param_count = PARAM_N;
 
@@ -61,27 +61,27 @@ public:
     explicit                operator bool () const { return !!get_length(); }
     const char*             get_pointer() const    { return m_str; }
     unsigned int            get_length() const     { return m_length; }
-    type                    get_type() const       { return m_type; }
+    Type                    get_type() const       { return m_type; }
     unsigned int            get_code() const       { return m_code; }
-    template <int S> bool   decode_csi(csi<S>& out) const;
-    bool                    get_c1_str(str_base& out) const;
+    template <int S> bool   decode_csi(Csi<S>& out) const;
+    bool                    get_c1_str(StrBase& out) const;
 
 private:
-    friend class            ecma48_iter;
-    friend class            ecma48_state;
-                            ecma48_code() = default;
-                            ecma48_code(ecma48_code&) = delete;
-                            ecma48_code(ecma48_code&&) = delete;
-    void                    operator = (ecma48_code&) = delete;
-    bool                    decode_csi(csi_base& base, int* params, unsigned int max_params) const;
+    friend class            Ecma48Iter;
+    friend class            Ecma48State;
+                            Ecma48Code() = default;
+                            Ecma48Code(Ecma48Code&) = delete;
+                            Ecma48Code(Ecma48Code&&) = delete;
+    void                    operator = (Ecma48Code&) = delete;
+    bool                    decode_csi(CsiBase& base, int* params, unsigned int max_params) const;
     const char*             m_str;
     unsigned short          m_length;
-    type                    m_type;
+    Type                    m_type;
     unsigned char           m_code;
 };
 
 //------------------------------------------------------------------------------
-inline int ecma48_code::csi_base::get_param(int index, int fallback) const
+inline int Ecma48Code::CsiBase::get_param(int index, int fallback) const
 {
     if (unsigned(index) < unsigned(param_count))
         return *(params + index);
@@ -91,7 +91,7 @@ inline int ecma48_code::csi_base::get_param(int index, int fallback) const
 
 //------------------------------------------------------------------------------
 template <int S>
-bool ecma48_code::decode_csi(csi<S>& csi) const
+bool Ecma48Code::decode_csi(Csi<S>& csi) const
 {
     return decode_csi(csi, csi.params, S);
 }
@@ -99,15 +99,15 @@ bool ecma48_code::decode_csi(csi<S>& csi) const
 
 
 //------------------------------------------------------------------------------
-class ecma48_state
+class Ecma48State
 {
 public:
-                        ecma48_state()  { reset(); }
+                        Ecma48State()   { reset(); }
     void                reset()         { state = count = 0; }
 
 private:
-    friend class        ecma48_iter;
-    ecma48_code         code;
+    friend class        Ecma48Iter;
+    Ecma48Code          code;
     int                 state;
     int                 count;
     char                buffer[64];
@@ -116,11 +116,11 @@ private:
 
 
 //------------------------------------------------------------------------------
-class ecma48_iter
+class Ecma48Iter
 {
 public:
-                        ecma48_iter(const char* s, ecma48_state& state, int len=-1);
-    const ecma48_code&  next();
+                        Ecma48Iter(const char* s, Ecma48State& state, int len=-1);
+    const Ecma48Code&   next();
 
 private:
     bool                next_c1();
@@ -132,7 +132,7 @@ private:
     bool                next_esc(int c);
     bool                next_esc_st(int c);
     bool                next_unknown(int c);
-    str_iter            m_iter;
-    ecma48_code&        m_code;
-    ecma48_state&       m_state;
+    StrIter             m_iter;
+    Ecma48Code&         m_code;
+    Ecma48State&        m_state;
 };

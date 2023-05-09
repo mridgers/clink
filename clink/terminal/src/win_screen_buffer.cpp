@@ -10,7 +10,7 @@
 #include <Windows.h>
 
 //------------------------------------------------------------------------------
-void win_screen_buffer::begin()
+void WinScreenBuffer::begin()
 {
     m_handle = GetStdHandle(STD_OUTPUT_HANDLE);
     GetConsoleMode(m_handle, &m_prev_mode);
@@ -22,7 +22,7 @@ void win_screen_buffer::begin()
 }
 
 //------------------------------------------------------------------------------
-void win_screen_buffer::end()
+void WinScreenBuffer::end()
 {
     SetConsoleTextAttribute(m_handle, m_default_attr);
     SetConsoleMode(m_handle, m_prev_mode);
@@ -30,9 +30,9 @@ void win_screen_buffer::end()
 }
 
 //------------------------------------------------------------------------------
-void win_screen_buffer::write(const char* data, int length)
+void WinScreenBuffer::write(const char* data, int length)
 {
-    str_iter iter(data, length);
+    StrIter iter(data, length);
     while (length > 0)
     {
         wchar_t wbuf[384];
@@ -49,7 +49,7 @@ void win_screen_buffer::write(const char* data, int length)
 }
 
 //------------------------------------------------------------------------------
-void win_screen_buffer::flush()
+void WinScreenBuffer::flush()
 {
     // When writing to the console conhost.exe will restart the cursor blink
     // timer and hide it which can be disorientating, especially when moving
@@ -60,7 +60,7 @@ void win_screen_buffer::flush()
 }
 
 //------------------------------------------------------------------------------
-int win_screen_buffer::get_columns() const
+int WinScreenBuffer::get_columns() const
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     GetConsoleScreenBufferInfo(m_handle, &csbi);
@@ -68,7 +68,7 @@ int win_screen_buffer::get_columns() const
 }
 
 //------------------------------------------------------------------------------
-int win_screen_buffer::get_rows() const
+int WinScreenBuffer::get_rows() const
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     GetConsoleScreenBufferInfo(m_handle, &csbi);
@@ -76,7 +76,7 @@ int win_screen_buffer::get_rows() const
 }
 
 //------------------------------------------------------------------------------
-void win_screen_buffer::clear(clear_type type)
+void WinScreenBuffer::clear(ClearType Type)
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     GetConsoleScreenBufferInfo(m_handle, &csbi);
@@ -84,7 +84,7 @@ void win_screen_buffer::clear(clear_type type)
     int width, height, count = 0;
     COORD xy;
 
-    switch (type)
+    switch (Type)
     {
     case clear_type_all:
         width = csbi.dwSize.X;
@@ -115,14 +115,14 @@ void win_screen_buffer::clear(clear_type type)
 }
 
 //------------------------------------------------------------------------------
-void win_screen_buffer::clear_line(clear_type type)
+void WinScreenBuffer::clear_line(ClearType Type)
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     GetConsoleScreenBufferInfo(m_handle, &csbi);
 
     int width;
     COORD xy;
-    switch (type)
+    switch (Type)
     {
     case clear_type_all:
         width = csbi.dwSize.X;
@@ -146,7 +146,7 @@ void win_screen_buffer::clear_line(clear_type type)
 }
 
 //------------------------------------------------------------------------------
-void win_screen_buffer::set_cursor(int column, int row)
+void WinScreenBuffer::set_cursor(int column, int row)
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     GetConsoleScreenBufferInfo(m_handle, &csbi);
@@ -163,7 +163,7 @@ void win_screen_buffer::set_cursor(int column, int row)
 }
 
 //------------------------------------------------------------------------------
-void win_screen_buffer::move_cursor(int dx, int dy)
+void WinScreenBuffer::move_cursor(int dx, int dy)
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     GetConsoleScreenBufferInfo(m_handle, &csbi);
@@ -176,7 +176,7 @@ void win_screen_buffer::move_cursor(int dx, int dy)
 }
 
 //------------------------------------------------------------------------------
-void win_screen_buffer::insert_chars(int count)
+void WinScreenBuffer::insert_chars(int count)
 {
     if (count <= 0)
         return;
@@ -199,7 +199,7 @@ void win_screen_buffer::insert_chars(int count)
 }
 
 //------------------------------------------------------------------------------
-void win_screen_buffer::delete_chars(int count)
+void WinScreenBuffer::delete_chars(int count)
 {
     if (count <= 0)
         return;
@@ -233,7 +233,7 @@ void win_screen_buffer::delete_chars(int count)
 }
 
 //------------------------------------------------------------------------------
-void win_screen_buffer::set_attributes(const attributes attr)
+void WinScreenBuffer::set_attributes(const Attributes attr)
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     GetConsoleScreenBufferInfo(m_handle, &csbi);
@@ -259,7 +259,7 @@ void win_screen_buffer::set_attributes(const attributes attr)
             out_attr &= ~attr_mask_underline;
     }
 
-    // Foreground colour
+    // Foreground Colour
     bool bold = m_bold;
     if (auto fg = attr.get_fg())
     {
@@ -276,7 +276,7 @@ void win_screen_buffer::set_attributes(const attributes attr)
     else
         out_attr &= ~attr_mask_bold;
 
-    // Background colour
+    // Background Colour
     if (auto bg = attr.get_bg())
     {
         int value = bg.is_default ? m_default_attr : (swizzle(bg->value) << 4);

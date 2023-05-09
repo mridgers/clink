@@ -14,8 +14,8 @@
 #define DO_COMPLETE "\x01"
 
 //------------------------------------------------------------------------------
-class test_terminal_in
-    : public terminal_in
+class TestTerminalIn
+    : public TerminalIn
 {
 public:
     bool                    has_input() const { return (m_read == nullptr) ? false : (*m_read != '\0'); }
@@ -31,8 +31,8 @@ private:
 };
 
 //------------------------------------------------------------------------------
-class test_terminal_out
-    : public terminal_out
+class TestTerminalOut
+    : public TerminalOut
 {
 public:
     virtual void            begin() override {}
@@ -41,39 +41,39 @@ public:
     virtual void            flush() override {}
     virtual int             get_columns() const override { return 80; }
     virtual int             get_rows() const override { return 25; }
-    virtual void            set_attributes(const attributes attr) {}
+    virtual void            set_attributes(const Attributes attr) {}
 };
 
 
 
 //------------------------------------------------------------------------------
-class line_editor_tester
+class LineEditorTester
 {
 public:
-                                line_editor_tester();
-                                line_editor_tester(const line_editor::desc& desc);
-                                ~line_editor_tester();
-    line_editor*                get_editor() const;
+                                LineEditorTester();
+                                LineEditorTester(const LineEditor::Desc& desc);
+                                ~LineEditorTester();
+    LineEditor*                 get_editor() const;
     void                        set_input(const char* input);
     template <class ...T> void  set_expected_matches(T... t); // T must be const char*
     void                        set_expected_output(const char* expected);
     void                        run(bool expectationless=false);
 
 private:
-    void                        create_line_editor(const line_editor::desc* desc=nullptr);
+    void                        create_line_editor(const LineEditor::Desc* desc=nullptr);
     void                        expected_matches_impl(int dummy, ...);
-    test_terminal_in            m_terminal_in;
-    test_terminal_out           m_terminal_out;
+    TestTerminalIn              m_terminal_in;
+    TestTerminalOut             m_terminal_out;
     std::vector<const char*>    m_expected_matches;
     const char*                 m_input = nullptr;
     const char*                 m_expected_output = nullptr;
-    line_editor*                m_editor = nullptr;
+    LineEditor*                 m_editor = nullptr;
     bool                        m_has_matches = false;
 };
 
 //------------------------------------------------------------------------------
 template <class ...T>
-void line_editor_tester::set_expected_matches(T... t)
+void LineEditorTester::set_expected_matches(T... t)
 {
     expected_matches_impl(0, t..., nullptr);
 }

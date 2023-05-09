@@ -7,14 +7,14 @@
 #include <stdarg.h>
 
 //------------------------------------------------------------------------------
-logger::~logger()
+Logger::~Logger()
 {
 }
 
 //------------------------------------------------------------------------------
-void logger::info(const char* function, int line, const char* fmt, ...)
+void Logger::info(const char* function, int line, const char* fmt, ...)
 {
-    logger* instance = logger::get();
+    Logger* instance = Logger::get();
     if (instance == nullptr)
         return;
 
@@ -25,9 +25,9 @@ void logger::info(const char* function, int line, const char* fmt, ...)
 }
 
 //------------------------------------------------------------------------------
-void logger::error(const char* function, int line, const char* fmt, ...)
+void Logger::error(const char* function, int line, const char* fmt, ...)
 {
-    logger* instance = logger::get();
+    Logger* instance = Logger::get();
     if (instance == nullptr)
         return;
 
@@ -36,9 +36,9 @@ void logger::error(const char* function, int line, const char* fmt, ...)
     va_list args;
     va_start(args, fmt);
 
-    logger::info(function, line, "*** ERROR ***");
+    Logger::info(function, line, "*** ERROR ***");
     instance->emit(function, line, fmt, args);
-    logger::info(function, line, "(last error = %d)", last_error);
+    Logger::info(function, line, "(last error = %d)", last_error);
 
     va_end(args);
 }
@@ -46,13 +46,13 @@ void logger::error(const char* function, int line, const char* fmt, ...)
 
 
 //------------------------------------------------------------------------------
-file_logger::file_logger(const char* log_path)
+FileLogger::FileLogger(const char* log_path)
 {
     m_log_path << log_path;
 }
 
 //------------------------------------------------------------------------------
-void file_logger::emit(const char* function, int line, const char* fmt, va_list args)
+void FileLogger::emit(const char* function, int line, const char* fmt, va_list args)
 {
     FILE* file;
 
@@ -60,12 +60,12 @@ void file_logger::emit(const char* function, int line, const char* fmt, va_list 
     if (file == nullptr)
         return;
 
-    str<24> func_name;
+    Str<24> func_name;
     func_name << function;
 
     DWORD pid = GetCurrentProcessId();
 
-    str<256> buffer;
+    Str<256> buffer;
     buffer.format("%04x %-24s %4d ", pid, func_name.c_str(), line);
     fputs(buffer.c_str(), file);
     vfprintf(file, fmt, args);

@@ -5,14 +5,14 @@
 
 #include "str.h"
 
-class setting;
+class Setting;
 
 //------------------------------------------------------------------------------
 namespace settings
 {
 
-setting*            first();
-setting*            find(const char* name);
+Setting*            first();
+Setting*            find(const char* name);
 bool                load(const char* file);
 bool                save(const char* file);
 
@@ -21,10 +21,10 @@ bool                save(const char* file);
 
 
 //------------------------------------------------------------------------------
-class setting
+class Setting
 {
 public:
-    enum type_e : unsigned char {
+    enum TypeE : unsigned char {
         type_unknown,
         type_int,
         type_bool,
@@ -32,98 +32,98 @@ public:
         type_enum,
     };
 
-    virtual         ~setting();
-    setting*        next() const;
-    type_e          get_type() const;
+    virtual         ~Setting();
+    Setting*        next() const;
+    TypeE           get_type() const;
     const char*     get_name() const;
     const char*     get_short_desc() const;
     const char*     get_long_desc() const;
     virtual bool    is_default() const = 0;
     virtual void    set() = 0;
     virtual bool    set(const char* value) = 0;
-    virtual void    get(str_base& out) const = 0;
+    virtual void    get(StrBase& out) const = 0;
 
 protected:
-                    setting(const char* name, const char* short_desc, const char* long_desc, type_e type);
-    str<32, false>  m_name;
-    str<48, false>  m_short_desc;
-    str<128>        m_long_desc;
-    setting*        m_prev;
-    setting*        m_next;
-    type_e          m_type;
+                    Setting(const char* name, const char* short_desc, const char* long_desc, TypeE Type);
+    Str<32, false>  m_name;
+    Str<48, false>  m_short_desc;
+    Str<128>        m_long_desc;
+    Setting*        m_prev;
+    Setting*        m_next;
+    TypeE           m_type;
 
     template <typename T>
-    struct store
+    struct Store
     {
         explicit    operator T () const                  { return value; }
-        bool        operator == (const store& rhs) const { return value == rhs.value; }
+        bool        operator == (const Store& rhs) const { return value == rhs.value; }
         T           value;
     };
 };
 
 //------------------------------------------------------------------------------
-template <> struct setting::store<const char*>
+template <> struct Setting::Store<const char*>
 {
     explicit        operator const char* () const        { return value.c_str(); }
-    bool            operator == (const store& rhs) const { return value.equals(rhs.value.c_str()); }
-    str<64>         value;
+    bool            operator == (const Store& rhs) const { return value.equals(rhs.value.c_str()); }
+    Str<64>         value;
 };
 
 //------------------------------------------------------------------------------
 template <typename T>
-class setting_impl
-    : public setting
+class SettingImpl
+    : public Setting
 {
 public:
-                    setting_impl(const char* name, const char* short_desc, T default_value);
-                    setting_impl(const char* name, const char* short_desc, const char* long_desc, T default_value);
+                    SettingImpl(const char* name, const char* short_desc, T default_value);
+                    SettingImpl(const char* name, const char* short_desc, const char* long_desc, T default_value);
     T               get() const;
     virtual bool    is_default() const override;
     virtual void    set() override;
     virtual bool    set(const char* value) override;
-    virtual void    get(str_base& out) const override;
+    virtual void    get(StrBase& out) const override;
 
 protected:
-    struct          type;
-    store<T>        m_store;
-    store<T>        m_default;
+    struct          Type;
+    Store<T>        m_store;
+    Store<T>        m_default;
 };
 
 //------------------------------------------------------------------------------
-template <typename T> setting_impl<T>::setting_impl(
+template <typename T> SettingImpl<T>::SettingImpl(
     const char* name,
     const char* short_desc,
     T default_value)
-: setting_impl<T>(name, short_desc, nullptr, default_value)
+: SettingImpl<T>(name, short_desc, nullptr, default_value)
 {
 }
 
 //------------------------------------------------------------------------------
-template <typename T> setting_impl<T>::setting_impl(
+template <typename T> SettingImpl<T>::SettingImpl(
     const char* name,
     const char* short_desc,
     const char* long_desc,
     T default_value)
-: setting(name, short_desc, long_desc, type_e(type::id))
+: Setting(name, short_desc, long_desc, TypeE(Type::id))
 {
     m_default.value = default_value;
     m_store.value = default_value;
 }
 
 //------------------------------------------------------------------------------
-template <typename T> void setting_impl<T>::set()
+template <typename T> void SettingImpl<T>::set()
 {
     m_store.value = T(m_default);
 }
 
 //------------------------------------------------------------------------------
-template <typename T> bool setting_impl<T>::is_default() const
+template <typename T> bool SettingImpl<T>::is_default() const
 {
     return m_store == m_default;
 }
 
 //------------------------------------------------------------------------------
-template <typename T> T setting_impl<T>::get() const
+template <typename T> T SettingImpl<T>::get() const
 {
     return T(m_store);
 }
@@ -131,29 +131,29 @@ template <typename T> T setting_impl<T>::get() const
 
 
 //------------------------------------------------------------------------------
-template <> struct setting_impl<bool>::type        { enum { id = setting::type_bool }; };
-template <> struct setting_impl<int>::type         { enum { id = setting::type_int }; };
-template <> struct setting_impl<const char*>::type { enum { id = setting::type_string }; };
+template <> struct SettingImpl<bool>::Type        { enum { id = Setting::type_bool }; };
+template <> struct SettingImpl<int>::Type         { enum { id = Setting::type_int }; };
+template <> struct SettingImpl<const char*>::Type { enum { id = Setting::type_string }; };
 
 //------------------------------------------------------------------------------
-typedef setting_impl<bool>         setting_bool;
-typedef setting_impl<int>          setting_int;
-typedef setting_impl<const char*>  setting_str;
+typedef SettingImpl<bool>           SettingBool;
+typedef SettingImpl<int>            SettingInt;
+typedef SettingImpl<const char*>    SettingStr;
 
 //------------------------------------------------------------------------------
-class setting_enum
-    : public setting_impl<int>
+class SettingEnum
+    : public SettingImpl<int>
 {
 public:
-                       setting_enum(const char* name, const char* short_desc, const char* values, int default_value);
-                       setting_enum(const char* name, const char* short_desc, const char* long_desc, const char* values, int default_value);
+                       SettingEnum(const char* name, const char* short_desc, const char* values, int default_value);
+                       SettingEnum(const char* name, const char* short_desc, const char* long_desc, const char* values, int default_value);
     virtual bool       set(const char* value) override;
-    virtual void       get(str_base& out) const override;
+    virtual void       get(StrBase& out) const override;
     const char*        get_options() const;
 
-    using setting_impl<int>::get;
+    using SettingImpl<int>::get;
 
 protected:
     static const char* next_option(const char* option);
-    str<48>            m_options;
+    Str<48>            m_options;
 };

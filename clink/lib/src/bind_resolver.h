@@ -3,45 +3,45 @@
 
 #pragma once
 
-class binder;
-class editor_module;
-class str_base;
+class Binder;
+class EditorModule;
+class StrBase;
 
 //------------------------------------------------------------------------------
-class bind_resolver
+class BindResolver
 {
 public:
-    class binding
+    class Binding
     {
     public:
         explicit        operator bool () const;
-        editor_module*  get_module() const;
+        EditorModule*   get_module() const;
         unsigned char   get_id() const;
-        void            get_chord(str_base& chord) const;
+        void            get_chord(StrBase& chord) const;
         void            claim();
 
     private:
-        friend class    bind_resolver;
-                        binding() = default;
-                        binding(bind_resolver* resolver, int node_index);
-        bind_resolver*  m_outer = nullptr;
+        friend class    BindResolver;
+                        Binding() = default;
+                        Binding(BindResolver* resolver, int node_index);
+        BindResolver*   m_outer = nullptr;
         unsigned short  m_node_index;
         unsigned char   m_module;
         unsigned char   m_depth;
         unsigned char   m_id;
     };
 
-                        bind_resolver(const binder& binder);
+                        BindResolver(const Binder& binder);
     void                set_group(int group);
     int                 get_group() const;
     bool                step(unsigned char key);
-    binding             next();
+    Binding             next();
     void                reset();
 
 private:
-    void                claim(binding& binding);
+    void                claim(Binding& Binding);
     bool                step_impl(unsigned char key);
-    const binder&       m_binder;
+    const Binder&       m_binder;
     unsigned short      m_node_index = 1;
     unsigned short      m_group = 1;
     bool                m_pending_input = false;

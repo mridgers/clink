@@ -23,12 +23,12 @@ static const char* g_default_fs[] = {
 };
 
 //------------------------------------------------------------------------------
-fs_fixture::fs_fixture(const char** fs)
+FsFixture::FsFixture(const char** fs)
 {
     os::get_env("tmp", m_root);
     REQUIRE(!m_root.empty());
 
-    str<64> id;
+    Str<64> id;
     id.format("clink_test_%d", rand());
     path::append(m_root, id.c_str());
 
@@ -44,7 +44,7 @@ fs_fixture::fs_fixture(const char** fs)
     const char** item = fs;
     while (const char* file = *item++)
     {
-        str<> dir;
+        Str<> dir;
         path::get_directory(file, dir);
         os::make_dir(dir.c_str());
 
@@ -56,7 +56,7 @@ fs_fixture::fs_fixture(const char** fs)
 }
 
 //------------------------------------------------------------------------------
-fs_fixture::~fs_fixture()
+FsFixture::~FsFixture()
 {
     os::set_current_dir(m_root.c_str());
     os::set_current_dir("..");
@@ -65,12 +65,12 @@ fs_fixture::~fs_fixture()
 }
 
 //------------------------------------------------------------------------------
-void fs_fixture::clean(const char* path)
+void FsFixture::clean(const char* path)
 {
-    str<> file;
+    Str<> file;
     path::join(path, "*", file);
 
-    globber globber(file.c_str());
+    Globber globber(file.c_str());
     globber.hidden(true);
     while (globber.next(file))
     {
@@ -84,7 +84,7 @@ void fs_fixture::clean(const char* path)
 }
 
 //------------------------------------------------------------------------------
-const char* fs_fixture::get_root() const
+const char* FsFixture::get_root() const
 {
     return m_root.c_str();
 }

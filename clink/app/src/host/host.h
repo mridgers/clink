@@ -7,26 +7,26 @@
 
 #include <lib/line_editor.h>
 
-class lua_state;
-class str_base;
+class LuaState;
+class StrBase;
 
 //------------------------------------------------------------------------------
-class host
+class Host
 {
 public:
-                    host(const char* name);
-    virtual         ~host();
+                    Host(const char* name);
+    virtual         ~Host();
     virtual bool    validate() = 0;
     virtual bool    initialise() = 0;
     virtual void    shutdown() = 0;
 
 protected:
-    bool            edit_line(const char* prompt, str_base& out);
-    virtual void    initialise_lua(lua_state& lua) = 0;
-    virtual void    initialise_editor_desc(line_editor::desc& desc) = 0;
+    bool            edit_line(const char* prompt, StrBase& out);
+    virtual void    initialise_lua(LuaState& lua) = 0;
+    virtual void    initialise_editor_desc(LineEditor::Desc& desc) = 0;
 
 private:
-    void            filter_prompt(const char* in, str_base& out);
+    void            filter_prompt(const char* in, StrBase& out);
     const char*     m_name;
-    history_db      m_history;
+    HistoryDb       m_history;
 };

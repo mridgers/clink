@@ -3,16 +3,16 @@
 
 #pragma once
 
-class line_buffer;
-class line_state;
-class matches;
-class printer;
+class LineBuffer;
+class LineState;
+class Matches;
+class Printer;
 
 //------------------------------------------------------------------------------
-class editor_module
+class EditorModule
 {
 public:
-    struct result
+    struct Result
     {
         virtual void        pass() = 0;
         virtual void        redraw() = 0;
@@ -22,33 +22,33 @@ public:
         virtual int         set_bind_group(int bind_group) = 0;
     };
 
-    struct input
+    struct Input
     {
         const char*         keys;
         unsigned char       id;
     };
 
-    struct context
+    struct Context
     {
         const char*         prompt;
-        printer&            printer;
-        line_buffer&        buffer;
-        const line_state&   line;
-        const matches&      matches;
+        Printer&            printer;
+        LineBuffer&         buffer;
+        const LineState&    line;
+        const Matches&      matches;
     };
 
-    struct binder
+    struct Binder
     {
         virtual int         get_group(const char* name=nullptr) const = 0;
         virtual int         create_group(const char* name) = 0;
         virtual bool        bind(unsigned int group, const char* chord, unsigned char id) = 0;
     };
 
-    virtual                 ~editor_module() = default;
-    virtual void            bind_input(binder& binder) = 0;
-    virtual void            on_begin_line(const context& context) = 0;
+    virtual                 ~EditorModule() = default;
+    virtual void            bind_input(Binder& binder) = 0;
+    virtual void            on_begin_line(const Context& context) = 0;
     virtual void            on_end_line() = 0;
-    virtual void            on_matches_changed(const context& context) = 0;
-    virtual void            on_input(const input& input, result& result, const context& context) = 0;
-    virtual void            on_terminal_resize(int columns, int rows, const context& context) = 0;
+    virtual void            on_matches_changed(const Context& context) = 0;
+    virtual void            on_input(const Input& Input, Result& result, const Context& context) = 0;
+    virtual void            on_terminal_resize(int columns, int rows, const Context& context) = 0;
 };

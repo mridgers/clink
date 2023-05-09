@@ -8,31 +8,31 @@
 #include <lib/line_state.h>
 
 //------------------------------------------------------------------------------
-static line_state_lua::method g_methods[] = {
-    { "getline",          &line_state_lua::get_line },
-    { "getcursor",        &line_state_lua::get_cursor },
-    { "getcommandoffset", &line_state_lua::get_command_offset },
-    { "getwordcount",     &line_state_lua::get_word_count },
-    { "getwordinfo",      &line_state_lua::get_word_info },
-    { "getword",          &line_state_lua::get_word },
-    { "getendword",       &line_state_lua::get_end_word },
+static LineStateLua::Method g_methods[] = {
+    { "getline",          &LineStateLua::get_line },
+    { "getcursor",        &LineStateLua::get_cursor },
+    { "getcommandoffset", &LineStateLua::get_command_offset },
+    { "getwordcount",     &LineStateLua::get_word_count },
+    { "getwordinfo",      &LineStateLua::get_word_info },
+    { "getword",          &LineStateLua::get_word },
+    { "getendword",       &LineStateLua::get_end_word },
     {}
 };
 
 
 
 //------------------------------------------------------------------------------
-line_state_lua::line_state_lua(const line_state& line)
-: lua_bindable("line_state", g_methods)
+LineStateLua::LineStateLua(const LineState& line)
+: LuaBindable("LineState", g_methods)
 , m_line(line)
 {
 }
 
 //------------------------------------------------------------------------------
-/// -name:  line:getline
+/// -name:  line:getlinE
 /// -ret:   string
 /// Returns the current line in its entirety.
-int line_state_lua::get_line(lua_State* state)
+int LineStateLua::get_line(lua_State* state)
 {
     lua_pushstring(state, m_line.get_line());
     return 1;
@@ -42,7 +42,7 @@ int line_state_lua::get_line(lua_State* state)
 /// -name:  line:getcursor
 /// -ret:   integer
 /// Returns the position of the cursor.
-int line_state_lua::get_cursor(lua_State* state)
+int LineStateLua::get_cursor(lua_State* state)
 {
     lua_pushinteger(state, m_line.get_cursor() + 1);
     return 1;
@@ -57,7 +57,7 @@ int line_state_lua::get_cursor(lua_State* state)
 /// Returns the offset to the start of the delimited command in the line that's
 /// being effectively edited. Note that this may not be the offset of the first
 /// command of the line unquoted as whitespace isn't considered for words.
-int line_state_lua::get_command_offset(lua_State* state)
+int LineStateLua::get_command_offset(lua_State* state)
 {
     lua_pushinteger(state, m_line.get_command_offset() + 1);
     return 1;
@@ -67,7 +67,7 @@ int line_state_lua::get_command_offset(lua_State* state)
 /// -name:  line:getwordcount
 /// -ret:   integer
 /// Returns the number of words in the current line.
-int line_state_lua::get_word_count(lua_State* state)
+int LineStateLua::get_word_count(lua_State* state)
 {
     lua_pushinteger(state, m_line.get_word_count());
     return 1;
@@ -80,17 +80,17 @@ int line_state_lua::get_word_count(lua_State* state)
 /// Returns a table of informationa about the Nth word in the line. The table
 /// returned has the following schema; { offset:integer, length:integer,
 /// quoted:boolean, delim:boolean }.
-int line_state_lua::get_word_info(lua_State* state)
+int LineStateLua::get_word_info(lua_State* state)
 {
     if (!lua_isnumber(state, 1))
         return 0;
 
-    const array<word>& words = m_line.get_words();
+    const Array<Word>& words = m_line.get_words();
     unsigned int index = int(lua_tointeger(state, 1)) - 1;
     if (index >= words.size())
         return 0;
 
-    word word = *(words[index]);
+    Word word = *(words[index]);
 
     lua_createtable(state, 0, 4);
 
@@ -119,13 +119,13 @@ int line_state_lua::get_word_info(lua_State* state)
 /// -arg:   index:integer
 /// -ret:   string
 /// Returns the word of the line at 'index'.
-int line_state_lua::get_word(lua_State* state)
+int LineStateLua::get_word(lua_State* state)
 {
     if (!lua_isnumber(state, 1))
         return 0;
 
     unsigned int index = int(lua_tointeger(state, 1)) - 1;
-    str_iter word = m_line.get_word(index);
+    StrIter word = m_line.get_word(index);
     lua_pushlstring(state, word.get_pointer(), word.length());
     return 1;
 }
@@ -136,9 +136,9 @@ int line_state_lua::get_word(lua_State* state)
 /// -show:  line:getword(line:getwordcount()) == line:getendword()
 /// Returns the last word of the line. This is the word that matches are being
 /// generated for.
-int line_state_lua::get_end_word(lua_State* state)
+int LineStateLua::get_end_word(lua_State* state)
 {
-    str_iter word = m_line.get_end_word();
+    StrIter word = m_line.get_end_word();
     lua_pushlstring(state, word.get_pointer(), word.length());
     return 1;
 }

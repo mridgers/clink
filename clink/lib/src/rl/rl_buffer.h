@@ -6,8 +6,8 @@
 #include "line_buffer.h"
 
 //------------------------------------------------------------------------------
-class rl_buffer
-    : public line_buffer
+class RlBuffer
+    : public LineBuffer
 {
 public:
     virtual void            reset() override;

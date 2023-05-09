@@ -3,7 +3,7 @@
 
 #pragma once
 
-void lua_load_script_impl(class lua_state&, const char*, int);
+void lua_load_script_impl(class LuaState&, const char*, int);
 
 #if defined(CLINK_FINAL)
     #define lua_load_script(state, module, name)                                \

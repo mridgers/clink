@@ -16,24 +16,24 @@
 #include <terminal/printer.h>
 
 //------------------------------------------------------------------------------
-class line_editor_impl
-    : public line_editor
+class LineEditorImpl
+    : public LineEditor
 {
 public:
-                        line_editor_impl(const desc& desc);
-    virtual bool        add_module(editor_module& module) override;
-    virtual bool        add_generator(match_generator& generator) override;
+                        LineEditorImpl(const Desc& desc);
+    virtual bool        add_module(EditorModule& module) override;
+    virtual bool        add_generator(MatchGenerator& generator) override;
     virtual bool        get_line(char* out, int out_size) override;
     virtual bool        edit(char* out, int out_size) override;
     virtual bool        update() override;
 
 private:
-    typedef editor_module                       module;
-    typedef fixed_array<editor_module*, 16>     modules;
-    typedef fixed_array<match_generator*, 32>   generators;
-    typedef fixed_array<word, 72>               words;
+    typedef EditorModule                    Module;
+    typedef FixedArray<EditorModule*, 16>   Modules;
+    typedef FixedArray<MatchGenerator*, 32> Generators;
+    typedef FixedArray<Word, 72>            Words;
 
-    enum flags : unsigned char
+    enum Flags : unsigned char
     {
         flag_init       = 1 << 0,
         flag_editing    = 1 << 1,
@@ -50,21 +50,21 @@ private:
     void                update_input();
     void                accept_match(unsigned int index);
     void                append_match_lcd();
-    module::context     get_context(const line_state& line) const;
-    line_state          get_linestate() const;
+    Module::Context     get_context(const LineState& line) const;
+    LineState           get_linestate() const;
     void                set_flag(unsigned char flag);
     void                clear_flag(unsigned char flag);
     bool                check_flag(unsigned char flag) const;
-    rl_module           m_module;
-    rl_buffer           m_buffer;
-    desc                m_desc;
-    modules             m_modules;
-    generators          m_generators;
-    binder              m_binder;
-    bind_resolver       m_bind_resolver = { m_binder };
-    words               m_words;
-    matches_impl        m_matches;
-    printer             m_printer;
+    RlModule            m_module;
+    RlBuffer            m_buffer;
+    Desc                m_desc;
+    Modules             m_modules;
+    Generators          m_generators;
+    Binder              m_binder;
+    BindResolver        m_bind_resolver = { m_binder };
+    Words               m_words;
+    MatchesImpl         m_matches;
+    Printer             m_printer;
     unsigned int        m_prev_key;
     unsigned short      m_command_offset;
     unsigned char       m_keys_size;

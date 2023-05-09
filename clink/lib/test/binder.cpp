@@ -7,9 +7,9 @@
 #include "editor_module.h"
 
 //------------------------------------------------------------------------------
-TEST_CASE("Binder")
+TEST_CASE("binder")
 {
-    binder binder;
+    Binder binder;
 
     SECTION("Group")
     {
@@ -42,15 +42,15 @@ TEST_CASE("Binder")
     {
         int group = binder.get_group();
         for (int i = 0; i < 64; ++i)
-            REQUIRE(binder.bind(group, "", ((editor_module*)0)[i], char(i)));
+            REQUIRE(binder.bind(group, "", ((EditorModule*)0)[i], char(i)));
 
-        auto& module = ((editor_module*)0)[0xff];
+        auto& module = ((EditorModule*)0)[0xff];
         REQUIRE(!binder.bind(group, "", module, 0xff));
     }
 
     SECTION("Overflow : bind")
     {
-        auto& null_module = *(editor_module*)0;
+        auto& null_module = *(EditorModule*)0;
         int default_group = binder.get_group();
 
         for (int i = 0; i < 508; ++i)
@@ -87,18 +87,18 @@ TEST_CASE("Binder")
         int group = binder.get_group();
         for (const auto& chord : chords)
         {
-            auto& module = *(editor_module*)(&chord);
+            auto& module = *(EditorModule*)(&chord);
             REQUIRE(binder.bind(group, chord.bind, module, 123));
 
-            bind_resolver resolver(binder);
+            BindResolver resolver(binder);
             for (const char* c = chord.input; *c; ++c)
                 if (resolver.step(*c))
                     break;
 
-            auto binding = resolver.next();
-            REQUIRE(binding);
-            REQUIRE(binding.get_id() == 123);
-            REQUIRE(binding.get_module() == &module);
+            auto Binding = resolver.next();
+            REQUIRE(Binding);
+            REQUIRE(Binding.get_id() == 123);
+            REQUIRE(Binding.get_module() == &module);
         }
     }
 
@@ -113,7 +113,7 @@ TEST_CASE("Binder")
         int group = binder.get_group();
         for (const char* chord : chords)
         {
-            REQUIRE(!binder.bind(group, chord, *(editor_module*)0, 234));
+            REQUIRE(!binder.bind(group, chord, *(EditorModule*)0, 234));
         }
     }
 }

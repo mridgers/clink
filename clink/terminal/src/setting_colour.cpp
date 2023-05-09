@@ -11,24 +11,24 @@ static const char* colour_bg_values = COLOUR_XS "default";
 #undef COLOUR_X
 
 //------------------------------------------------------------------------------
-setting_colour::setting_colour(
+SettingColour::SettingColour(
     const char* name,
     const char* short_desc,
     int default_fg,
     int default_bg)
-: setting_colour(name, short_desc, nullptr, default_fg, default_bg)
+: SettingColour(name, short_desc, nullptr, default_fg, default_bg)
 {
 }
 
 //------------------------------------------------------------------------------
-setting_colour::setting_colour(
+SettingColour::SettingColour(
     const char* name,
     const char* short_desc,
     const char* long_desc,
     int default_fg,
     int default_bg)
 {
-    str<64> inner_name;
+    Str<64> inner_name;
     inner_name << name << ".fg";
     m_fg.construct(inner_name.c_str(), short_desc, long_desc, colour_fg_values, default_fg);
 
@@ -38,9 +38,9 @@ setting_colour::setting_colour(
 }
 
 //------------------------------------------------------------------------------
-attributes setting_colour::get() const
+Attributes SettingColour::get() const
 {
-    attributes out = attributes::defaults;
+    Attributes out = Attributes::defaults;
 
     int fg = m_fg->get();
     switch (fg)

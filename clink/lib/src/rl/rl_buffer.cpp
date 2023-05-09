@@ -12,55 +12,55 @@ extern "C" {
 }
 
 //------------------------------------------------------------------------------
-void rl_buffer::reset()
+void RlBuffer::reset()
 {
     using_history();
     remove(0, ~0u);
 }
 
 //------------------------------------------------------------------------------
-void rl_buffer::begin_line()
+void RlBuffer::begin_line()
 {
     m_need_draw = true;
 }
 
 //------------------------------------------------------------------------------
-void rl_buffer::end_line()
+void RlBuffer::end_line()
 {
 }
 
 //------------------------------------------------------------------------------
-const char* rl_buffer::get_buffer() const
+const char* RlBuffer::get_buffer() const
 {
     return rl_line_buffer;
 }
 
 //------------------------------------------------------------------------------
-unsigned int rl_buffer::get_length() const
+unsigned int RlBuffer::get_length() const
 {
     return rl_end;
 }
 
 //------------------------------------------------------------------------------
-unsigned int rl_buffer::get_cursor() const
+unsigned int RlBuffer::get_cursor() const
 {
     return rl_point;
 }
 
 //------------------------------------------------------------------------------
-unsigned int rl_buffer::set_cursor(unsigned int pos)
+unsigned int RlBuffer::set_cursor(unsigned int pos)
 {
     return rl_point = min<unsigned int>(pos, rl_end);
 }
 
 //------------------------------------------------------------------------------
-bool rl_buffer::insert(const char* text)
+bool RlBuffer::insert(const char* text)
 {
     return (m_need_draw = (text[rl_insert_text(text)] == '\0'));
 }
 
 //------------------------------------------------------------------------------
-bool rl_buffer::remove(unsigned int from, unsigned int to)
+bool RlBuffer::remove(unsigned int from, unsigned int to)
 {
     to = min(to, get_length());
     m_need_draw = !!rl_delete_text(from, to);
@@ -69,7 +69,7 @@ bool rl_buffer::remove(unsigned int from, unsigned int to)
 }
 
 //------------------------------------------------------------------------------
-void rl_buffer::draw()
+void RlBuffer::draw()
 {
     if (m_need_draw)
     {
@@ -79,19 +79,19 @@ void rl_buffer::draw()
 }
 
 //------------------------------------------------------------------------------
-void rl_buffer::redraw()
+void RlBuffer::redraw()
 {
     rl_forced_update_display();
 }
 
 //------------------------------------------------------------------------------
-void rl_buffer::begin_undo_group()
+void RlBuffer::begin_undo_group()
 {
     rl_begin_undo_group();
 }
 
 //------------------------------------------------------------------------------
-void rl_buffer::end_undo_group()
+void RlBuffer::end_undo_group()
 {
     rl_end_undo_group();
 }

@@ -3,17 +3,17 @@
 
 #pragma once
 
-class screen_buffer;
-class terminal_in;
-class terminal_out;
+class ScreenBuffer;
+class TerminalIn;
+class TerminalOut;
 
 //------------------------------------------------------------------------------
-struct terminal
+struct Terminal
 {
-    terminal_in*    in;
-    terminal_out*   out;
+    TerminalIn*     in;
+    TerminalOut*    out;
 };
 
 //------------------------------------------------------------------------------
-terminal            terminal_create(screen_buffer* screen=nullptr);
-void                terminal_destroy(const terminal& terminal);
+Terminal            terminal_create(ScreenBuffer* screen=nullptr);
+void                terminal_destroy(const Terminal& Terminal);

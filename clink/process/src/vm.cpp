@@ -23,10 +23,10 @@ static void initialise_page_constants()
 static unsigned int to_access_flags(unsigned int ms_flags)
 {
     unsigned int ret = 0;
-    if (ms_flags & 0x22) ret |= vm::access_read;
-    if (ms_flags & 0x44) ret |= vm::access_write|vm::access_read;
-    if (ms_flags & 0x88) ret |= vm::access_cow|vm::access_write|vm::access_read;
-    if (ms_flags & 0xf0) ret |= vm::access_execute;
+    if (ms_flags & 0x22) ret |= Vm::access_read;
+    if (ms_flags & 0x44) ret |= Vm::access_write|Vm::access_read;
+    if (ms_flags & 0x88) ret |= Vm::access_cow|Vm::access_write|Vm::access_read;
+    if (ms_flags & 0xf0) ret |= Vm::access_execute;
     return ret;
 }
 
@@ -34,17 +34,17 @@ static unsigned int to_access_flags(unsigned int ms_flags)
 static unsigned int to_ms_flags(unsigned int access_flags)
 {
     unsigned int ret = PAGE_NOACCESS;
-    if (access_flags & vm::access_cow)          ret = PAGE_WRITECOPY;
-    else if (access_flags & vm::access_write)   ret = PAGE_READWRITE;
-    else if (access_flags & vm::access_read)    ret = PAGE_READONLY;
-    if (access_flags & vm::access_execute)      ret <<= 4;
+    if (access_flags & Vm::access_cow)          ret = PAGE_WRITECOPY;
+    else if (access_flags & Vm::access_write)   ret = PAGE_READWRITE;
+    else if (access_flags & Vm::access_read)    ret = PAGE_READONLY;
+    if (access_flags & Vm::access_execute)      ret <<= 4;
     return ret;
 }
 
 
 
 //------------------------------------------------------------------------------
-vm::vm(int pid)
+Vm::Vm(int pid)
 {
     if (pid > 0)
         m_handle = OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_VM_OPERATION|
@@ -54,14 +54,14 @@ vm::vm(int pid)
 }
 
 //------------------------------------------------------------------------------
-vm::~vm()
+Vm::~Vm()
 {
     if (m_handle != nullptr)
         CloseHandle(m_handle);
 }
 
 //------------------------------------------------------------------------------
-size_t vm::get_block_granularity()
+size_t Vm::get_block_granularity()
 {
     if (!g_alloc_granularity)
         initialise_page_constants();
@@ -70,7 +70,7 @@ size_t vm::get_block_granularity()
 }
 
 //------------------------------------------------------------------------------
-size_t vm::get_page_size()
+size_t Vm::get_page_size()
 {
     if (!g_page_size)
         initialise_page_constants();
@@ -79,7 +79,7 @@ size_t vm::get_page_size()
 }
 
 //------------------------------------------------------------------------------
-void* vm::get_alloc_base(void* address)
+void* Vm::get_alloc_base(void* address)
 {
     if (m_handle == nullptr)
         return nullptr;
@@ -92,7 +92,7 @@ void* vm::get_alloc_base(void* address)
 }
 
 //------------------------------------------------------------------------------
-vm::region vm::get_region(void* address)
+Vm::Region Vm::get_region(void* address)
 {
     if (m_handle == nullptr)
         return {};
@@ -105,13 +105,13 @@ vm::region vm::get_region(void* address)
 }
 
 //------------------------------------------------------------------------------
-void* vm::get_page(void* address)
+void* Vm::get_page(void* address)
 {
     return (void*)(uintptr_t(address) & ~(get_page_size() - 1));
 }
 
 //------------------------------------------------------------------------------
-vm::region vm::alloc(unsigned int page_count, unsigned int access)
+Vm::Region Vm::alloc(unsigned int page_count, unsigned int access)
 {
     if (m_handle == nullptr)
         return {};
@@ -125,41 +125,41 @@ vm::region vm::alloc(unsigned int page_count, unsigned int access)
 }
 
 //------------------------------------------------------------------------------
-void vm::free(const region& region)
+void Vm::free(const Region& Region)
 {
     if (m_handle == nullptr)
         return;
 
-    size_t size = region.page_count * get_page_size();
-    VirtualFreeEx(m_handle, region.base, size, MEM_RELEASE);
+    size_t size = Region.page_count * get_page_size();
+    VirtualFreeEx(m_handle, Region.base, size, MEM_RELEASE);
 }
 
 //------------------------------------------------------------------------------
-int vm::get_access(const region& region)
+int Vm::get_access(const Region& Region)
 {
     if (m_handle == nullptr)
         return -1;
 
     MEMORY_BASIC_INFORMATION mbi;
-    if (VirtualQueryEx(m_handle, region.base, &mbi, sizeof(mbi)))
+    if (VirtualQueryEx(m_handle, Region.base, &mbi, sizeof(mbi)))
         return to_access_flags(mbi.Protect);
 
     return -1;
 }
 
 //------------------------------------------------------------------------------
-void vm::set_access(const region& region, unsigned int access)
+void Vm::set_access(const Region& Region, unsigned int access)
 {
     if (m_handle == nullptr)
         return;
 
     DWORD ms_flags = to_ms_flags(access);
-    size_t size = region.page_count * get_page_size();
-    VirtualProtectEx(m_handle, region.base, size, ms_flags, &ms_flags);
+    size_t size = Region.page_count * get_page_size();
+    VirtualProtectEx(m_handle, Region.base, size, ms_flags, &ms_flags);
 }
 
 //------------------------------------------------------------------------------
-bool vm::read(void* dest, const void* src, size_t size)
+bool Vm::read(void* dest, const void* src, size_t size)
 {
     if (m_handle == nullptr)
         return false;
@@ -168,7 +168,7 @@ bool vm::read(void* dest, const void* src, size_t size)
 }
 
 //------------------------------------------------------------------------------
-bool vm::write(void* dest, const void* src, size_t size)
+bool Vm::write(void* dest, const void* src, size_t size)
 {
     if (m_handle == nullptr)
         return false;
@@ -177,11 +177,11 @@ bool vm::write(void* dest, const void* src, size_t size)
 }
 
 //------------------------------------------------------------------------------
-void vm::flush_icache(const region& region)
+void Vm::flush_icache(const Region& Region)
 {
     if (m_handle == nullptr)
         return;
 
-    size_t size = region.page_count * get_page_size();
-    FlushInstructionCache(m_handle, region.base, size);
+    size_t size = Region.page_count * get_page_size();
+    FlushInstructionCache(m_handle, Region.base, size);
 }

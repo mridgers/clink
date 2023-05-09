@@ -9,32 +9,32 @@
 #include <lib/matches.h>
 
 //------------------------------------------------------------------------------
-static match_builder_lua::method g_methods[] = {
-    { "addmatch",           &match_builder_lua::add_match },
-    { "addmatches",         &match_builder_lua::add_matches },
-    { "setprefixincluded",  &match_builder_lua::set_prefix_included },
+static MatchBuilderLua::Method g_methods[] = {
+    { "addmatch",           &MatchBuilderLua::add_match },
+    { "addmatches",         &MatchBuilderLua::add_matches },
+    { "setprefixincluded",  &MatchBuilderLua::set_prefix_included },
     {}
 };
 
 
 
 //------------------------------------------------------------------------------
-match_builder_lua::match_builder_lua(match_builder& builder)
-: lua_bindable<match_builder_lua>("match_builder_lua", g_methods)
-, m_builder(builder)
+MatchBuilderLua::MatchBuilderLua(MatchBuilder& Builder)
+: LuaBindable<MatchBuilderLua>("MatchBuilderLua", g_methods)
+, m_builder(Builder)
 {
 }
 
 //------------------------------------------------------------------------------
-match_builder_lua::~match_builder_lua()
+MatchBuilderLua::~MatchBuilderLua()
 {
 }
 
 //------------------------------------------------------------------------------
-/// -name:  builder:addmatch
+/// -name:  Builder:addmatch
 /// -arg:   match:string|table
 /// -ret:   boolean
-int match_builder_lua::add_match(lua_State* state)
+int MatchBuilderLua::add_match(lua_State* state)
 {
     int ret = 0;
     if (lua_gettop(state) > 0)
@@ -45,9 +45,9 @@ int match_builder_lua::add_match(lua_State* state)
 }
 
 //------------------------------------------------------------------------------
-/// -name:  builder:setprefixincluded
+/// -name:  Builder:setprefixincluded
 /// -arg:   [state:boolean]
-int match_builder_lua::set_prefix_included(lua_State* state)
+int MatchBuilderLua::set_prefix_included(lua_State* state)
 {
     bool included = true;
     if (lua_gettop(state) > 0)
@@ -59,13 +59,13 @@ int match_builder_lua::set_prefix_included(lua_State* state)
 }
 
 //------------------------------------------------------------------------------
-/// -name:  builder:addmatches
+/// -name:  Builder:addmatches
 /// -arg:   matches:table or function
 /// -ret:   integer, boolean
-/// This is the equivalent of calling builder:addmatch() in a for-loop. Returns
+/// This is the equivalent of calling Builder:addmatch() in a for-loop. Returns
 /// the number of matches added and a boolean indicating if all matches were
 /// added successfully. If matches is a function is called until it returns nil.
-int match_builder_lua::add_matches(lua_State* state)
+int MatchBuilderLua::add_matches(lua_State* state)
 {
     int count = 0;
     int total = -1;
@@ -105,7 +105,7 @@ int match_builder_lua::add_matches(lua_State* state)
 }
 
 //------------------------------------------------------------------------------
-bool match_builder_lua::add_match_impl(lua_State* state, int stack_index)
+bool MatchBuilderLua::add_match_impl(lua_State* state, int stack_index)
 {
     if (lua_isstring(state, stack_index))
     {
@@ -117,7 +117,7 @@ bool match_builder_lua::add_match_impl(lua_State* state, int stack_index)
         if (stack_index < 0)
             --stack_index;
 
-        match_desc desc = {};
+        MatchDesc desc = {};
 
         lua_pushliteral(state, "match");
         lua_rawget(state, stack_index);

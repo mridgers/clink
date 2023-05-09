@@ -27,25 +27,25 @@ static void list_keys()
 //------------------------------------------------------------------------------
 static void list_options(const char* key)
 {
-    const setting* setting = settings::find(key);
+    const Setting* setting = settings::find(key);
     if (setting == nullptr)
         return;
 
     switch (setting->get_type())
     {
-    case setting::type_int:
-    case setting::type_string:
+    case Setting::type_int:
+    case Setting::type_string:
         break;
 
-    case setting::type_bool:
+    case Setting::type_bool:
         puts("true");
         puts("false");
         break;
 
-    case setting::type_enum:
+    case Setting::type_enum:
         {
-            const char* options = ((const setting_enum*)setting)->get_options();
-            str_tokeniser tokens(options, ",");
+            const char* options = ((const SettingEnum*)setting)->get_options();
+            StrTokeniser tokens(options, ",");
             const char* start;
             int length;
             while (tokens.next(start, length))
@@ -66,7 +66,7 @@ static bool print_keys()
 
     for (auto* next = settings::first(); next != nullptr; next = next->next())
     {
-        str<> value;
+        Str<> value;
         next->get(value);
         const char* name = next->get_name();
         printf("%-*s  %s\n", longest, name, value.c_str());
@@ -78,10 +78,10 @@ static bool print_keys()
 //------------------------------------------------------------------------------
 static bool print_value(const char* key)
 {
-    const setting* setting = settings::find(key);
+    const Setting* setting = settings::find(key);
     if (setting == nullptr)
     {
-        printf("ERROR: Setting '%s' not found.\n", key);
+        printf("ERROR: setting '%s' not found.\n", key);
         return false;
     }
 
@@ -89,10 +89,10 @@ static bool print_value(const char* key)
     printf(" Description: %s\n", setting->get_short_desc());
 
     // Output an enum-type setting's options.
-    if (setting->get_type() == setting::type_enum)
-        printf("     Options: %s\n", ((setting_enum*)setting)->get_options());
+    if (setting->get_type() == Setting::type_enum)
+        printf("     Options: %s\n", ((SettingEnum*)setting)->get_options());
 
-    str<> value;
+    Str<> value;
     setting->get(value);
     printf("       Value: %s\n", value.c_str());
 
@@ -106,10 +106,10 @@ static bool print_value(const char* key)
 //------------------------------------------------------------------------------
 static bool set_value(const char* key, const char* value)
 {
-    setting* setting = settings::find(key);
+    Setting* setting = settings::find(key);
     if (setting == nullptr)
     {
-        printf("ERROR: Setting '%s' not found.\n", key);
+        printf("ERROR: setting '%s' not found.\n", key);
         return false;
     }
 
@@ -123,9 +123,9 @@ static bool set_value(const char* key, const char* value)
         return false;
     }
 
-    str<> result;
+    Str<> result;
     setting->get(result);
-    printf("Setting '%s' %sset to '%s'\n", key, value ? "" : "re", result.c_str());
+    printf("setting '%s' %sset to '%s'\n", key, value ? "" : "re", result.c_str());
     return true;
 }
 
@@ -172,12 +172,12 @@ int set(int argc, char** argv)
     }
 
     // Load the settings from disk.
-    str<280> settings_file;
-    app_context::get()->get_settings_path(settings_file);
+    Str<280> settings_file;
+    AppContext::get()->get_settings_path(settings_file);
     settings::load(settings_file.c_str());
 
     // Load all lua state too as there is settings declared in scripts.
-    host_lua lua;
+    HostLua lua;
     lua_load_script(lua, app, exec);
     lua_load_script(lua, app, prompt);
     lua.load_scripts();

@@ -4,10 +4,10 @@
 #pragma once
 
 //------------------------------------------------------------------------------
-class line_buffer
+class LineBuffer
 {
 public:
-    virtual                 ~line_buffer() = default;
+    virtual                 ~LineBuffer() = default;
     virtual void            reset() = 0;
     virtual void            begin_line() = 0;
     virtual void            end_line() = 0;

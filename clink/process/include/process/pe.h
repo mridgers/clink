@@ -4,17 +4,17 @@
 #pragma once
 
 //------------------------------------------------------------------------------
-class pe_info
+class PeInfo
 {
 public:
     typedef void        (__stdcall *funcptr_t)();
-                        pe_info(void* base);
+                        PeInfo(void* base);
     funcptr_t*          get_import_by_name(const char* dll, const char* func_name) const;
     funcptr_t*          get_import_by_addr(const char* dll, funcptr_t func_addr) const;
     funcptr_t           get_export(const char* func_name) const;
 
 private:
-    typedef funcptr_t*  (pe_info::*import_iter_t)(IMAGE_IMPORT_DESCRIPTOR*, const void*) const;
+    typedef funcptr_t*  (PeInfo::*import_iter_t)(IMAGE_IMPORT_DESCRIPTOR*, const void*) const;
 
     IMAGE_NT_HEADERS*   get_nt_headers() const;
     void*               get_data_directory(int index, int* size=nullptr) const;

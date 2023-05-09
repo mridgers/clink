@@ -14,14 +14,14 @@ enum
     visitor_read_console    = 1 << 3,
 };
 
-struct originals
+struct Originals
 {
     BOOL    (WINAPI *set_env_var)(const wchar_t*, const wchar_t*);
     BOOL    (WINAPI *write_console)(HANDLE, const void*, DWORD, LPDWORD, LPVOID);
     HANDLE  (WINAPI *get_std_handle)(DWORD);
 };
 
-static originals    g_originals;
+static Originals    g_originals;
 static unsigned int g_visited_bits;
 
 //------------------------------------------------------------------------------

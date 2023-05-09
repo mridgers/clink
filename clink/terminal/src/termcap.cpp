@@ -171,7 +171,7 @@ char* tgetstr(char* name, char** out)
 //------------------------------------------------------------------------------
 char* tgoto(char* base, int x, int y)
 {
-    str_base(gt_termcap_buffer).format(base, y);
+    StrBase(gt_termcap_buffer).format(base, y);
     return gt_termcap_buffer;
 }
 

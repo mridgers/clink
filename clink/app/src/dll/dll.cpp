@@ -26,29 +26,29 @@ const char* g_clink_header =
 
 
 //------------------------------------------------------------------------------
-static host* g_host = nullptr;
+static Host* g_host = nullptr;
 
 
 
 //------------------------------------------------------------------------------
 static void success()
 {
-    if (!app_context::get()->is_quiet())
+    if (!AppContext::get()->is_quiet())
         puts(g_clink_header);
 }
 
 //------------------------------------------------------------------------------
 static void failed()
 {
-    str<280> buffer;
-    app_context::get()->get_state_dir(buffer);
+    Str<280> buffer;
+    AppContext::get()->get_state_dir(buffer);
     fprintf(stderr, "Failed to load Clink.\nSee log for details (%s).\n", buffer.c_str());
 }
 
 //------------------------------------------------------------------------------
-static bool get_host_name(str_base& out)
+static bool get_host_name(StrBase& out)
 {
-    str<MAX_PATH> buffer;
+    Str<MAX_PATH> buffer;
     if (GetModuleFileName(nullptr, buffer.data(), buffer.size()) == buffer.size())
         return false;
 
@@ -61,7 +61,7 @@ static bool get_host_name(str_base& out)
 //------------------------------------------------------------------------------
 static void shutdown_clink()
 {
-    seh_scope seh;
+    SehScope seh;
 
     if (g_host != nullptr)
     {
@@ -70,40 +70,40 @@ static void shutdown_clink()
         g_host = nullptr;
     }
 
-    if (logger* logger = logger::get())
-        delete logger;
+    if (Logger* Logger = Logger::get())
+        delete Logger;
 
-    delete app_context::get();
+    delete AppContext::get();
 }
 
 //------------------------------------------------------------------------------
-bool __stdcall initialise_clink(const app_context::desc& app_desc)
+bool __stdcall initialise_clink(const AppContext::Desc& app_desc)
 {
-    seh_scope seh;
+    SehScope seh;
 
-    auto* app_ctx = new app_context(app_desc);
+    auto* app_ctx = new AppContext(app_desc);
 
     // Start a log file.
     if (app_ctx->is_logging_enabled())
     {
-        str<256> log_path;
+        Str<256> log_path;
         app_ctx->get_log_path(log_path);
-        new file_logger(log_path.c_str());
+        new FileLogger(log_path.c_str());
     }
 
-    // What process is the DLL loaded into?
-    str<64> host_name;
+    // What Process is the DLL loaded into?
+    Str<64> host_name;
     if (!get_host_name(host_name))
         return false;
 
-    LOG("Host process is '%s'", host_name.c_str());
+    LOG("Host Process is '%s'", host_name.c_str());
 
-    // Search for a supported host.
+    // Search for a supported Host.
     struct {
         const char* name;
-        host*       (*creator)();
+        Host*       (*creator)();
     } hosts[] = {
-        { "cmd.exe", []() -> host* { return new host_cmd(); } },
+        { "cmd.exe", []() -> Host* { return new HostCmd(); } },
     };
 
     for (int i = 0; i < sizeof_array(hosts); ++i)
@@ -111,10 +111,10 @@ bool __stdcall initialise_clink(const app_context::desc& app_desc)
             if (g_host = (hosts[i].creator)())
                 break;
 
-    // Bail out if this isn't a supported host.
+    // Bail out if this isn't a supported Host.
     if (g_host == nullptr)
     {
-        LOG("Unknown host.");
+        LOG("Unknown Host.");
         return false;
     }
 

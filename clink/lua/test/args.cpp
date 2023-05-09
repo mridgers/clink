@@ -12,14 +12,14 @@
 //------------------------------------------------------------------------------
 TEST_CASE("Lua arg parsers")
 {
-    fs_fixture fs;
+    FsFixture fs;
 
-    lua_state lua;
-    lua_match_generator lua_generator(lua);
+    LuaState lua;
+    LuaMatchGenerator lua_generator(lua);
 
-    line_editor::desc desc;
+    LineEditor::Desc desc;
     desc.command_delims = "&|";
-    line_editor_tester tester(desc);
+    LineEditorTester tester(desc);
     tester.get_editor()->add_generator(lua_generator);
     tester.get_editor()->add_generator(file_match_generator());
 
@@ -39,42 +39,42 @@ TEST_CASE("Lua arg parsers")
 
         REQUIRE(lua.do_string(script));
 
-        SECTION("Node matches 1")
+        SECTION("Node Matches 1")
         {
             tester.set_input("argcmd ");
             tester.set_expected_matches("one", "two", "three", "spa ce");
             tester.run();
         }
 
-        SECTION("Node matches 2")
+        SECTION("Node Matches 2")
         {
             tester.set_input("argcmd t");
             tester.set_expected_matches("two", "three");
             tester.run();
         }
 
-        SECTION("Node matches 3 (.exe)")
+        SECTION("Node Matches 3 (.exe)")
         {
             tester.set_input("argcmd.exe t");
             tester.set_expected_matches("two", "three");
             tester.run();
         }
 
-        SECTION("Node matches 4 (.bat)")
+        SECTION("Node Matches 4 (.bat)")
         {
             tester.set_input("argcmd.bat t");
             tester.set_expected_matches("two", "three");
             tester.run();
         }
 
-        SECTION("Node matches quoted 1")
+        SECTION("Node Matches quoted 1")
         {
             tester.set_input("argcmd \"t");
             tester.set_expected_matches("two", "three");
             tester.run();
         }
 
-        SECTION("Node matches quoted executable")
+        SECTION("Node Matches quoted executable")
         {
             tester.set_input("\"argcmd\" t");
             tester.set_expected_matches("two", "three");

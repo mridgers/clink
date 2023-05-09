@@ -8,20 +8,20 @@
 #include <vector>
 
 //------------------------------------------------------------------------------
-struct match_info
+struct MatchInfo
 {
     unsigned short  store_id;
     unsigned short  displayable_store_id;
     unsigned short  aux_store_id;
     unsigned char   cell_count;
-    unsigned char   suffix : 7; // TODO: suffix can be in store instead of info.
+    unsigned char   suffix : 7; // TODO: suffix can be in Store instead of info.
     unsigned char   select : 1;
 };
 
 
 
 //------------------------------------------------------------------------------
-class match_store
+class MatchStore
 {
 public:
     const char*             get(unsigned int id) const;
@@ -36,11 +36,11 @@ protected:
 
 
 //------------------------------------------------------------------------------
-class matches_impl
-    : public matches
+class MatchesImpl
+    : public Matches
 {
 public:
-                            matches_impl(unsigned int store_size=0x10000);
+                            MatchesImpl(unsigned int store_size=0x10000);
     virtual unsigned int    get_match_count() const override;
     virtual const char*     get_match(unsigned int index) const override;
     virtual const char*     get_displayable(unsigned int index) const override;
@@ -49,26 +49,26 @@ public:
     virtual unsigned int    get_cell_count(unsigned int index) const override;
     virtual bool            has_aux() const override;
     bool                    is_prefix_included() const;
-    virtual void            get_match_lcd(str_base& out) const override;
+    virtual void            get_match_lcd(StrBase& out) const override;
 
 private:
-    friend class            match_pipeline;
-    friend class            match_builder;
+    friend class            MatchPipeline;
+    friend class            MatchBuilder;
     void                    set_prefix_included(bool included);
-    bool                    add_match(const match_desc& desc);
+    bool                    add_match(const MatchDesc& desc);
     unsigned int            get_info_count() const;
-    match_info*             get_infos();
-    const match_store&      get_store() const;
+    MatchInfo*              get_infos();
+    const MatchStore&       get_store() const;
     void                    reset();
     void                    coalesce(unsigned int count_hint);
 
 private:
-    class store_impl
-        : public match_store
+    class StoreImpl
+        : public MatchStore
     {
     public:
-                            store_impl(unsigned int size);
-                            ~store_impl();
+                            StoreImpl(unsigned int size);
+                            ~StoreImpl();
         void                reset();
         int                 store_front(const char* str);
         int                 store_back(const char* str);
@@ -79,10 +79,10 @@ private:
         unsigned int        m_back;
     };
 
-    typedef std::vector<match_info> infos;
+    typedef std::vector<MatchInfo> Infos;
 
-    store_impl              m_store;
-    infos                   m_infos;
+    StoreImpl               m_store;
+    Infos                   m_infos;
     unsigned short          m_count = 0;
     bool                    m_coalesced = false;
     bool                    m_has_aux = false;

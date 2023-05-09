@@ -7,11 +7,11 @@
 #include <core/str_tokeniser.h>
 
 //------------------------------------------------------------------------------
-TEST_CASE("str_tokeniser : basic")
+TEST_CASE("StrTokeniser : basic")
 {
-    str_tokeniser t("a;b;c", ";");
+    StrTokeniser t("a;b;c", ";");
 
-    str<> s;
+    Str<> s;
     REQUIRE(t.next(s)); REQUIRE(s.equals("a") == true);
     REQUIRE(t.next(s)); REQUIRE(s.equals("b") == true);
     REQUIRE(t.next(s)); REQUIRE(s.equals("c") == true);
@@ -19,35 +19,35 @@ TEST_CASE("str_tokeniser : basic")
 }
 
 //------------------------------------------------------------------------------
-TEST_CASE("str_tokeniser : empty")
+TEST_CASE("StrTokeniser : empty")
 {
     {
-        str<> s;
-        str_tokeniser t;
+        Str<> s;
+        StrTokeniser t;
         REQUIRE(!t.next(s));
     }{
-        str<> s;
-        str_iter i;
-        str_tokeniser t(i);
+        Str<> s;
+        StrIter i;
+        StrTokeniser t(i);
         REQUIRE(!t.next(s));
     }{
-        wstr<> s;
-        wstr_tokeniser t;
+        Wstr<> s;
+        WstrTokeniser t;
         REQUIRE(!t.next(s));
     }{
-        wstr<> s;
-        wstr_iter i;
-        wstr_tokeniser t(i);
+        Wstr<> s;
+        WstrIter i;
+        WstrTokeniser t(i);
         REQUIRE(!t.next(s));
     }
 }
 
 //------------------------------------------------------------------------------
-TEST_CASE("str_tokeniser : multi delims")
+TEST_CASE("StrTokeniser : multi delims")
 {
-    str_tokeniser t("a;b-c.d", ";-.");
+    StrTokeniser t("a;b-c.d", ";-.");
 
-    str<> s;
+    Str<> s;
     REQUIRE(t.next(s)); REQUIRE(s.equals("a") == true);
     REQUIRE(t.next(s)); REQUIRE(s.equals("b") == true);
     REQUIRE(t.next(s)); REQUIRE(s.equals("c") == true);
@@ -56,14 +56,14 @@ TEST_CASE("str_tokeniser : multi delims")
 }
 
 //------------------------------------------------------------------------------
-TEST_CASE("str_tokeniser : ends")
+TEST_CASE("StrTokeniser : ends")
 {
     const char* inputs[] = { "a;b;c", ";a;b;c", "a;b;c;" };
-    for (auto input : inputs)
+    for (auto Input : inputs)
     {
-        str_tokeniser t(input, ";");
+        StrTokeniser t(Input, ";");
 
-        str<> s;
+        Str<> s;
         REQUIRE(t.next(s)); REQUIRE(s.equals("a") == true);
         REQUIRE(t.next(s)); REQUIRE(s.equals("b") == true);
         REQUIRE(t.next(s)); REQUIRE(s.equals("c") == true);
@@ -72,14 +72,14 @@ TEST_CASE("str_tokeniser : ends")
 }
 
 //------------------------------------------------------------------------------
-TEST_CASE("str_tokeniser : delim runs")
+TEST_CASE("StrTokeniser : delim runs")
 {
     const char* inputs[] = { "a;;b--c", "-;a;-b;c", "a;b;-c-;" };
-    for (auto input : inputs)
+    for (auto Input : inputs)
     {
-        str_tokeniser t(input, ";-");
+        StrTokeniser t(Input, ";-");
 
-        str<> s;
+        Str<> s;
         REQUIRE(t.next(s)); REQUIRE(s.equals("a") == true);
         REQUIRE(t.next(s)); REQUIRE(s.equals("b") == true);
         REQUIRE(t.next(s)); REQUIRE(s.equals("c") == true);
@@ -88,13 +88,13 @@ TEST_CASE("str_tokeniser : delim runs")
 }
 
 //------------------------------------------------------------------------------
-TEST_CASE("str_tokeniser : quote")
+TEST_CASE("StrTokeniser : quote")
 {
-    str_tokeniser t("'-abc';(-abc);'-a)b;c", ";-");
+    StrTokeniser t("'-abc';(-abc);'-a)b;c", ";-");
     t.add_quote_pair("'");
     t.add_quote_pair("()");
 
-    str<> s;
+    Str<> s;
     REQUIRE(t.next(s)); REQUIRE(s.equals("'-abc'") == true);
     REQUIRE(t.next(s)); REQUIRE(s.equals("(-abc)") == true);
     REQUIRE(t.next(s)); REQUIRE(s.equals("'-a)b;c") == true);
@@ -102,11 +102,11 @@ TEST_CASE("str_tokeniser : quote")
 }
 
 //------------------------------------------------------------------------------
-TEST_CASE("str_tokeniser : delim return")
+TEST_CASE("StrTokeniser : delim return")
 {
-    str_tokeniser t("a;b;-c-;d", ";-");
+    StrTokeniser t("a;b;-c-;d", ";-");
 
-    str<> s;
+    Str<> s;
     REQUIRE(t.next(s).delim == 0);   REQUIRE(s.equals("a") == true);
     REQUIRE(t.next(s).delim == ';'); REQUIRE(s.equals("b") == true);
     REQUIRE(t.next(s).delim == '-'); REQUIRE(s.equals("c") == true);

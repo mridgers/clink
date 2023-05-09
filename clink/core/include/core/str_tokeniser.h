@@ -8,13 +8,13 @@
 #include "str_iter.h"
 
 //------------------------------------------------------------------------------
-class str_token
+class StrToken
 {
 public:
     enum : unsigned char {
         invalid_delim   = 0xff,
     };
-                        str_token(char c) : delim(c) {}
+                        StrToken(char c) : delim(c) {}
     explicit            operator bool () const       { return (delim != invalid_delim); }
     unsigned char       delim;
 };
@@ -23,35 +23,35 @@ public:
 
 //------------------------------------------------------------------------------
 template <typename T>
-class str_tokeniser_impl
+class StrTokeniserImpl
 {
 public:
-                        str_tokeniser_impl(const T* in=(const T*)L"", const char* delims=" ");
-                        str_tokeniser_impl(const str_iter_impl<T>& in, const char* delims=" ");
+                        StrTokeniserImpl(const T* in=(const T*)L"", const char* delims=" ");
+                        StrTokeniserImpl(const StrIterImpl<T>& in, const char* delims=" ");
     bool                add_quote_pair(const char* pair);
-    str_token           next(str_impl<T>& out);
-    str_token           next(const T*& start, int& length);
-    str_token           next(str_iter_impl<T>& out);
+    StrToken            next(StrImpl<T>& out);
+    StrToken            next(const T*& start, int& length);
+    StrToken            next(StrIterImpl<T>& out);
 
 private:
-    struct quote
+    struct Quote
     {
         char            left;
         char            right;
     };
 
-    typedef fixed_array<quote, 4> quotes;
+    typedef FixedArray<Quote, 4> quotes;
 
     int                 get_right_quote(int left) const;
-    str_token           next_impl(const T*& out_start, int& out_length);
+    StrToken            next_impl(const T*& out_start, int& out_length);
     quotes              m_quotes;
-    str_iter_impl<T>    m_iter;
+    StrIterImpl<T>      m_iter;
     const char*         m_delims;
 };
 
 //------------------------------------------------------------------------------
 template <typename T>
-str_tokeniser_impl<T>::str_tokeniser_impl(const T* in, const char* delims)
+StrTokeniserImpl<T>::StrTokeniserImpl(const T* in, const char* delims)
 : m_iter(in)
 , m_delims(delims)
 {
@@ -59,7 +59,7 @@ str_tokeniser_impl<T>::str_tokeniser_impl(const T* in, const char* delims)
 
 //------------------------------------------------------------------------------
 template <typename T>
-str_tokeniser_impl<T>::str_tokeniser_impl(const str_iter_impl<T>& in, const char* delims)
+StrTokeniserImpl<T>::StrTokeniserImpl(const StrIterImpl<T>& in, const char* delims)
 : m_iter(in)
 , m_delims(delims)
 {
@@ -67,12 +67,12 @@ str_tokeniser_impl<T>::str_tokeniser_impl(const str_iter_impl<T>& in, const char
 
 //------------------------------------------------------------------------------
 template <typename T>
-bool str_tokeniser_impl<T>::add_quote_pair(const char* pair)
+bool StrTokeniserImpl<T>::add_quote_pair(const char* pair)
 {
     if (pair == nullptr || !pair[0])
         return false;
 
-    quote* q = m_quotes.push_back();
+    Quote* q = m_quotes.push_back();
     if (q == nullptr)
         return false;
 
@@ -81,5 +81,5 @@ bool str_tokeniser_impl<T>::add_quote_pair(const char* pair)
 }
 
 //------------------------------------------------------------------------------
-typedef str_tokeniser_impl<char>    str_tokeniser;
-typedef str_tokeniser_impl<wchar_t> wstr_tokeniser;
+typedef StrTokeniserImpl<char>      StrTokeniser;
+typedef StrTokeniserImpl<wchar_t> WstrTokeniser;

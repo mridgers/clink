@@ -8,32 +8,32 @@
 #include <core/str_iter.h>
 
 //------------------------------------------------------------------------------
-class doskey_alias
+class DoskeyAlias
 {
 public:
-                    doskey_alias();
+                    DoskeyAlias();
     void            reset();
-    bool            next(wstr_base& out);
+    bool            next(WstrBase& out);
     explicit        operator bool () const;
 
 private:
-    friend class    doskey;
-    wstr<32>        m_buffer;
+    friend class    Doskey;
+    Wstr<32>        m_buffer;
     const wchar_t*  m_cursor;
 };
 
 
 
 //------------------------------------------------------------------------------
-class doskey
+class Doskey
 {
 public:
-                    doskey(const char* shell_name);
+                    Doskey(const char* shell_name);
     bool            add_alias(const char* alias, const char* text);
     bool            remove_alias(const char* alias);
-    void            resolve(const wchar_t* chars, doskey_alias& out);
+    void            resolve(const wchar_t* chars, DoskeyAlias& out);
 
 private:
-    bool            resolve_impl(const wstr_iter& in, class wstr_stream* out);
+    bool            resolve_impl(const WstrIter& in, class WstrStream* out);
     const char*     m_shell_name;
 };

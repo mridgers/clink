@@ -19,30 +19,30 @@ static int get(lua_State* state)
         return 0;
 
     const char* key = lua_tostring(state, 1);
-    const setting* setting = settings::find(key);
+    const Setting* setting = settings::find(key);
     if (setting == nullptr)
         return 0;
 
-    int type = setting->get_type();
-    switch (type)
+    int Type = setting->get_type();
+    switch (Type)
     {
-    case setting::type_bool:
+    case Setting::type_bool:
         {
-            bool value = ((setting_bool*)setting)->get();
+            bool value = ((SettingBool*)setting)->get();
             lua_pushboolean(state, value == true);
         }
         break;
 
-    case setting::type_int:
+    case Setting::type_int:
         {
-            int value = ((setting_int*)setting)->get();
+            int value = ((SettingInt*)setting)->get();
             lua_pushinteger(state, value);
         }
         break;
 
     default:
         {
-            str<> value;
+            Str<> value;
             setting->get(value);
             lua_pushstring(state, value.c_str());
         }
@@ -63,7 +63,7 @@ static int set(lua_State* state)
         return 0;
 
     const char* key = lua_tostring(state, 1);
-    setting* setting = settings::find(key);
+    Setting* setting = settings::find(key);
     if (setting == nullptr)
         return 0;
 
@@ -88,8 +88,8 @@ template <typename S, typename... V> void add_impl(lua_State* state, V... value)
     {
         lua_pushliteral(state, "__gc");
         lua_pushcfunction(state, [](lua_State* state) -> int {
-            setting* s = (setting*)lua_touserdata(state, -1);
-            s->~setting();
+            Setting* s = (Setting*)lua_touserdata(state, -1);
+            s->~Setting();
             return 0;
         });
         lua_rawset(state, -3);
@@ -115,20 +115,20 @@ static int add(lua_State* state)
     switch (lua_type(state, 2))
     {
     case LUA_TNUMBER:
-        add_impl<setting_int>(state, int(lua_tointeger(state, 2)));
+        add_impl<SettingInt>(state, int(lua_tointeger(state, 2)));
         break;
 
     case LUA_TBOOLEAN:
-        add_impl<setting_bool>(state, lua_toboolean(state, 2) == 1);
+        add_impl<SettingBool>(state, lua_toboolean(state, 2) == 1);
         break;
 
     case LUA_TSTRING:
-        add_impl<setting_str>(state, (const char*)lua_tostring(state, 2));
+        add_impl<SettingStr>(state, (const char*)lua_tostring(state, 2));
         break;
 
     case LUA_TTABLE:
         {
-            str<256> options;
+            Str<256> options;
             for (int i = 0, n = int(lua_rawlen(state, 2)); i < n; ++i)
             {
                 lua_rawgeti(state, 2, i + 1);
@@ -140,7 +140,7 @@ static int add(lua_State* state)
                 lua_pop(state, 1);
             }
 
-            add_impl<setting_enum>(state, options.c_str(), 0);
+            add_impl<SettingEnum>(state, options.c_str(), 0);
         }
         break;
 
@@ -154,7 +154,7 @@ static int add(lua_State* state)
 }
 
 //------------------------------------------------------------------------------
-void settings_lua_initialise(lua_state& lua)
+void settings_lua_initialise(LuaState& lua)
 {
     struct {
         const char* name;

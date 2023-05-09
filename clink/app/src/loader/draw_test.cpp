@@ -13,13 +13,13 @@
 #include <xmmintrin.h>
 
 //------------------------------------------------------------------------------
-struct handle
+struct Handle
 {
-           handle()                 = default;
-           handle(const handle&)    = delete;
-           handle(const handle&&)   = delete;
-           handle(HANDLE h)         { value = (h == INVALID_HANDLE_VALUE) ? nullptr : h; }
-           ~handle()                { close(); }
+           Handle()                 = default;
+           Handle(const Handle&)    = delete;
+           Handle(const Handle&&)   = delete;
+           Handle(HANDLE h)         { value = (h == INVALID_HANDLE_VALUE) ? nullptr : h; }
+           ~Handle()                { close(); }
            operator HANDLE () const { return value; }
     void   operator = (HANDLE h)    { close(); value = h; }
     void   close()                  { if (value != nullptr) CloseHandle(value); }
@@ -29,7 +29,7 @@ struct handle
 
 
 //------------------------------------------------------------------------------
-class test_editor
+class TestEditor
 {
 public:
     void            start(const char* prompt);
@@ -37,24 +37,24 @@ public:
     void            press_keys(const char* keys);
 
 private:
-    terminal        m_terminal;
-    line_editor*    m_editor;
-    handle          m_thread;
+    Terminal        m_terminal;
+    LineEditor*     m_editor;
+    Handle          m_thread;
 };
 
 //------------------------------------------------------------------------------
-void test_editor::start(const char* prompt)
+void TestEditor::start(const char* prompt)
 {
     m_terminal = terminal_create();
 
-    line_editor::desc desc = {};
+    LineEditor::Desc desc = {};
     desc.input = m_terminal.in;
     desc.output = m_terminal.out;
     desc.prompt = prompt;
     m_editor = line_editor_create(desc);
 
     auto thread = [] (void* param) -> DWORD {
-        auto* self = (test_editor*)param;
+        auto* self = (TestEditor*)param;
         char c;
         self->m_editor->edit(&c, sizeof(c));
         return 0;
@@ -64,7 +64,7 @@ void test_editor::start(const char* prompt)
 }
 
 //------------------------------------------------------------------------------
-void test_editor::end()
+void TestEditor::end()
 {
     press_keys("\n");
     WaitForSingleObject(m_thread, INFINITE);
@@ -73,7 +73,7 @@ void test_editor::end()
 }
 
 //------------------------------------------------------------------------------
-void test_editor::press_keys(const char* keys)
+void TestEditor::press_keys(const char* keys)
 {
     HANDLE handle = GetStdHandle(STD_INPUT_HANDLE);
     DWORD written;
@@ -91,25 +91,25 @@ void test_editor::press_keys(const char* keys)
 
 
 //------------------------------------------------------------------------------
-class test_console
+class TestConsole
 {
 public:
-            test_console();
-            ~test_console();
+            TestConsole();
+            ~TestConsole();
     void    resize(int columns) { resize(columns, m_rows); }
     void    resize(int columns, int rows);
     int     get_columns() const { return m_columns; }
     int     get_rows() const    { return m_rows; }
 
 private:
-    handle  m_handle;
+    Handle  m_handle;
     HANDLE  m_prev_handle;
     int     m_columns;
     int     m_rows;
 };
 
 //------------------------------------------------------------------------------
-test_console::test_console()
+TestConsole::TestConsole()
 : m_prev_handle(GetStdHandle(STD_OUTPUT_HANDLE))
 {
     m_handle = CreateConsoleScreenBuffer(GENERIC_WRITE|GENERIC_READ, 3, nullptr,
@@ -128,13 +128,13 @@ test_console::test_console()
 }
 
 //------------------------------------------------------------------------------
-test_console::~test_console()
+TestConsole::~TestConsole()
 {
     SetStdHandle(STD_OUTPUT_HANDLE, m_prev_handle);
 }
 
 //------------------------------------------------------------------------------
-void test_console::resize(int columns, int rows)
+void TestConsole::resize(int columns, int rows)
 {
     SMALL_RECT rect = { 0, 0, short(columns - 1), short(rows - 1) };
     COORD size = { short(columns), short(rows) };
@@ -150,15 +150,15 @@ void test_console::resize(int columns, int rows)
 
 
 //------------------------------------------------------------------------------
-class stepper
+class Stepper
 {
 public:
-                    stepper(int timeout_ms);
-                    ~stepper();
+                    Stepper(int timeout_ms);
+                    ~Stepper();
     bool            step();
 
 private:
-    enum state
+    enum State
     {
         state_running,
         state_step,
@@ -167,18 +167,18 @@ private:
     };
 
     void            run_input_thread();
-    handle          m_input_thread;
-    volatile state  m_state;
+    Handle          m_input_thread;
+    volatile State  m_state;
     int             m_timeout_ms;
 };
 
 //------------------------------------------------------------------------------
-stepper::stepper(int timeout_ms)
+Stepper::Stepper(int timeout_ms)
 : m_state(state_running)
 , m_timeout_ms(timeout_ms)
 {
     auto thunk = [] (void* param) -> DWORD {
-        auto* self = (stepper*)param;
+        auto* self = (Stepper*)param;
         self->run_input_thread();
         return 0;
     };
@@ -187,13 +187,13 @@ stepper::stepper(int timeout_ms)
 }
 
 //------------------------------------------------------------------------------
-stepper::~stepper()
+Stepper::~Stepper()
 {
     TerminateThread(m_input_thread, 0);
 }
 
 //------------------------------------------------------------------------------
-void stepper::run_input_thread()
+void Stepper::run_input_thread()
 {
 /*
     HANDLE stdin_handle = GetStdHandle(STD_INPUT_HANDLE);
@@ -224,7 +224,7 @@ void stepper::run_input_thread()
 }
 
 //------------------------------------------------------------------------------
-bool stepper::step()
+bool Stepper::step()
 {
     switch (m_state)
     {
@@ -239,22 +239,22 @@ bool stepper::step()
 
 
 //------------------------------------------------------------------------------
-class runner
+class Runner
 {
 public:
-                        runner();
+                        Runner();
     void                go();
 
 private:
     bool                step();
     void                ecma48_test();
     void                line_test();
-    test_console        m_console;
-    stepper             m_stepper;
+    TestConsole         m_console;
+    Stepper             m_stepper;
 };
 
 //------------------------------------------------------------------------------
-runner::runner()
+Runner::Runner()
 : m_stepper(200)
 {
     srand(0xa9e);
@@ -262,24 +262,24 @@ runner::runner()
 }
 
 //------------------------------------------------------------------------------
-void runner::go()
+void Runner::go()
 {
     ecma48_test();
     line_test();
 }
 
 //------------------------------------------------------------------------------
-bool runner::step()
+bool Runner::step()
 {
     return m_stepper.step();
 }
 
 //------------------------------------------------------------------------------
-void runner::ecma48_test()
+void Runner::ecma48_test()
 {
 #define CSI(x) "\x1b[" #x
-    terminal terminal = terminal_create();
-    terminal_out& output = *terminal.out;
+    Terminal terminal = terminal_create();
+    TerminalOut& output = *terminal.out;
     output.begin();
 
     // Clear screen after
@@ -319,9 +319,9 @@ void runner::ecma48_test()
 }
 
 //------------------------------------------------------------------------------
-void runner::line_test()
+void Runner::line_test()
 {
-    test_editor editor;
+    TestEditor editor;
 
 #if 1
     editor.start("prompt\n->$ ");
@@ -353,6 +353,6 @@ void runner::line_test()
 //------------------------------------------------------------------------------
 int draw_test(int, char**)
 {
-    runner().go();
+    Runner().go();
     return 0;
 }

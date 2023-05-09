@@ -7,13 +7,13 @@
 
 //------------------------------------------------------------------------------
 template <typename TYPE>
-struct builder
+struct Builder
 {
-                builder(TYPE* data, int max_length);
-                ~builder()                            { *write = '\0'; }
+                Builder(TYPE* data, int max_length);
+                ~Builder()                            { *write = '\0'; }
     bool        truncated() const                     { return (write >= end); }
     int         get_written() const                   { return int(write - start); }
-    builder&    operator << (int value);
+    Builder&    operator << (int value);
     TYPE*       write;
     const TYPE* start;
     const TYPE* end;
@@ -21,7 +21,7 @@ struct builder
 
 //------------------------------------------------------------------------------
 template <typename TYPE>
-builder<TYPE>::builder(TYPE* data, int max_length)
+Builder<TYPE>::Builder(TYPE* data, int max_length)
 : write(data)
 , start(data)
 , end(data + max_length - 1)
@@ -30,7 +30,7 @@ builder<TYPE>::builder(TYPE* data, int max_length)
 
 //------------------------------------------------------------------------------
 template <>
-builder<wchar_t>& builder<wchar_t>::operator << (int value)
+Builder<wchar_t>& Builder<wchar_t>::operator << (int value)
 {
     // For code points that don't fit in wchar_t there is 'surrogate pairs'.
     if (value > 0xffff)
@@ -44,7 +44,7 @@ builder<wchar_t>& builder<wchar_t>::operator << (int value)
 
 //------------------------------------------------------------------------------
 template <>
-builder<char>& builder<char>::operator << (int value)
+Builder<char>& Builder<char>::operator << (int value)
 {
     if (write < end)
         *write++ = char(value);
@@ -55,16 +55,16 @@ builder<char>& builder<char>::operator << (int value)
 
 
 //------------------------------------------------------------------------------
-int to_utf8(char* out, int max_count, wstr_iter& iter)
+int to_utf8(char* out, int max_count, WstrIter& iter)
 {
-    builder<char> builder(out, max_count);
+    Builder<char> Builder(out, max_count);
 
     int c;
-    while (!builder.truncated() && (c = iter.next()))
+    while (!Builder.truncated() && (c = iter.next()))
     {
         if (c < 0x80)
         {
-            builder << c;
+            Builder << c;
             continue;
         }
 
@@ -84,21 +84,21 @@ int to_utf8(char* out, int max_count, wstr_iter& iter)
         }
 
         for (int i = 0; i < n; ++i)
-            builder << (out_chars[i] | 0x80);
+            Builder << (out_chars[i] | 0x80);
     }
 
-    return builder.get_written();
+    return Builder.get_written();
 }
 
 //------------------------------------------------------------------------------
 int to_utf8(char* out, int max_count, const wchar_t* utf16)
 {
-    wstr_iter iter(utf16);
+    WstrIter iter(utf16);
     return to_utf8(out, max_count, iter);
 }
 
 //------------------------------------------------------------------------------
-int to_utf8(str_base& out, str_iter_impl<wchar_t>& utf16)
+int to_utf8(StrBase& out, StrIterImpl<wchar_t>& utf16)
 {
     int length = out.length();
 
@@ -109,35 +109,35 @@ int to_utf8(str_base& out, str_iter_impl<wchar_t>& utf16)
 }
 
 //------------------------------------------------------------------------------
-int to_utf8(str_base& out, const wchar_t* utf16)
+int to_utf8(StrBase& out, const wchar_t* utf16)
 {
-    wstr_iter iter(utf16);
+    WstrIter iter(utf16);
     return to_utf8(out, iter);
 }
 
 
 
 //------------------------------------------------------------------------------
-int to_utf16(wchar_t* out, int max_count, str_iter& iter)
+int to_utf16(wchar_t* out, int max_count, StrIter& iter)
 {
-    builder<wchar_t> builder(out, max_count);
+    Builder<wchar_t> Builder(out, max_count);
 
     int c;
-    while (!builder.truncated() && (c = iter.next()))
-        builder << c;
+    while (!Builder.truncated() && (c = iter.next()))
+        Builder << c;
 
-    return builder.get_written();
+    return Builder.get_written();
 }
 
 //------------------------------------------------------------------------------
 int to_utf16(wchar_t* out, int max_count, const char* utf8)
 {
-    str_iter iter(utf8);
+    StrIter iter(utf8);
     return to_utf16(out, max_count, iter);
 }
 
 //------------------------------------------------------------------------------
-int to_utf16(wstr_base& out, str_iter_impl<char>& utf8)
+int to_utf16(WstrBase& out, StrIterImpl<char>& utf8)
 {
     int length = out.length();
 
@@ -148,8 +148,8 @@ int to_utf16(wstr_base& out, str_iter_impl<char>& utf8)
 }
 
 //------------------------------------------------------------------------------
-int to_utf16(wstr_base& out, const char* utf8)
+int to_utf16(WstrBase& out, const char* utf8)
 {
-    str_iter iter(utf8);
+    StrIter iter(utf8);
     return to_utf16(out, iter);
 }

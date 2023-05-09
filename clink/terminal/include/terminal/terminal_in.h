@@ -4,7 +4,7 @@
 #pragma once
 
 //------------------------------------------------------------------------------
-class terminal_in
+class TerminalIn
 {
 public:
     enum {
@@ -14,7 +14,7 @@ public:
         input_terminal_resize,
     };
 
-    virtual         ~terminal_in() = default;
+    virtual         ~TerminalIn() = default;
     virtual void    begin() = 0;
     virtual void    end() = 0;
     virtual void    select() = 0;

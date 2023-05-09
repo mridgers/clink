@@ -11,7 +11,7 @@ TEST_CASE("Wide character/UTF-8 conversion")
 {
     SECTION("To UTF-8")
     {
-        str<> s;
+        Str<> s;
 
         SECTION("One byte")
         {
@@ -54,30 +54,30 @@ TEST_CASE("Wide character/UTF-8 conversion")
 
         SECTION("char_count()")
         {
-            REQUIRE(1 == str<>("a").char_count());
-            REQUIRE(2 == str<>("a\xcf\xbf").char_count());
-            REQUIRE(2 == str<>("a\xef\xbf\x8f").char_count());
-            REQUIRE(2 == str<>("a\xf7\xbf\x8f\xa5").char_count());
-            REQUIRE(2 == str<>("a\xfb\xbf\x8f\xa5\x9a").char_count());
+            REQUIRE(1 == Str<>("a").char_count());
+            REQUIRE(2 == Str<>("a\xcf\xbf").char_count());
+            REQUIRE(2 == Str<>("a\xef\xbf\x8f").char_count());
+            REQUIRE(2 == Str<>("a\xf7\xbf\x8f\xa5").char_count());
+            REQUIRE(2 == Str<>("a\xfb\xbf\x8f\xa5\x9a").char_count());
         }
 
         SECTION("Growable")
         {
-            str<4, true> t;
+            Str<4, true> t;
             t.from_utf16(L"0123456789");
             REQUIRE(t.length() == 10);
         }
 
         SECTION("Not growable")
         {
-            str<4, false> t;
+            Str<4, false> t;
             t.from_utf16(L"0123456789");
             REQUIRE(t.length() == 3);
         }
 
         SECTION("Stream")
         {
-            wstr_iter iter(L"01234567");
+            WstrIter iter(L"01234567");
             char out[6];
 
             REQUIRE(to_utf8(out, 6, iter) == 5);
@@ -92,7 +92,7 @@ TEST_CASE("Wide character/UTF-8 conversion")
 
     SECTION("From UTF-8")
     {
-        wstr<> s;
+        Wstr<> s;
 
         SECTION("One byte")
         {
@@ -135,27 +135,27 @@ TEST_CASE("Wide character/UTF-8 conversion")
 
         SECTION("char_count()")
         {
-            REQUIRE(wstr<>(L"\xdbff\xdfff").char_count() == 1);
-            REQUIRE(wstr<>(L"\xd800\xdc00").char_count() == 1);
+            REQUIRE(Wstr<>(L"\xdbff\xdfff").char_count() == 1);
+            REQUIRE(Wstr<>(L"\xd800\xdc00").char_count() == 1);
         }
 
         SECTION("Growable")
         {
-            wstr<4, true> t;
+            Wstr<4, true> t;
             t.from_utf8("0123456789");
             REQUIRE(t.length() == 10);
         }
 
         SECTION("Not growable")
         {
-            wstr<4, false> t;
+            Wstr<4, false> t;
             t.from_utf8("0123456789");
             REQUIRE(t.length() == 3);
         }
 
         SECTION("Stream")
         {
-            str_iter iter("01234567");
+            StrIter iter("01234567");
             wchar_t out[6];
 
             REQUIRE(to_utf16(out, 6, iter) == 5);

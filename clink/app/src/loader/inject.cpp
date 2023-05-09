@@ -16,15 +16,15 @@
 #include <process/vm.h>
 
 //------------------------------------------------------------------------------
-bool __stdcall  initialise_clink(const app_context::desc&);
+bool __stdcall  initialise_clink(const AppContext::Desc&);
 void            puts_help(const char**, int);
 
 //------------------------------------------------------------------------------
-static void copy_dll(str_base& dll_path)
+static void copy_dll(StrBase& dll_path)
 {
-    str<280> target_path;
+    Str<280> target_path;
     {
-        wstr<280> dir;
+        Wstr<280> dir;
         if (SHGetFolderPathW(0, CSIDL_LOCAL_APPDATA, nullptr, 0, dir.data()) == S_OK)
         {
             target_path = dir.c_str();
@@ -39,7 +39,7 @@ static void copy_dll(str_base& dll_path)
 
     target_path << "/clink/dll_cache/" CLINK_VERSION_STR;
 
-    str<12, false> path_salt;
+    Str<12, false> path_salt;
     path_salt.format("_%08x", str_hash(dll_path.c_str()));
     target_path << path_salt;
 
@@ -65,7 +65,7 @@ static void copy_dll(str_base& dll_path)
     target_path << ".origin";
     if (always || os::get_path_type(target_path.c_str()) != os::path_type_file)
     {
-        wstr<280> wcopy_path(target_path.c_str());
+        Wstr<280> wcopy_path(target_path.c_str());
         HANDLE out = CreateFileW(wcopy_path.c_str(), GENERIC_WRITE, 0, nullptr,
             CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
         if (out != INVALID_HANDLE_VALUE)
@@ -125,8 +125,8 @@ static int check_dll_version(const char* clink_dll)
 static void* inject_dll(DWORD target_pid)
 {
     // Get path to clink's DLL that we'll inject.
-    str<280> dll_path;
-    process().get_file_name(dll_path);
+    Str<280> dll_path;
+    Process().get_file_name(dll_path);
     path::get_directory(dll_path);
     path::append(dll_path, CLINK_DLL);
 
@@ -144,7 +144,7 @@ static void* inject_dll(DWORD target_pid)
     osvi.dwOSVersionInfoSize = sizeof(osvi);
     GetVersionEx((OSVERSIONINFO*)&osvi);
 
-    LOG("System: ver=%d.%d %d.%d arch=%d cpus=%d cpu_type=%d page_size=%d",
+    LOG("System: ver=%d.%d %d.%d Arch=%d cpus=%d cpu_type=%d page_size=%d",
         osvi.dwMajorVersion,
         osvi.dwMinorVersion,
         osvi.wServicePackMajor,
@@ -169,7 +169,7 @@ static void* inject_dll(DWORD target_pid)
     }
 
     // Inject Clink DLL.
-    process cmd_process(target_pid);
+    Process cmd_process(target_pid);
     return cmd_process.inject_module(dll_path.c_str());
 }
 
@@ -206,10 +206,10 @@ static bool is_clink_present(DWORD target_pid)
 //------------------------------------------------------------------------------
 static DWORD find_inject_target()
 {
-    str<512, false> buffer;
-    for (int pid = process().get_parent_pid(); pid;)
+    Str<512, false> buffer;
+    for (int pid = Process().get_parent_pid(); pid;)
     {
-        process process(pid);
+        Process process(pid);
         process.get_file_name(buffer);
         const char* name = path::get_name(buffer.c_str());
         if (_stricmp(name, "cmd.exe") == 0)
@@ -222,7 +222,7 @@ static DWORD find_inject_target()
 }
 
 //------------------------------------------------------------------------------
-void get_profile_path(const char* in, str_base& out)
+void get_profile_path(const char* in, StrBase& out)
 {
     if (in[0] == '~' && (in[1] == '\\' || in[1] == '/'))
     {
@@ -265,7 +265,7 @@ int inject(int argc, char** argv)
 
     // Parse arguments
     DWORD target_pid = 0;
-    app_context::desc app_desc;
+    AppContext::Desc app_desc;
     int i;
     int ret = false;
     while ((i = getopt_long(argc, argv, "nalqhp:d:", options, nullptr)) != -1)
@@ -274,7 +274,7 @@ int inject(int argc, char** argv)
         {
         case 'p':
             {
-                str_base state_dir(app_desc.state_dir);
+                StrBase state_dir(app_desc.state_dir);
                 get_profile_path(optarg, state_dir);
             }
             break;
@@ -299,8 +299,8 @@ int inject(int argc, char** argv)
     }
 
     // Restart the log file on every inject.
-    str<256> log_path;
-    app_context::get()->get_log_path(log_path);
+    Str<256> log_path;
+    AppContext::get()->get_log_path(log_path);
     unlink(log_path.c_str());
 
     // Unless a target pid was specified on the command line search for a
@@ -324,10 +324,10 @@ int inject(int argc, char** argv)
         return ret;
 
     // Remotely call Clink's initialisation function.
-    void* our_dll_base = vm().get_alloc_base("");
+    void* our_dll_base = Vm().get_alloc_base("");
     uintptr_t init_func = uintptr_t(remote_dll_base);
     init_func += uintptr_t(initialise_clink) - uintptr_t(our_dll_base);
-    ret |= (process(target_pid).remote_call((void*)init_func, app_desc) != nullptr);
+    ret |= (Process(target_pid).remote_call((void*)init_func, app_desc) != nullptr);
 
     return ret;
 }

@@ -16,13 +16,13 @@
 #include <terminal/setting_colour.h>
 
 //------------------------------------------------------------------------------
-editor_module* tab_completer_create()
+EditorModule* tab_completer_create()
 {
-    return new tab_completer();
+    return new TabCompleter();
 }
 
 //------------------------------------------------------------------------------
-void tab_completer_destroy(editor_module* completer)
+void tab_completer_destroy(EditorModule* completer)
 {
     delete completer;
 }
@@ -30,58 +30,58 @@ void tab_completer_destroy(editor_module* completer)
 
 
 //------------------------------------------------------------------------------
-static setting_int g_query_threshold(
+static SettingInt g_query_threshold(
     "match.query_threshold",
     "Ask if no. matches > threshold",
     "If there are more than 'threshold' matches then ask the user before\n"
     "displaying them all.",
     100);
 
-static setting_bool g_vertical(
+static SettingBool g_vertical(
     "match.vertical",
     "Display matches vertically",
     "Toggles the display of ordered matches between columns or rows.",
     true);
 
-static setting_int g_column_pad(
+static SettingInt g_column_pad(
     "match.column_pad",
     "Space between columns",
     "Adjusts the amount of whitespace padding between columns of matches.",
     2);
 
-setting_int g_max_width(
+SettingInt g_max_width(
     "match.max_width",
     "Maximum display width",
-    "The maximum number of terminal columns to use when displaying matches.",
+    "The maximum number of Terminal columns to use when displaying matches.",
     106);
 
-setting_colour g_colour_interact(
-    "colour.interact",
+SettingColour g_colour_interact(
+    "Colour.interact",
     "For user-interaction prompts",
     "Used when Clink displays text or prompts such as a pager's 'More?'. Naming\n"
     "these settings is hard. Describing them even more so.",
-    setting_colour::value_green, setting_colour::value_bg_default);
+    SettingColour::value_green, SettingColour::value_bg_default);
 
-setting_colour g_colour_minor(
-    "colour.minor",
-    "Minor colour value",
-    "The colour used to display minor elements such as the lower common\n"
+SettingColour g_colour_minor(
+    "Colour.minor",
+    "Minor Colour value",
+    "The Colour used to display minor elements such as the lower common\n"
     "denominator of active matches in tab completion's display.",
-    setting_colour::value_dark_grey, setting_colour::value_bg_default);
+    SettingColour::value_dark_grey, SettingColour::value_bg_default);
 
-setting_colour g_colour_major(
-    "colour.major",
-    "Major colour value",
-    "The colour used to display major elements like remainder of active matches\n"
+SettingColour g_colour_major(
+    "Colour.major",
+    "Major Colour value",
+    "The Colour used to display major elements like remainder of active matches\n"
     "still to be completed.",
-    setting_colour::value_grey, setting_colour::value_bg_default);
+    SettingColour::value_grey, SettingColour::value_bg_default);
 
-setting_colour g_colour_highlight(
-    "colour.highlight",
+SettingColour g_colour_highlight(
+    "Colour.highlight",
     "Colour for highlights",
-    "The colour used for displaying highlighted elements such as the next\n"
+    "The Colour used for displaying highlighted elements such as the next\n"
     "character when invoking tab completion.",
-    setting_colour::value_light_green, setting_colour::value_bg_default);
+    SettingColour::value_light_green, SettingColour::value_bg_default);
 
 
 
@@ -98,7 +98,7 @@ enum {
 
 
 //------------------------------------------------------------------------------
-void tab_completer::bind_input(binder& binder)
+void TabCompleter::bind_input(Binder& binder)
 {
     int default_group = binder.get_group();
     binder.bind(default_group, "\t", state_none);
@@ -127,23 +127,23 @@ void tab_completer::bind_input(binder& binder)
 }
 
 //------------------------------------------------------------------------------
-void tab_completer::on_begin_line(const context& context)
+void TabCompleter::on_begin_line(const Context& context)
 {
 }
 
 //------------------------------------------------------------------------------
-void tab_completer::on_end_line()
+void TabCompleter::on_end_line()
 {
 }
 
 //------------------------------------------------------------------------------
-void tab_completer::on_matches_changed(const context& context)
+void TabCompleter::on_matches_changed(const Context& context)
 {
     m_waiting = false;
 }
 
 //------------------------------------------------------------------------------
-void tab_completer::on_input(const input& input, result& result, const context& context)
+void TabCompleter::on_input(const Input& input, Result& result, const Context& context)
 {
     auto& matches = context.matches;
     if (matches.get_match_count() == 0)
@@ -205,9 +205,9 @@ void tab_completer::on_input(const input& input, result& result, const context& 
 }
 
 //------------------------------------------------------------------------------
-tab_completer::state tab_completer::begin_print(const context& context)
+TabCompleter::State TabCompleter::begin_print(const Context& context)
 {
-    const matches& matches = context.matches;
+    const Matches& matches = context.matches;
     int match_count = matches.get_match_count();
 
     m_longest = 0;
@@ -225,7 +225,7 @@ tab_completer::state tab_completer::begin_print(const context& context)
     int query_threshold = g_query_threshold.get();
     if (query_threshold > 0 && query_threshold <= match_count)
     {
-        str<40> prompt;
+        Str<40> prompt;
         prompt.format("Show %d matches? [Yn]", match_count);
         context.printer.print(g_colour_interact.get(), prompt.c_str(), prompt.length());
 
@@ -236,21 +236,21 @@ tab_completer::state tab_completer::begin_print(const context& context)
 }
 
 //------------------------------------------------------------------------------
-tab_completer::state tab_completer::print(const context& context, bool single_row)
+TabCompleter::State TabCompleter::print(const Context& context, bool single_row)
 {
     auto& printer = context.printer;
 
-    const matches& matches = context.matches;
+    const Matches& matches = context.matches;
 
-    attributes minor_attr = g_colour_minor.get();
-    attributes major_attr = g_colour_major.get();
-    attributes highlight_attr = g_colour_highlight.get();
+    Attributes minor_attr = g_colour_minor.get();
+    Attributes major_attr = g_colour_major.get();
+    Attributes highlight_attr = g_colour_highlight.get();
 
     printer.print("\r");
 
     int match_count = matches.get_match_count();
 
-    str<288> lcd;
+    Str<288> lcd;
     matches.get_match_lcd(lcd);
     int lcd_length = lcd.length();
 
@@ -277,7 +277,7 @@ tab_completer::state tab_completer::print(const context& context, bool single_ro
             const char* match = matches.get_displayable(index);
             const char* post_lcd = match + lcd_length;
 
-            str_iter iter(post_lcd);
+            StrIter iter(post_lcd);
             iter.next();
             const char* match_tail = iter.get_pointer();
 
@@ -317,6 +317,6 @@ tab_completer::state tab_completer::print(const context& context, bool single_ro
 }
 
 //------------------------------------------------------------------------------
-void tab_completer::on_terminal_resize(int columns, int rows, const context& context)
+void TabCompleter::on_terminal_resize(int columns, int rows, const Context& context)
 {
 }

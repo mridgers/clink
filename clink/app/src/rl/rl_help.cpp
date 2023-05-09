@@ -12,7 +12,7 @@ extern "C" {
 }
 
 //------------------------------------------------------------------------------
-extern setting_int g_max_width;
+extern SettingInt g_max_width;
 
 //------------------------------------------------------------------------------
 static const char* get_function_name(int (*func_addr)(int, int))
@@ -125,7 +125,7 @@ static char** collect_keymap(
 }
 
 //------------------------------------------------------------------------------
-void show_rl_help(printer& printer)
+void show_rl_help(Printer& Printer)
 {
     Keymap map = rl_get_keymap();
     int offset = 1;
@@ -160,27 +160,27 @@ void show_rl_help(printer& printer)
             longest = l;
     }
 
-    // Display the matches.
-    printer.print("\n");
+    // Display the Matches.
+    Printer.print("\n");
 
-    int max_width = min<int>(printer.get_columns() - 3, g_max_width.get());
+    int max_width = min<int>(Printer.get_columns() - 3, g_max_width.get());
     int columns = max(1, max_width / (longest + 1));
     for (int i = 1, j = columns - 1; i < offset; ++i, --j)
     {
         const char* match = collector[i];
 
         int length = int(strlen(match));
-        printer.print(match, length);
+        Printer.print(match, length);
 
         const char spaces[] = "                                         ";
         int space_count = max(longest - length, 0) + 1;
-        printer.print(spaces, min<int>(sizeof(spaces) - 1, space_count));
+        Printer.print(spaces, min<int>(sizeof(spaces) - 1, space_count));
 
         if (j)
             continue;
 
         j = columns;
-        printer.print("\n");
+        Printer.print("\n");
     }
 
     // Tidy up (N.B. the first match is a placeholder and shouldn't be freed).

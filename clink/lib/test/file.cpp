@@ -14,8 +14,8 @@
 //------------------------------------------------------------------------------
 TEST_CASE("File match generator")
 {
-    fs_fixture fs;
-    line_editor_tester tester;
+    FsFixture fs;
+    LineEditorTester tester;
     tester.get_editor()->add_generator(file_match_generator());
 
     SECTION("File system matches")
@@ -57,7 +57,7 @@ TEST_CASE("File match generator")
 
     SECTION("Case mapping matches")
     {
-        str_compare_scope _(str_compare_scope::relaxed);
+        StrCompareScope _(StrCompareScope::relaxed);
 
         tester.set_input("case-m" DO_COMPLETE);
         tester.set_expected_matches("case_map-1", "case_map_2");
@@ -78,12 +78,12 @@ TEST_CASE("File match generator")
 
     SECTION("cmd-style drive relative")
     {
-        str<280> fs_path;
+        Str<280> fs_path;
         path::join(fs.get_root(), "dir1", fs_path);
 
         const char* env_vars[] = { "=m:", fs_path.c_str(), nullptr };
 
-        env_fixture env(env_vars);
+        EnvFixture env(env_vars);
         tester.set_input("m:" DO_COMPLETE);
         tester.set_expected_output("m:");
         tester.set_expected_matches("only", "file1", "file2");

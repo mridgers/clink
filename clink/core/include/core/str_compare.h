@@ -9,7 +9,7 @@
 #include <Windows.h>
 
 //------------------------------------------------------------------------------
-class str_compare_scope
+class StrCompareScope
 {
 public:
     enum
@@ -19,8 +19,8 @@ public:
         relaxed,    // case insensitive with -/_ considered equivalent.
     };
 
-                str_compare_scope(int mode);
-                ~str_compare_scope();
+                StrCompareScope(int mode);
+                ~StrCompareScope();
     static int  current();
 
 private:
@@ -32,7 +32,7 @@ private:
 
 //------------------------------------------------------------------------------
 template <class T, int MODE>
-int str_compare_impl(str_iter_impl<T>& lhs, str_iter_impl<T>& rhs)
+int StrCompareImpl(StrIterImpl<T>& lhs, StrIterImpl<T>& rhs)
 {
     const T* start = lhs.get_pointer();
 
@@ -70,13 +70,13 @@ int str_compare_impl(str_iter_impl<T>& lhs, str_iter_impl<T>& rhs)
 
 //------------------------------------------------------------------------------
 template <class T>
-int str_compare(str_iter_impl<T>& lhs, str_iter_impl<T>& rhs)
+int str_compare(StrIterImpl<T>& lhs, StrIterImpl<T>& rhs)
 {
-    switch (str_compare_scope::current())
+    switch (StrCompareScope::current())
     {
-    case str_compare_scope::relaxed:  return str_compare_impl<T, 2>(lhs, rhs);
-    case str_compare_scope::caseless: return str_compare_impl<T, 1>(lhs, rhs);
-    default:                          return str_compare_impl<T, 0>(lhs, rhs);
+    case StrCompareScope::relaxed:    return StrCompareImpl<T, 2>(lhs, rhs);
+    case StrCompareScope::caseless: return StrCompareImpl<T, 1>(lhs, rhs);
+    default:                          return StrCompareImpl<T, 0>(lhs, rhs);
     }
 }
 
@@ -84,16 +84,16 @@ int str_compare(str_iter_impl<T>& lhs, str_iter_impl<T>& rhs)
 template <class T>
 int str_compare(const T* lhs, const T* rhs)
 {
-    str_iter_impl<T> lhs_iter(lhs);
-    str_iter_impl<T> rhs_iter(rhs);
+    StrIterImpl<T> lhs_iter(lhs);
+    StrIterImpl<T> rhs_iter(rhs);
     return str_compare(lhs_iter, rhs_iter);
 }
 
 //------------------------------------------------------------------------------
 template <class T>
-int str_compare(const str_impl<T>& lhs, const str_impl<T>& rhs)
+int str_compare(const StrImpl<T>& lhs, const StrImpl<T>& rhs)
 {
-    str_iter_impl<T> lhs_iter(lhs);
-    str_iter_impl<T> rhs_iter(rhs);
+    StrIterImpl<T> lhs_iter(lhs);
+    StrIterImpl<T> rhs_iter(rhs);
     return str_compare(lhs_iter, rhs_iter);
 }

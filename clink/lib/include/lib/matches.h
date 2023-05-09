@@ -3,10 +3,10 @@
 
 #pragma once
 
-class str_base;
+class StrBase;
 
 //------------------------------------------------------------------------------
-class matches
+class Matches
 {
 public:
     virtual unsigned int    get_match_count() const = 0;
@@ -16,13 +16,13 @@ public:
     virtual char            get_suffix(unsigned int index) const = 0;
     virtual unsigned int    get_cell_count(unsigned int index) const = 0;
     virtual bool            has_aux() const = 0;
-    virtual void            get_match_lcd(str_base& out) const = 0;
+    virtual void            get_match_lcd(StrBase& out) const = 0;
 };
 
 
 
 //------------------------------------------------------------------------------
-struct match_desc
+struct MatchDesc
 {
     const char*             match;
     const char*             displayable;
@@ -31,14 +31,14 @@ struct match_desc
 };
 
 //------------------------------------------------------------------------------
-class match_builder
+class MatchBuilder
 {
 public:
-                            match_builder(matches& matches);
+                            MatchBuilder(Matches& matches);
     bool                    add_match(const char* match);
-    bool                    add_match(const match_desc& desc);
+    bool                    add_match(const MatchDesc& desc);
     void                    set_prefix_included(bool included=true);
 
 private:
-    matches&                m_matches;
+    Matches&                m_matches;
 };

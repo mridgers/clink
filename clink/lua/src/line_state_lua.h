@@ -5,15 +5,15 @@
 
 #include "lua_bindable.h"
 
-class line_state;
+class LineState;
 struct lua_State;
 
 //------------------------------------------------------------------------------
-class line_state_lua
-    : public lua_bindable<line_state_lua>
+class LineStateLua
+    : public LuaBindable<LineStateLua>
 {
 public:
-                        line_state_lua(const line_state& line);
+                        LineStateLua(const LineState& line);
     int                 get_line(lua_State* state);
     int                 get_cursor(lua_State* state);
     int                 get_command_offset(lua_State* state);
@@ -23,5 +23,5 @@ public:
     int                 get_end_word(lua_State* state);
 
 private:
-    const line_state&   m_line;
+    const LineState&    m_line;
 };

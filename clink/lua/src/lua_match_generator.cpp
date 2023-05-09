@@ -19,7 +19,7 @@ extern "C" {
 }
 
 //------------------------------------------------------------------------------
-lua_match_generator::lua_match_generator(lua_state& state)
+LuaMatchGenerator::LuaMatchGenerator(LuaState& state)
 : m_state(state)
 {
     lua_load_script(m_state, lib, generator);
@@ -27,19 +27,19 @@ lua_match_generator::lua_match_generator(lua_state& state)
 }
 
 //------------------------------------------------------------------------------
-lua_match_generator::~lua_match_generator()
+LuaMatchGenerator::~LuaMatchGenerator()
 {
 }
 
 //------------------------------------------------------------------------------
-void lua_match_generator::print_error(const char* error) const
+void LuaMatchGenerator::print_error(const char* error) const
 {
     puts("");
     puts(error);
 }
 
 //------------------------------------------------------------------------------
-bool lua_match_generator::generate(const line_state& line, match_builder& builder)
+bool LuaMatchGenerator::generate(const LineState& line, MatchBuilder& Builder)
 {
     lua_State* state = m_state.get_state();
 
@@ -48,10 +48,10 @@ bool lua_match_generator::generate(const line_state& line, match_builder& builde
     lua_pushliteral(state, "_generate");
     lua_rawget(state, -2);
 
-    line_state_lua line_lua(line);
+    LineStateLua line_lua(line);
     line_lua.push(state);
 
-    match_builder_lua builder_lua(builder);
+    MatchBuilderLua builder_lua(Builder);
     builder_lua.push(state);
 
     if (lua_pcall(state, 2, 1, 0) != 0)
@@ -70,7 +70,7 @@ bool lua_match_generator::generate(const line_state& line, match_builder& builde
 }
 
 //------------------------------------------------------------------------------
-int lua_match_generator::get_prefix_length(const line_state& line) const
+int LuaMatchGenerator::get_prefix_length(const LineState& line) const
 {
     lua_State* state = m_state.get_state();
 
@@ -79,7 +79,7 @@ int lua_match_generator::get_prefix_length(const line_state& line) const
     lua_pushliteral(state, "_get_prefix_length");
     lua_rawget(state, -2);
 
-    line_state_lua line_lua(line);
+    LineStateLua line_lua(line);
     line_lua.push(state);
 
     if (lua_pcall(state, 1, 1, 0) != 0)

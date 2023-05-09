@@ -29,7 +29,7 @@ static const char* get_string(lua_State* state, int index)
 /// system-specific delimiter is used.
 static int normalise(lua_State* state)
 {
-    str<288> out(get_string(state, 1));
+    Str<288> out(get_string(state, 1));
     if (out.length() == 0)
         return 0;
 
@@ -53,7 +53,7 @@ static int get_base_name(lua_State* state)
     if (path == nullptr)
         return 0;
 
-    str<288> out;
+    Str<288> out;
     path::get_base_name(path, out);
     lua_pushstring(state, out.c_str());
     return 1;
@@ -67,7 +67,7 @@ static int get_base_name(lua_State* state)
 /// -show:  path.getdirectory("bar") -- returns nil
 static int get_directory(lua_State* state)
 {
-    str<288> out(get_string(state, 1));
+    Str<288> out(get_string(state, 1));
     if (out.length() == 0)
         return 0;
 
@@ -86,7 +86,7 @@ static int get_directory(lua_State* state)
 /// -show:  path.getdrive("foo/bar") -- returns nil
 static int get_drive(lua_State* state)
 {
-    str<8> out(get_string(state, 1));
+    Str<8> out(get_string(state, 1));
     if (out.length() == 0)
         return 0;
 
@@ -109,7 +109,7 @@ static int get_extension(lua_State* state)
     if (path == nullptr)
         return 0;
 
-    str<32> ext;
+    Str<32> ext;
     path::get_extension(path, ext);
     lua_pushstring(state, ext.c_str());
     return 1;
@@ -126,7 +126,7 @@ static int get_name(lua_State* state)
     if (path == nullptr)
         return 0;
 
-    str<> name;
+    Str<> name;
     path::get_name(path, name);
     lua_pushstring(state, name.c_str());
     return 1;
@@ -148,14 +148,14 @@ static int join(lua_State* state)
     if (rhs == nullptr)
         return 0;
 
-    str<288> out;
+    Str<288> out;
     path::join(lhs, rhs, out);
     lua_pushstring(state, out.c_str());
     return 1;
 }
 
 //------------------------------------------------------------------------------
-void path_lua_initialise(lua_state& lua)
+void path_lua_initialise(LuaState& lua)
 {
     struct {
         const char* name;

@@ -17,14 +17,14 @@ unsigned int cell_count(const char* in)
 {
     unsigned int count = 0;
 
-    ecma48_state state;
-    ecma48_iter iter(in, state);
-    while (const ecma48_code& code = iter.next())
+    Ecma48State state;
+    Ecma48Iter iter(in, state);
+    while (const Ecma48Code& code = iter.next())
     {
-        if (code.get_type() != ecma48_code::type_chars)
+        if (code.get_type() != Ecma48Code::type_chars)
             continue;
 
-        str_iter inner_iter(code.get_pointer(), code.get_length());
+        StrIter inner_iter(code.get_pointer(), code.get_length());
         while (int c = inner_iter.next())
             count += wcwidth(c);
     }
@@ -56,13 +56,13 @@ enum
 
 
 //------------------------------------------------------------------------------
-bool ecma48_code::decode_csi(csi_base& base, int* params, unsigned int max_params) const
+bool Ecma48Code::decode_csi(CsiBase& base, int* params, unsigned int max_params) const
 {
     if (get_type() != type_c1 || get_code() != c1_csi)
         return false;
 
     /* CSI P ... P I .... I F */
-    str_iter iter(get_pointer(), get_length());
+    StrIter iter(get_pointer(), get_length());
 
     // Skip CSI
     if (iter.next() == 0x1b)
@@ -109,12 +109,12 @@ bool ecma48_code::decode_csi(csi_base& base, int* params, unsigned int max_param
 }
 
 //------------------------------------------------------------------------------
-bool ecma48_code::get_c1_str(str_base& out) const
+bool Ecma48Code::get_c1_str(StrBase& out) const
 {
     if (get_type() != type_c1 || get_code() == c1_csi)
         return false;
 
-    str_iter iter(get_pointer(), get_length());
+    StrIter iter(get_pointer(), get_length());
 
     // Skip announce
     if (iter.next() == 0x1b)
@@ -139,7 +139,7 @@ bool ecma48_code::get_c1_str(str_base& out) const
 
 
 //------------------------------------------------------------------------------
-ecma48_iter::ecma48_iter(const char* s, ecma48_state& state, int len)
+Ecma48Iter::Ecma48Iter(const char* s, Ecma48State& state, int len)
 : m_iter(s, len)
 , m_code(state.code)
 , m_state(state)
@@ -147,7 +147,7 @@ ecma48_iter::ecma48_iter(const char* s, ecma48_state& state, int len)
 }
 
 //------------------------------------------------------------------------------
-const ecma48_code& ecma48_iter::next()
+const Ecma48Code& Ecma48Iter::next()
 {
     m_code.m_str = m_iter.get_pointer();
 
@@ -206,7 +206,7 @@ const ecma48_code& ecma48_iter::next()
 }
 
 //------------------------------------------------------------------------------
-bool ecma48_iter::next_c1()
+bool Ecma48Iter::next_c1()
 {
     // Convert c1 code to its 7-bit version.
     m_code.m_code = (m_code.m_code & 0x1f) | 0x40;
@@ -220,7 +220,7 @@ bool ecma48_iter::next_c1()
             m_state.state = ecma48_state_cmd_str;
             return false;
 
-        case 0x5b: /* csi */
+        case 0x5b: /* Csi */
             m_state.state = ecma48_state_csi_p;
             return false;
 
@@ -233,11 +233,11 @@ bool ecma48_iter::next_c1()
 }
 
 //------------------------------------------------------------------------------
-bool ecma48_iter::next_char(int c)
+bool Ecma48Iter::next_char(int c)
 {
     if (in_range(c, 0x00, 0x1f))
     {
-        m_code.m_type = ecma48_code::type_chars;
+        m_code.m_type = Ecma48Code::type_chars;
         return true;
     }
 
@@ -246,7 +246,7 @@ bool ecma48_iter::next_char(int c)
 }
 
 //------------------------------------------------------------------------------
-bool ecma48_iter::next_char_str(int c)
+bool Ecma48Iter::next_char_str(int c)
 {
     m_iter.next();
 
@@ -260,7 +260,7 @@ bool ecma48_iter::next_char_str(int c)
 }
 
 //------------------------------------------------------------------------------
-bool ecma48_iter::next_cmd_str(int c)
+bool Ecma48Iter::next_cmd_str(int c)
 {
     if (c == 0x1b)
     {
@@ -287,7 +287,7 @@ bool ecma48_iter::next_cmd_str(int c)
 }
 
 //------------------------------------------------------------------------------
-bool ecma48_iter::next_csi_f(int c)
+bool Ecma48Iter::next_csi_f(int c)
 {
     if (in_range(c, 0x20, 0x2f))
     {
@@ -308,7 +308,7 @@ bool ecma48_iter::next_csi_f(int c)
 }
 
 //------------------------------------------------------------------------------
-bool ecma48_iter::next_csi_p(int c)
+bool Ecma48Iter::next_csi_p(int c)
 {
     if (in_range(c, 0x30, 0x3f))
     {
@@ -321,19 +321,19 @@ bool ecma48_iter::next_csi_p(int c)
 }
 
 //------------------------------------------------------------------------------
-bool ecma48_iter::next_esc(int c)
+bool Ecma48Iter::next_esc(int c)
 {
     m_iter.next();
 
     if (in_range(c, 0x40, 0x5f))
     {
-        m_code.m_type = ecma48_code::type_c1;
+        m_code.m_type = Ecma48Code::type_c1;
         m_code.m_code = c;
         return next_c1();
     }
     else if (in_range(c, 0x60, 0x7f))
     {
-        m_code.m_type = ecma48_code::type_icf;
+        m_code.m_type = Ecma48Code::type_icf;
         m_code.m_code = c;
         return true;
     }
@@ -343,7 +343,7 @@ bool ecma48_iter::next_esc(int c)
 }
 
 //------------------------------------------------------------------------------
-bool ecma48_iter::next_esc_st(int c)
+bool Ecma48Iter::next_esc_st(int c)
 {
     if (c == 0x5c)
     {
@@ -358,7 +358,7 @@ bool ecma48_iter::next_esc_st(int c)
 }
 
 //------------------------------------------------------------------------------
-bool ecma48_iter::next_unknown(int c)
+bool Ecma48Iter::next_unknown(int c)
 {
     m_iter.next();
 
@@ -369,18 +369,18 @@ bool ecma48_iter::next_unknown(int c)
     }
     else if (in_range(c, 0x00, 0x1f))
     {
-        m_code.m_type = ecma48_code::type_c0;
+        m_code.m_type = Ecma48Code::type_c0;
         m_code.m_code = c;
         return true;
     }
     else if (in_range(c, 0x80, 0x9f))
     {
-        m_code.m_type = ecma48_code::type_c1;
+        m_code.m_type = Ecma48Code::type_c1;
         m_code.m_code = c;
         return next_c1();
     }
 
-    m_code.m_type = ecma48_code::type_chars;
+    m_code.m_type = Ecma48Code::type_chars;
     m_state.state = ecma48_state_char;
     return false;
 }

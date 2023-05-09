@@ -9,15 +9,15 @@
 
 #include <core/singleton.h>
 
-class lua_state;
+class LuaState;
 
 //------------------------------------------------------------------------------
-class host_cmd
-    : public host
-    , public singleton<host_cmd>
+class HostCmd
+    : public Host
+    , public Singleton<HostCmd>
 {
 public:
-                        host_cmd();
+                        HostCmd();
     virtual bool        validate() override;
     virtual bool        initialise() override;
     virtual void        shutdown() override;
@@ -27,12 +27,12 @@ private:
     static BOOL WINAPI  write_console(HANDLE handle, const wchar_t* chars, DWORD to_write, LPDWORD written, LPVOID);
     static BOOL WINAPI  set_env_var(const wchar_t* name, const wchar_t* value);
     bool                initialise_system();
-    virtual void        initialise_lua(lua_state& lua) override;
-    virtual void        initialise_editor_desc(line_editor::desc& desc) override;
+    virtual void        initialise_lua(LuaState& lua) override;
+    virtual void        initialise_editor_desc(LineEditor::Desc& desc) override;
     void                edit_line(const wchar_t* prompt, wchar_t* chars, int max_chars);
     bool                capture_prompt(const wchar_t* chars, int char_count);
     bool                is_interactive() const;
-    tagged_prompt       m_prompt;
-    doskey              m_doskey;
-    doskey_alias        m_doskey_alias;
+    TaggedPrompt        m_prompt;
+    Doskey              m_doskey;
+    DoskeyAlias         m_doskey_alias;
 };

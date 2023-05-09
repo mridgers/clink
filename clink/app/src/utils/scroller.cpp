@@ -5,7 +5,7 @@
 #include "scroller.h"
 
 //------------------------------------------------------------------------------
-scroller::scroller()
+Scroller::Scroller()
 : m_handle(0)
 {
     m_cursor_position.X = 0;
@@ -13,7 +13,7 @@ scroller::scroller()
 }
 
 //------------------------------------------------------------------------------
-void scroller::begin()
+void Scroller::begin()
 {
     m_handle = GetStdHandle(STD_OUTPUT_HANDLE);
 
@@ -23,7 +23,7 @@ void scroller::begin()
 }
 
 //------------------------------------------------------------------------------
-void scroller::end()
+void Scroller::end()
 {
     SetConsoleCursorPosition(m_handle, m_cursor_position);
     m_handle = 0;
@@ -32,7 +32,7 @@ void scroller::end()
 }
 
 //------------------------------------------------------------------------------
-void scroller::page_up()
+void Scroller::page_up()
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     GetConsoleScreenBufferInfo(m_handle, &csbi);
@@ -48,7 +48,7 @@ void scroller::page_up()
 }
 
 //------------------------------------------------------------------------------
-void scroller::page_down()
+void Scroller::page_down()
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     GetConsoleScreenBufferInfo(m_handle, &csbi);
@@ -67,9 +67,9 @@ void scroller::page_down()
 
 
 //------------------------------------------------------------------------------
-void scroller_module::bind_input(binder& binder)
+void ScrollerModule::bind_input(Binder& binder)
 {
-    m_bind_group = binder.create_group("scroller");
+    m_bind_group = binder.create_group("Scroller");
     if (m_bind_group >= 0)
     {
         int default_group = binder.get_group();
@@ -82,25 +82,25 @@ void scroller_module::bind_input(binder& binder)
 }
 
 //------------------------------------------------------------------------------
-void scroller_module::on_begin_line(const context& context)
+void ScrollerModule::on_begin_line(const Context& context)
 {
 }
 
 //------------------------------------------------------------------------------
-void scroller_module::on_end_line()
+void ScrollerModule::on_end_line()
 {
 }
 
 //------------------------------------------------------------------------------
-void scroller_module::on_matches_changed(const context& context)
+void ScrollerModule::on_matches_changed(const Context& context)
 {
 }
 
 //------------------------------------------------------------------------------
-void scroller_module::on_input(
-    const input& input,
-    result& result,
-    const context& context)
+void ScrollerModule::on_input(
+    const Input& input,
+    Result& result,
+    const Context& context)
 {
     switch (input.id)
     {
@@ -128,6 +128,6 @@ void scroller_module::on_input(
 }
 
 //------------------------------------------------------------------------------
-void scroller_module::on_terminal_resize(int columns, int rows, const context& context)
+void ScrollerModule::on_terminal_resize(int columns, int rows, const Context& context)
 {
 }

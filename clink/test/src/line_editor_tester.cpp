@@ -11,55 +11,55 @@
 #include <stdio.h>
 
 //------------------------------------------------------------------------------
-class empty_module
-    : public editor_module
+class EmptyModule
+    : public EditorModule
 {
 public:
-    virtual void    bind_input(binder& binder) override {}
-    virtual void    on_begin_line(const context& context) override {}
+    virtual void    bind_input(Binder& binder) override {}
+    virtual void    on_begin_line(const Context& context) override {}
     virtual void    on_end_line() override {}
-    virtual void    on_matches_changed(const context& context) override {}
-    virtual void    on_input(const input& input, result& result, const context& context) override {}
-    virtual void    on_terminal_resize(int columns, int rows, const context& context) override {}
+    virtual void    on_matches_changed(const Context& context) override {}
+    virtual void    on_input(const Input& input, Result& result, const Context& context) override {}
+    virtual void    on_terminal_resize(int columns, int rows, const Context& context) override {}
 };
 
 
 
 //------------------------------------------------------------------------------
-class test_module
-    : public empty_module
+class TestModule
+    : public EmptyModule
 {
 public:
-    const matches*  get_matches() const;
+    const Matches*  get_matches() const;
 
 private:
-    virtual void    bind_input(binder& binder) override;
-    virtual void    on_matches_changed(const context& context) override;
-    virtual void    on_input(const input& input, result& result, const context& context) override;
-    const matches*  m_matches = nullptr;
+    virtual void    bind_input(Binder& binder) override;
+    virtual void    on_matches_changed(const Context& context) override;
+    virtual void    on_input(const Input& input, Result& result, const Context& context) override;
+    const Matches*  m_matches = nullptr;
 };
 
 //------------------------------------------------------------------------------
-const matches* test_module::get_matches() const
+const Matches* TestModule::get_matches() const
 {
     return m_matches;
 }
 
 //------------------------------------------------------------------------------
-void test_module::bind_input(binder& binder)
+void TestModule::bind_input(Binder& binder)
 {
     int default_group = binder.get_group();
     binder.bind(default_group, DO_COMPLETE, 0);
 }
 
 //------------------------------------------------------------------------------
-void test_module::on_matches_changed(const context& context)
+void TestModule::on_matches_changed(const Context& context)
 {
     m_matches = &(context.matches);
 }
 
 //------------------------------------------------------------------------------
-void test_module::on_input(const input&, result& result, const context& context)
+void TestModule::on_input(const Input&, Result& result, const Context& context)
 {
     if (context.matches.get_match_count() == 1)
         result.accept_match(0);
@@ -70,22 +70,22 @@ void test_module::on_input(const input&, result& result, const context& context)
 
 
 //------------------------------------------------------------------------------
-line_editor_tester::line_editor_tester()
+LineEditorTester::LineEditorTester()
 {
     create_line_editor();
 }
 
 //------------------------------------------------------------------------------
-line_editor_tester::line_editor_tester(const line_editor::desc& desc)
+LineEditorTester::LineEditorTester(const LineEditor::Desc& desc)
 {
     create_line_editor(&desc);
 }
 
 //------------------------------------------------------------------------------
-void line_editor_tester::create_line_editor(const line_editor::desc* desc)
+void LineEditorTester::create_line_editor(const LineEditor::Desc* desc)
 {
     // Create a line editor.
-    line_editor::desc inner_desc;
+    LineEditor::Desc inner_desc;
     if (desc != nullptr)
         inner_desc = *desc;
     inner_desc.input = &m_terminal_in;
@@ -96,31 +96,31 @@ void line_editor_tester::create_line_editor(const line_editor::desc* desc)
 }
 
 //------------------------------------------------------------------------------
-line_editor_tester::~line_editor_tester()
+LineEditorTester::~LineEditorTester()
 {
     line_editor_destroy(m_editor);
 }
 
 //------------------------------------------------------------------------------
-line_editor* line_editor_tester::get_editor() const
+LineEditor* LineEditorTester::get_editor() const
 {
     return m_editor;
 }
 
 //------------------------------------------------------------------------------
-void line_editor_tester::set_input(const char* input)
+void LineEditorTester::set_input(const char* input)
 {
     m_input = input;
 }
 
 //------------------------------------------------------------------------------
-void line_editor_tester::set_expected_output(const char* expected)
+void LineEditorTester::set_expected_output(const char* expected)
 {
     m_expected_output = expected;
 }
 
 //------------------------------------------------------------------------------
-void line_editor_tester::run(bool expectationless)
+void LineEditorTester::run(bool expectationless)
 {
     bool has_expectations = expectationless;
     has_expectations |= m_has_matches || (m_expected_output != nullptr);
@@ -131,7 +131,7 @@ void line_editor_tester::run(bool expectationless)
 
     // If we're expecting some matches then add a module to catch the
     // matches object.
-    test_module match_catch;
+    TestModule match_catch;
     m_editor->add_module(match_catch);
 
     // First update doesn't read input. We do however want to read at least one
@@ -145,7 +145,7 @@ void line_editor_tester::run(bool expectationless)
 
     if (m_has_matches)
     {
-        const matches* matches = match_catch.get_matches();
+        const Matches* matches = match_catch.get_matches();
         REQUIRE(matches != nullptr);
 
         unsigned int match_count = matches->get_match_count();
@@ -200,7 +200,7 @@ void line_editor_tester::run(bool expectationless)
 }
 
 //------------------------------------------------------------------------------
-void line_editor_tester::expected_matches_impl(int dummy, ...)
+void LineEditorTester::expected_matches_impl(int dummy, ...)
 {
     m_expected_matches.clear();
 

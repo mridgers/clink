@@ -28,15 +28,15 @@ extern "C" {
 }
 
 //------------------------------------------------------------------------------
-static setting_enum g_ignore_case(
+static SettingEnum g_ignore_case(
     "match.ignore_case",
     "Case insensitive matching",
-    "Toggles whether case is ignored when selecting matches. The 'relaxed'\n"
+    "Toggles whether case is ignored when selecting Matches. The 'relaxed'\n"
     "option will also consider -/_ as equal.",
     "off,on,relaxed",
     2);
 
-static setting_bool g_add_history_cmd(
+static SettingBool g_add_history_cmd(
     "history.add_history_cmd",
     "Add 'history' commands",
     "Toggles the adding of 'history' commands to the history.",
@@ -45,47 +45,47 @@ static setting_bool g_add_history_cmd(
 
 
 //------------------------------------------------------------------------------
-host::host(const char* name)
+Host::Host(const char* name)
 : m_name(name)
 {
 }
 
 //------------------------------------------------------------------------------
-host::~host()
+Host::~Host()
 {
 }
 
 //------------------------------------------------------------------------------
-bool host::edit_line(const char* prompt, str_base& out)
+bool Host::edit_line(const char* prompt, StrBase& out)
 {
-    const app_context* app = app_context::get();
+    const AppContext* app = AppContext::get();
     app->update_env();
 
-    struct cwd_restorer
+    struct CwdRestorer
     {
-        cwd_restorer()  { os::get_current_dir(m_path); }
-        ~cwd_restorer() { os::set_current_dir(m_path.c_str()); }
-        str<288>        m_path;
+        CwdRestorer()   { os::get_current_dir(m_path); }
+        ~CwdRestorer() { os::set_current_dir(m_path.c_str()); }
+        Str<288>        m_path;
     } cwd;
 
     // Load Clink's settings.
-    str<288> settings_file;
-    app_context::get()->get_settings_path(settings_file);
+    Str<288> settings_file;
+    AppContext::get()->get_settings_path(settings_file);
     settings::load(settings_file.c_str());
 
     // Set up the string comparison mode.
     int cmp_mode;
     switch (g_ignore_case.get())
     {
-    case 1:     cmp_mode = str_compare_scope::caseless; break;
-    case 2:     cmp_mode = str_compare_scope::relaxed;  break;
-    default:    cmp_mode = str_compare_scope::exact;    break;
+    case 1:     cmp_mode = StrCompareScope::caseless; break;
+    case 2:     cmp_mode = StrCompareScope::relaxed;    break;
+    default:    cmp_mode = StrCompareScope::exact;      break;
     }
-    str_compare_scope compare(cmp_mode);
+    StrCompareScope compare(cmp_mode);
 
     // Set up Lua and load scripts into it.
-    host_lua lua;
-    prompt_filter prompt_filter(lua);
+    HostLua lua;
+    PromptFilter prompt_filter(lua);
     initialise_lua(lua);
     lua.load_scripts();
 
@@ -94,29 +94,29 @@ bool host::edit_line(const char* prompt, str_base& out)
     // without loading settings first. [TODO: find a better way]
     settings::load(settings_file.c_str());
 
-    line_editor::desc desc = {};
+    LineEditor::Desc desc = {};
     initialise_editor_desc(desc);
 
     // Filter the prompt.
-    str<256> filtered_prompt;
+    Str<256> filtered_prompt;
     prompt_filter.filter(prompt, filtered_prompt);
     desc.prompt = filtered_prompt.c_str();
 
     // Set the terminal that will handle all IO while editing.
-    terminal terminal = terminal_create();
+    Terminal terminal = terminal_create();
     desc.input = terminal.in;
     desc.output = terminal.out;
 
     // Create the editor and add components to it.
-    line_editor* editor = line_editor_create(desc);
+    LineEditor* editor = line_editor_create(desc);
 
-    editor_module* completer = tab_completer_create();
+    EditorModule* completer = tab_completer_create();
     editor->add_module(*completer);
 
-    scroller_module scroller;
+    ScrollerModule scroller;
     editor->add_module(scroller);
 
-    host_module host_module(m_name);
+    HostModule host_module(m_name);
     editor->add_module(host_module);
 
     editor->add_generator(lua);
@@ -131,7 +131,7 @@ bool host::edit_line(const char* prompt, str_base& out)
         if (ret = editor->edit(out.data(), out.size()))
         {
             // Handle history event expansion.
-            if (m_history.expand(out.c_str(), out) == history_db::expand_print)
+            if (m_history.expand(out.c_str(), out) == HistoryDb::expand_print)
             {
                 puts(out.c_str());
                 continue;
