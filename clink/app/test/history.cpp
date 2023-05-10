@@ -39,12 +39,12 @@ struct TestHistoryDb
 };
 
 //------------------------------------------------------------------------------
-int count_files()
+int32 count_files()
 {
     Globber file_iter("*");
     file_iter.hidden(true);
 
-    int file_count = 0;
+    int32 file_count = 0;
     for (Str<1, false> unused; file_iter.next(unused); ++file_count);
 
     return file_count;
@@ -124,7 +124,7 @@ TEST_CASE("history db")
         settings::find("history.shared")->set("true");
         settings::find("history.dupe_mode")->set("add");
 
-        int line_bytes = 0;
+        int32 line_bytes = 0;
 
         // Write a lot of lines, check it only goes to main file.
         {
@@ -136,7 +136,7 @@ TEST_CASE("history db")
                 for (const char* line : line_set0)
                 {
                     REQUIRE(history.add(line));
-                    line_bytes += int(strlen(line)) + 1; // +1 for \n
+                    line_bytes += int32(strlen(line)) + 1; // +1 for \n
                 }
             }
 
@@ -158,13 +158,13 @@ TEST_CASE("history db")
         settings::find("history.shared")->set("false");
         settings::find("history.dupe_mode")->set("add");
 
-        int line_bytes = 0;
+        int32 line_bytes = 0;
         {
             TestHistoryDb history;
             REQUIRE(count_files() == 3);
 
             REQUIRE(history.add(line_set0[0]));
-            line_bytes += int(strlen(line_set0[0])) + 1;
+            line_bytes += int32(strlen(line_set0[0])) + 1;
 
             REQUIRE(count_files() == 3);
             REQUIRE(os::get_file_size(session_path) == line_bytes);
@@ -193,14 +193,14 @@ TEST_CASE("history db")
 
         char buffer[256];
         StrIter line;
-        int j = 0;
-        for (int i = 0; i < sizeof_array(buffer); ++i)
+        int32 j = 0;
+        for (int32 i = 0; i < sizeof_array(buffer); ++i)
         {
             HistoryDb::Iter iter = history.read_lines(buffer, i);
             char c = 'a';
             while (iter.next(line))
             {
-                int line_length = line.length();
+                int32 line_length = line.length();
                 REQUIRE(line_length == 1 || line_length == 2);
 
                 REQUIRE(line.get_pointer()[0] == c++);

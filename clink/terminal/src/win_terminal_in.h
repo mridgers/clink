@@ -13,18 +13,18 @@ public:
     virtual void    begin() override;
     virtual void    end() override;
     virtual void    select() override;
-    virtual int     read() override;
+    virtual int32   read() override;
 
 private:
     void            read_console();
     void            process_input(const KEY_EVENT_RECORD& key_event);
-    void            push(unsigned int value);
+    void            push(uint32 value);
     void            push(const char* seq);
-    unsigned char   pop();
+    uint8           pop();
     void*           _stdin = nullptr;
-    unsigned int    _dimensions = 0;
-    unsigned long   _prev_mode = 0;
-    unsigned char   _buffer_head = 0;
-    unsigned char   _buffer_count = 0;
-    unsigned char   _buffer[16]; // must be power of two.
+    uint32          _dimensions = 0;
+    uint32          _prev_mode = 0;
+    uint8           _buffer_head = 0;
+    uint8           _buffer_count = 0;
+    uint8           _buffer[16]; // must be power of two.
 };

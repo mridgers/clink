@@ -8,14 +8,14 @@
 #include <core/str_tokeniser.h>
 
 //------------------------------------------------------------------------------
-extern "C" int wcwidth(int);
+extern "C" int32 wcwidth(int32);
 
 
 
 //------------------------------------------------------------------------------
-unsigned int cell_count(const char* in)
+uint32 cell_count(const char* in)
 {
-    unsigned int count = 0;
+    uint32 count = 0;
 
     Ecma48State state;
     Ecma48Iter iter(in, state);
@@ -25,7 +25,7 @@ unsigned int cell_count(const char* in)
             continue;
 
         StrIter inner_iter(code.get_pointer(), code.get_length());
-        while (int c = inner_iter.next())
+        while (int32 c = inner_iter.next())
             count += wcwidth(c);
     }
 
@@ -33,9 +33,9 @@ unsigned int cell_count(const char* in)
 }
 
 //------------------------------------------------------------------------------
-static bool in_range(int value, int left, int right)
+static bool in_range(int32 value, int32 left, int32 right)
 {
-    return (unsigned(right - value) <= unsigned(right - left));
+    return (uint32(right - value) <= uint32(right - left));
 }
 
 
@@ -56,7 +56,7 @@ enum
 
 
 //------------------------------------------------------------------------------
-bool Ecma48Code::decode_csi(CsiBase& base, int* params, unsigned int max_params) const
+bool Ecma48Code::decode_csi(CsiBase& base, int32* params, uint32 max_params) const
 {
     if (get_type() != type_c1 || get_code() != c1_csi)
         return false;
@@ -75,10 +75,10 @@ bool Ecma48Code::decode_csi(CsiBase& base, int* params, unsigned int max_params)
     // Extract parameters.
     base.intermediate = 0;
     base.final = 0;
-    int param = 0;
-    unsigned int count = 0;
+    int32 param = 0;
+    uint32 count = 0;
     bool trailing_param = false;
-    while (int c = iter.next())
+    while (int32 c = iter.next())
     {
         if (in_range(c, 0x30, 0x3b))
         {
@@ -123,7 +123,7 @@ bool Ecma48Code::get_c1_str(StrBase& out) const
     const char* start = iter.get_pointer();
 
     // Skip until terminator
-    while (int c = iter.peek())
+    while (int32 c = iter.peek())
     {
         if (c == 0x9c || c == 0x1b)
             break;
@@ -132,14 +132,14 @@ bool Ecma48Code::get_c1_str(StrBase& out) const
     }
 
     out.clear();
-    out.concat(start, int(iter.get_pointer() - start));
+    out.concat(start, int32(iter.get_pointer() - start));
     return true;
 }
 
 
 
 //------------------------------------------------------------------------------
-Ecma48Iter::Ecma48Iter(const char* s, Ecma48State& state, int len)
+Ecma48Iter::Ecma48Iter(const char* s, Ecma48State& state, int32 len)
 : _iter(s, len)
 , _code(state.code)
 , _state(state)
@@ -155,7 +155,7 @@ const Ecma48Code& Ecma48Iter::next()
     bool done = true;
     while (1)
     {
-        int c = _iter.peek();
+        int32 c = _iter.peek();
         if (!c)
         {
             if (_state.state != ecma48_state_char)
@@ -198,7 +198,7 @@ const Ecma48Code& Ecma48Iter::next()
         _code._length = _state.count;
     }
     else
-        _code._length = int(_iter.get_pointer() - _code.get_pointer());
+        _code._length = int32(_iter.get_pointer() - _code.get_pointer());
 
     _state.reset();
 
@@ -233,7 +233,7 @@ bool Ecma48Iter::next_c1()
 }
 
 //------------------------------------------------------------------------------
-bool Ecma48Iter::next_char(int c)
+bool Ecma48Iter::next_char(int32 c)
 {
     if (in_range(c, 0x00, 0x1f))
     {
@@ -246,7 +246,7 @@ bool Ecma48Iter::next_char(int c)
 }
 
 //------------------------------------------------------------------------------
-bool Ecma48Iter::next_char_str(int c)
+bool Ecma48Iter::next_char_str(int32 c)
 {
     _iter.next();
 
@@ -260,7 +260,7 @@ bool Ecma48Iter::next_char_str(int c)
 }
 
 //------------------------------------------------------------------------------
-bool Ecma48Iter::next_cmd_str(int c)
+bool Ecma48Iter::next_cmd_str(int32 c)
 {
     if (c == 0x1b)
     {
@@ -287,7 +287,7 @@ bool Ecma48Iter::next_cmd_str(int c)
 }
 
 //------------------------------------------------------------------------------
-bool Ecma48Iter::next_csi_f(int c)
+bool Ecma48Iter::next_csi_f(int32 c)
 {
     if (in_range(c, 0x20, 0x2f))
     {
@@ -308,7 +308,7 @@ bool Ecma48Iter::next_csi_f(int c)
 }
 
 //------------------------------------------------------------------------------
-bool Ecma48Iter::next_csi_p(int c)
+bool Ecma48Iter::next_csi_p(int32 c)
 {
     if (in_range(c, 0x30, 0x3f))
     {
@@ -321,7 +321,7 @@ bool Ecma48Iter::next_csi_p(int c)
 }
 
 //------------------------------------------------------------------------------
-bool Ecma48Iter::next_esc(int c)
+bool Ecma48Iter::next_esc(int32 c)
 {
     _iter.next();
 
@@ -343,7 +343,7 @@ bool Ecma48Iter::next_esc(int c)
 }
 
 //------------------------------------------------------------------------------
-bool Ecma48Iter::next_esc_st(int c)
+bool Ecma48Iter::next_esc_st(int32 c)
 {
     if (c == 0x5c)
     {
@@ -358,7 +358,7 @@ bool Ecma48Iter::next_esc_st(int c)
 }
 
 //------------------------------------------------------------------------------
-bool Ecma48Iter::next_unknown(int c)
+bool Ecma48Iter::next_unknown(int32 c)
 {
     _iter.next();
 

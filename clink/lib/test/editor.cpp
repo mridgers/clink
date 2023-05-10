@@ -17,8 +17,8 @@ struct DelimModule
     virtual void    on_end_line() override {}
     virtual void    on_matches_changed(const Context& context) override;
     virtual void    on_input(const Input& Input, Result& result, const Context& context) override {}
-    virtual void    on_terminal_resize(int columns, int rows, const Context& context) override {}
-    unsigned char   delim = 'a';
+    virtual void    on_terminal_resize(int32 columns, int32 rows, const Context& context) override {}
+    uint8           delim = 'a';
 };
 
 //------------------------------------------------------------------------------
@@ -26,7 +26,7 @@ void DelimModule::on_matches_changed(const Context& context)
 {
     const LineState& line = context.line;
 
-    unsigned int word_count = line.get_word_count();
+    uint32 word_count = line.get_word_count();
     REQUIRE(word_count > 0);
 
     const Word* word = line.get_words().back();

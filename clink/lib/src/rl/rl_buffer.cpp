@@ -36,21 +36,21 @@ const char* RlBuffer::get_buffer() const
 }
 
 //------------------------------------------------------------------------------
-unsigned int RlBuffer::get_length() const
+uint32 RlBuffer::get_length() const
 {
     return rl_end;
 }
 
 //------------------------------------------------------------------------------
-unsigned int RlBuffer::get_cursor() const
+uint32 RlBuffer::get_cursor() const
 {
     return rl_point;
 }
 
 //------------------------------------------------------------------------------
-unsigned int RlBuffer::set_cursor(unsigned int pos)
+uint32 RlBuffer::set_cursor(uint32 pos)
 {
-    return rl_point = min<unsigned int>(pos, rl_end);
+    return rl_point = min<uint32>(pos, rl_end);
 }
 
 //------------------------------------------------------------------------------
@@ -60,7 +60,7 @@ bool RlBuffer::insert(const char* text)
 }
 
 //------------------------------------------------------------------------------
-bool RlBuffer::remove(unsigned int from, unsigned int to)
+bool RlBuffer::remove(uint32 from, uint32 to)
 {
     to = min(to, get_length());
     _need_draw = !!rl_delete_text(from, to);

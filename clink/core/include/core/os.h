@@ -15,8 +15,8 @@ enum {
     path_type_dir,
 };
 
-int     get_path_type(const char* path);
-int     get_file_size(const char* path);
+int32   get_path_type(const char* path);
+int32   get_file_size(const char* path);
 void    get_current_dir(StrBase& out);
 bool    set_current_dir(const char* dir);
 bool    make_dir(const char* dir);

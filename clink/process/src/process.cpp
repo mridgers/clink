@@ -15,7 +15,7 @@
 #include <stddef.h>
 
 //------------------------------------------------------------------------------
-Process::Process(int pid)
+Process::Process(int32 pid)
 : _pid(pid)
 {
     if (_pid == -1)
@@ -23,7 +23,7 @@ Process::Process(int pid)
 }
 
 //------------------------------------------------------------------------------
-int Process::get_parent_pid() const
+int32 Process::get_parent_pid() const
 {
     LONG (WINAPI *NtQueryInformationProcess)(HANDLE, ULONG, PVOID, ULONG, PULONG);
 
@@ -73,7 +73,7 @@ bool Process::get_file_name(StrBase& out) const
 //------------------------------------------------------------------------------
 Process::Arch Process::get_arch() const
 {
-    int is_x64_os;
+    int32 is_x64_os;
     SYSTEM_INFO system_info;
     GetNativeSystemInfo(&system_info);
     is_x64_os = system_info.wProcessorArchitecture;
@@ -135,10 +135,10 @@ void* Process::inject_module(const char* dll_path)
 }
 
 //------------------------------------------------------------------------------
-void* Process::remote_call(void* function, const void* param, int param_size)
+void* Process::remote_call(void* function, const void* param, int32 param_size)
 {
     // Open the Process so we can operate on it.
-    unsigned int Flags = PROCESS_QUERY_INFORMATION|PROCESS_CREATE_THREAD;
+    uint32 Flags = PROCESS_QUERY_INFORMATION|PROCESS_CREATE_THREAD;
     Handle process_handle = OpenProcess(Flags, FALSE, _pid);
     if (!process_handle)
         return nullptr;
@@ -159,7 +159,7 @@ void* Process::remote_call(void* function, const void* param, int param_size)
 
 #if 1
 #   if ARCHITECTURE == 86
-    unsigned char thunk[] = {
+    uint8 thunk[] = {
         //0xcc,
         0x8b, 0x44, 0x24, 0x04,
         0x8d, 0x48, 0x08,
@@ -170,7 +170,7 @@ void* Process::remote_call(void* function, const void* param, int param_size)
         0xc3,
     };
 #   elif ARCHITECTURE == 64
-    unsigned char thunk[] = {
+    uint8 thunk[] = {
         //0xcc,
         0x57,
         0x48, 0x83, 0xec, 0x20,
@@ -190,17 +190,17 @@ void* Process::remote_call(void* function, const void* param, int param_size)
     auto* thunk = static_cast<void (__stdcall*)(ThunkData&)>(thunk_impl);
 #endif
 
-    static int thunk_size;
+    static int32 thunk_size;
     if (!thunk_size)
-        for (const auto* c = (unsigned char*)thunk; ++thunk_size, *c++ != 0xc3;);
+        for (const auto* c = (uint8*)thunk; ++thunk_size, *c++ != 0xc3;);
 
     Vm vm(_pid);
     Vm::Region Region = vm.alloc(1, Vm::access_write);
     if (Region.base == nullptr)
         return nullptr;
 
-    int write_offset = 0;
-    const auto& vm_write = [&] (const void* data, int size) {
+    int32 write_offset = 0;
+    const auto& vm_write = [&] (const void* data, int32 size) {
         void* addr = (char*)Region.base + write_offset;
         vm.write(addr, data, size);
         write_offset = (write_offset + size + 7) & ~7;

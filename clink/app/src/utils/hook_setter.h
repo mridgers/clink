@@ -16,7 +16,7 @@ public:
     template <typename RET,
              typename... ARGS>
     bool                        add_jmp(void* module, const char* name, RET (__stdcall *hook)(ARGS...));
-    int                         commit();
+    int32                       commit();
 
 private:
     enum HookType
@@ -38,7 +38,7 @@ private:
     bool                        commit_iat(void* self, const HookDesc& desc);
     bool                        commit_jmp(void* self, const HookDesc& desc);
     HookDesc                    _descs[4];
-    int                         _desc_count;
+    int32                       _desc_count;
 };
 
 //------------------------------------------------------------------------------

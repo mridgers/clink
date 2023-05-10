@@ -100,7 +100,7 @@ enum {
 //------------------------------------------------------------------------------
 void TabCompleter::bind_input(Binder& binder)
 {
-    int default_group = binder.get_group();
+    int32 default_group = binder.get_group();
     binder.bind(default_group, "\t", state_none);
 
     _prompt_bind_group = binder.create_group("tab_complete_prompt");
@@ -166,7 +166,7 @@ void TabCompleter::on_input(const Input& input, Result& result, const Context& c
     }
 
     const char* keys = input.keys;
-    int next_state = state_none;
+    int32 next_state = state_none;
 
     switch (input.id)
     {
@@ -208,21 +208,21 @@ void TabCompleter::on_input(const Input& input, Result& result, const Context& c
 TabCompleter::State TabCompleter::begin_print(const Context& context)
 {
     const Matches& matches = context.matches;
-    int match_count = matches.get_match_count();
+    int32 match_count = matches.get_match_count();
 
     _longest = 0;
     _row = 0;
 
     // Get the longest match length.
-    for (int i = 0, n = matches.get_match_count(); i < n; ++i)
-        _longest = max<int>(matches.get_cell_count(i), _longest);
+    for (int32 i = 0, n = matches.get_match_count(); i < n; ++i)
+        _longest = max<int32>(matches.get_cell_count(i), _longest);
 
     if (!_longest)
         return state_none;
 
     context.printer.print("\n");
 
-    int query_threshold = g_query_threshold.get();
+    int32 query_threshold = g_query_threshold.get();
     if (query_threshold > 0 && query_threshold <= match_count)
     {
         Str<40> prompt;
@@ -248,27 +248,27 @@ TabCompleter::State TabCompleter::print(const Context& context, bool single_row)
 
     printer.print("\r");
 
-    int match_count = matches.get_match_count();
+    int32 match_count = matches.get_match_count();
 
     Str<288> lcd;
     matches.get_match_lcd(lcd);
-    int lcd_length = lcd.length();
+    int32 lcd_length = lcd.length();
 
     // Calculate the number of columns of matches per row.
-    int column_pad = g_column_pad.get();
-    int cell_columns = min<int>(g_max_width.get(), printer.get_columns());
-    int columns = max(1, (cell_columns + column_pad) / (_longest + column_pad));
-    int total_rows = (match_count + columns - 1) / columns;
+    int32 column_pad = g_column_pad.get();
+    int32 cell_columns = min<int32>(g_max_width.get(), printer.get_columns());
+    int32 columns = max(1, (cell_columns + column_pad) / (_longest + column_pad));
+    int32 total_rows = (match_count + columns - 1) / columns;
 
     bool vertical = g_vertical.get();
-    int index_step = vertical ? total_rows : 1;
+    int32 index_step = vertical ? total_rows : 1;
 
-    int max_rows = single_row ? 1 : (total_rows - _row - 1);
-    max_rows = min<int>(printer.get_rows() - 2 - (_row != 0), max_rows);
+    int32 max_rows = single_row ? 1 : (total_rows - _row - 1);
+    max_rows = min<int32>(printer.get_rows() - 2 - (_row != 0), max_rows);
     for (; max_rows >= 0; --max_rows, ++_row)
     {
-        int index = vertical ? _row : (_row * columns);
-        for (int x = columns - 1; x >= 0; --x)
+        int32 index = vertical ? _row : (_row * columns);
+        for (int32 x = columns - 1; x >= 0; --x)
         {
             if (index >= match_count)
                 continue;
@@ -282,23 +282,23 @@ TabCompleter::State TabCompleter::print(const Context& context, bool single_row)
             const char* match_tail = iter.get_pointer();
 
             printer.print(minor_attr, match, lcd_length);
-            printer.print(highlight_attr, post_lcd, int(match_tail - post_lcd));
-            printer.print(major_attr, match_tail, int(strlen(match_tail)));
+            printer.print(highlight_attr, post_lcd, int32(match_tail - post_lcd));
+            printer.print(major_attr, match_tail, int32(strlen(match_tail)));
 
             // Move the cursor to the next column
             if (x)
             {
-                int spaces_needed = column_pad;
+                int32 spaces_needed = column_pad;
                 if (total_rows > 1)
                 {
-                    int visible_chars = matches.get_cell_count(index);
+                    int32 visible_chars = matches.get_cell_count(index);
                     spaces_needed = _longest - visible_chars + column_pad;
                 }
 
-                for (int i = spaces_needed; i >= 0;)
+                for (int32 i = spaces_needed; i >= 0;)
                 {
                     const char spaces[] = "                            ";
-                    printer.print(spaces, min<int>(sizeof_array(spaces) - 1, i));
+                    printer.print(spaces, min<int32>(sizeof_array(spaces) - 1, i));
                     i -= sizeof_array(spaces) - 1;
                 }
             }
@@ -317,6 +317,6 @@ TabCompleter::State TabCompleter::print(const Context& context, bool single_row)
 }
 
 //------------------------------------------------------------------------------
-void TabCompleter::on_terminal_resize(int columns, int rows, const Context& context)
+void TabCompleter::on_terminal_resize(int32 columns, int32 rows, const Context& context)
 {
 }

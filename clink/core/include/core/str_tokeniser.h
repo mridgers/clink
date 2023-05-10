@@ -11,12 +11,12 @@
 class StrToken
 {
 public:
-    enum : unsigned char {
+    enum : uint8 {
         invalid_delim   = 0xff,
     };
                         StrToken(char c) : delim(c) {}
     explicit            operator bool () const       { return (delim != invalid_delim); }
-    unsigned char       delim;
+    uint8               delim;
 };
 
 
@@ -30,7 +30,7 @@ public:
                         StrTokeniserImpl(const StrIterImpl<T>& in, const char* delims=" ");
     bool                add_quote_pair(const char* pair);
     StrToken            next(StrImpl<T>& out);
-    StrToken            next(const T*& start, int& length);
+    StrToken            next(const T*& start, int32& length);
     StrToken            next(StrIterImpl<T>& out);
 
 private:
@@ -42,8 +42,8 @@ private:
 
     typedef FixedArray<Quote, 4> quotes;
 
-    int                 get_right_quote(int left) const;
-    StrToken            next_impl(const T*& out_start, int& out_length);
+    int32               get_right_quote(int32 left) const;
+    StrToken            next_impl(const T*& out_start, int32& out_length);
     quotes              _quotes;
     StrIterImpl<T>      _iter;
     const char*         _delims;

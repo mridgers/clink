@@ -18,7 +18,7 @@ TEST_CASE("binder")
 
         REQUIRE(binder.get_group() == 1);
 
-        int groups[] = {
+        int32 groups[] = {
             binder.create_group("group1"),
             binder.create_group("group2"),
         };
@@ -32,7 +32,7 @@ TEST_CASE("binder")
 
     SECTION("Overflow : group")
     {
-        for (int i = 1; i < 256; ++i)
+        for (int32 i = 1; i < 256; ++i)
             REQUIRE(binder.create_group("group") == (i * 2) + 1);
 
         REQUIRE(binder.create_group("group") == -1);
@@ -40,8 +40,8 @@ TEST_CASE("binder")
 
     SECTION("Overflow : module")
     {
-        int group = binder.get_group();
-        for (int i = 0; i < 64; ++i)
+        int32 group = binder.get_group();
+        for (int32 i = 0; i < 64; ++i)
             REQUIRE(binder.bind(group, "", ((EditorModule*)0)[i], char(i)));
 
         auto& module = ((EditorModule*)0)[0xff];
@@ -51,9 +51,9 @@ TEST_CASE("binder")
     SECTION("Overflow : bind")
     {
         auto& null_module = *(EditorModule*)0;
-        int default_group = binder.get_group();
+        int32 default_group = binder.get_group();
 
-        for (int i = 0; i < 508; ++i)
+        for (int32 i = 0; i < 508; ++i)
         {
             char chord[] = { char((i > 0xff) + 1), char((i % 0xfe) + 1), 0 };
             REQUIRE(binder.bind(default_group, chord, null_module, 0x12));
@@ -84,7 +84,7 @@ TEST_CASE("binder")
             "",         "z",
         };
 
-        int group = binder.get_group();
+        int32 group = binder.get_group();
         for (const auto& chord : chords)
         {
             auto& module = *(EditorModule*)(&chord);
@@ -110,7 +110,7 @@ TEST_CASE("binder")
                                "\\M-C-",
         };
 
-        int group = binder.get_group();
+        int32 group = binder.get_group();
         for (const char* chord : chords)
         {
             REQUIRE(!binder.bind(group, chord, *(EditorModule*)0, 234));

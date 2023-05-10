@@ -11,7 +11,7 @@ template <>
 StrToken StrTokeniserImpl<char>::next(StrImpl<char>& out)
 {
     const char* start;
-    int length;
+    int32 length;
     auto ret = next_impl(start, length);
 
     out.clear();
@@ -26,7 +26,7 @@ template <>
 StrToken StrTokeniserImpl<wchar_t>::next(StrImpl<wchar_t>& out)
 {
     const wchar_t* start;
-    int length;
+    int32 length;
     auto ret = next_impl(start, length);
 
     out.clear();
@@ -38,14 +38,14 @@ StrToken StrTokeniserImpl<wchar_t>::next(StrImpl<wchar_t>& out)
 
 //------------------------------------------------------------------------------
 template <>
-StrToken StrTokeniserImpl<char>::next(const char*& start, int& length)
+StrToken StrTokeniserImpl<char>::next(const char*& start, int32& length)
 {
     return next_impl(start, length);
 }
 
 //------------------------------------------------------------------------------
 template <>
-StrToken StrTokeniserImpl<wchar_t>::next(const wchar_t*& start, int& length)
+StrToken StrTokeniserImpl<wchar_t>::next(const wchar_t*& start, int32& length)
 {
     return next_impl(start, length);
 }
@@ -55,7 +55,7 @@ template <>
 StrToken StrTokeniserImpl<char>::next(StrIterImpl<char>& out)
 {
     const char* start;
-    int length;
+    int32 length;
     if (auto ret = next_impl(start, length))
     {
         new (&out) StrIterImpl<char>(start, length);
@@ -70,7 +70,7 @@ template <>
 StrToken StrTokeniserImpl<wchar_t>::next(StrIterImpl<wchar_t>& out)
 {
     const wchar_t* start;
-    int length;
+    int32 length;
     if (auto ret = next_impl(start, length))
     {
         new (&out) StrIterImpl<wchar_t>(start, length);
@@ -82,7 +82,7 @@ StrToken StrTokeniserImpl<wchar_t>::next(StrIterImpl<wchar_t>& out)
 
 //------------------------------------------------------------------------------
 template <typename T>
-int StrTokeniserImpl<T>::get_right_quote(int left) const
+int32 StrTokeniserImpl<T>::get_right_quote(int32 left) const
 {
     for (const Quote& iter : _quotes)
         if (iter.left == left)
@@ -93,11 +93,11 @@ int StrTokeniserImpl<T>::get_right_quote(int left) const
 
 //------------------------------------------------------------------------------
 template <typename T>
-StrToken StrTokeniserImpl<T>::next_impl(const T*& out_start, int& out_length)
+StrToken StrTokeniserImpl<T>::next_impl(const T*& out_start, int32& out_length)
 {
     // Skip initial delimiters.
     char delim = 0;
-    while (int c = _iter.peek())
+    while (int32 c = _iter.peek())
     {
         const char* candidate = strchr(_delims, c);
         if (candidate == nullptr)
@@ -110,8 +110,8 @@ StrToken StrTokeniserImpl<T>::next_impl(const T*& out_start, int& out_length)
     // Extract the delimited string.
     const T* start = _iter.get_pointer();
 
-    int quote_close = 0;
-    while (int c = _iter.peek())
+    int32 quote_close = 0;
+    while (int32 c = _iter.peek())
     {
         if (quote_close)
         {
@@ -135,6 +135,6 @@ StrToken StrTokeniserImpl<T>::next_impl(const T*& out_start, int& out_length)
 
     // Set the output and return.
     out_start = start;
-    out_length = int(end - start);
+    out_length = int32(end - start);
     return delim;
 }

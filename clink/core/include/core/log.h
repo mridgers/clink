@@ -16,11 +16,11 @@ class Logger
 {
 public:
     virtual         ~Logger();
-    static void     info(const char* function, int line, const char* fmt, ...);
-    static void     error(const char* function, int line, const char* fmt, ...);
+    static void     info(const char* function, int32 line, const char* fmt, ...);
+    static void     error(const char* function, int32 line, const char* fmt, ...);
 
 protected:
-    virtual void    emit(const char* function, int line, const char* fmt, va_list args) = 0;
+    virtual void    emit(const char* function, int32 line, const char* fmt, va_list args) = 0;
 };
 
 //------------------------------------------------------------------------------
@@ -29,7 +29,7 @@ class FileLogger
 {
 public:
                     FileLogger(const char* log_path);
-    virtual void    emit(const char* function, int line, const char* fmt, va_list args) override;
+    virtual void    emit(const char* function, int32 line, const char* fmt, va_list args) override;
 
 private:
     Str<256>        _log_path;

@@ -12,8 +12,10 @@
 //------------------------------------------------------------------------------
 void WinTerminalOut::begin()
 {
+    DWORD prev_mode;
     _stdout = GetStdHandle(STD_OUTPUT_HANDLE);
-    GetConsoleMode(_stdout, &_prev_mode);
+    GetConsoleMode(_stdout, &prev_mode);
+    _prev_mode = prev_mode;
 
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     GetConsoleScreenBufferInfo(_stdout, &csbi);
@@ -29,19 +31,19 @@ void WinTerminalOut::end()
 }
 
 //------------------------------------------------------------------------------
-void WinTerminalOut::write(const char* chars, int length)
+void WinTerminalOut::write(const char* chars, int32 length)
 {
     StrIter iter(chars, length);
     while (length > 0)
     {
         wchar_t wbuf[384];
-        int n = min<int>(sizeof_array(wbuf), length + 1);
+        int32 n = min<int32>(sizeof_array(wbuf), length + 1);
         n = to_utf16(wbuf, n, iter);
 
         DWORD written;
         WriteConsoleW(_stdout, wbuf, n, &written, nullptr);
 
-        n = int(iter.get_pointer() - chars);
+        n = int32(iter.get_pointer() - chars);
         length -= n;
         chars += n;
     }
@@ -59,7 +61,7 @@ void WinTerminalOut::flush()
 }
 
 //------------------------------------------------------------------------------
-int WinTerminalOut::get_columns() const
+int32 WinTerminalOut::get_columns() const
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     GetConsoleScreenBufferInfo(_stdout, &csbi);
@@ -67,7 +69,7 @@ int WinTerminalOut::get_columns() const
 }
 
 //------------------------------------------------------------------------------
-int WinTerminalOut::get_rows() const
+int32 WinTerminalOut::get_rows() const
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     GetConsoleScreenBufferInfo(_stdout, &csbi);

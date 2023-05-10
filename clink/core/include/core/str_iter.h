@@ -10,13 +10,13 @@ template <typename T>
 class StrIterImpl
 {
 public:
-    explicit        StrIterImpl(const T* s=(const T*)L"", int len=-1);
-    explicit        StrIterImpl(const StrImpl<T>& s, int len=-1);
+    explicit        StrIterImpl(const T* s=(const T*)L"", int32 len=-1);
+    explicit        StrIterImpl(const StrImpl<T>& s, int32 len=-1);
     const T*        get_pointer() const;
-    int             peek();
-    int             next();
+    int32           peek();
+    int32           next();
     bool            more() const;
-    unsigned int    length() const;
+    uint32          length() const;
 
 private:
     const T*        _ptr;
@@ -24,14 +24,14 @@ private:
 };
 
 //------------------------------------------------------------------------------
-template <typename T> StrIterImpl<T>::StrIterImpl(const T* s, int len)
+template <typename T> StrIterImpl<T>::StrIterImpl(const T* s, int32 len)
 : _ptr(s)
 , _end(_ptr + len)
 {
 }
 
 //------------------------------------------------------------------------------
-template <typename T> StrIterImpl<T>::StrIterImpl(const StrImpl<T>& s, int len)
+template <typename T> StrIterImpl<T>::StrIterImpl(const StrImpl<T>& s, int32 len)
 : _ptr(s.c_str())
 , _end(_ptr + len)
 {
@@ -44,10 +44,10 @@ template <typename T> const T* StrIterImpl<T>::get_pointer() const
 };
 
 //------------------------------------------------------------------------------
-template <typename T> int StrIterImpl<T>::peek()
+template <typename T> int32 StrIterImpl<T>::peek()
 {
     const T* ptr = _ptr;
-    int ret = next();
+    int32 ret = next();
     _ptr = ptr;
     return ret;
 }

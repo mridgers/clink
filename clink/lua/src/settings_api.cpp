@@ -13,7 +13,7 @@
 /// -name:  settings.get
 /// -arg:   name:string
 /// -ret:   boolean or string or integer
-static int get(lua_State* state)
+static int32 get(lua_State* state)
 {
     if (lua_gettop(state) == 0 || !lua_isstring(state, 1))
         return 0;
@@ -23,7 +23,7 @@ static int get(lua_State* state)
     if (setting == nullptr)
         return 0;
 
-    int Type = setting->get_type();
+    int32 Type = setting->get_type();
     switch (Type)
     {
     case Setting::type_bool:
@@ -35,7 +35,7 @@ static int get(lua_State* state)
 
     case Setting::type_int:
         {
-            int value = ((SettingInt*)setting)->get();
+            int32 value = ((SettingInt*)setting)->get();
             lua_pushinteger(state, value);
         }
         break;
@@ -57,7 +57,7 @@ static int get(lua_State* state)
 /// -arg:   name:string
 /// -arg:   value:string
 /// -ret:   boolean
-static int set(lua_State* state)
+static int32 set(lua_State* state)
 {
     if (lua_gettop(state) < 2 || !lua_isstring(state, 1))
         return 0;
@@ -87,7 +87,7 @@ template <typename S, typename... V> void add_impl(lua_State* state, V... value)
     if (luaL_newmetatable(state, "settings_mt"))
     {
         lua_pushliteral(state, "__gc");
-        lua_pushcfunction(state, [](lua_State* state) -> int {
+        lua_pushcfunction(state, [](lua_State* state) -> int32 {
             Setting* s = (Setting*)lua_touserdata(state, -1);
             s->~Setting();
             return 0;
@@ -104,7 +104,7 @@ template <typename S, typename... V> void add_impl(lua_State* state, V... value)
 /// -arg:   name:string
 /// -arg:   default:...
 /// -ret:   boolean
-static int add(lua_State* state)
+static int32 add(lua_State* state)
 {
     if (lua_gettop(state) < 2 || !lua_isstring(state, 1))
     {
@@ -115,7 +115,7 @@ static int add(lua_State* state)
     switch (lua_type(state, 2))
     {
     case LUA_TNUMBER:
-        add_impl<SettingInt>(state, int(lua_tointeger(state, 2)));
+        add_impl<SettingInt>(state, int32(lua_tointeger(state, 2)));
         break;
 
     case LUA_TBOOLEAN:
@@ -129,7 +129,7 @@ static int add(lua_State* state)
     case LUA_TTABLE:
         {
             Str<256> options;
-            for (int i = 0, n = int(lua_rawlen(state, 2)); i < n; ++i)
+            for (int32 i = 0, n = int32(lua_rawlen(state, 2)); i < n; ++i)
             {
                 lua_rawgeti(state, 2, i + 1);
                 if (const char* option = lua_tostring(state, -1))
@@ -158,7 +158,7 @@ void settings_lua_initialise(LuaState& lua)
 {
     struct {
         const char* name;
-        int         (*method)(lua_State*);
+        int32       (*method)(lua_State*);
     } methods[] = {
         { "get",    &get },
         { "set",    &set },

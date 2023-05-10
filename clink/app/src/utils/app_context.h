@@ -22,7 +22,7 @@ public:
     };
 
                 AppContext(const Desc& desc);
-    int         get_id() const;
+    int32       get_id() const;
     bool        is_logging_enabled() const;
     bool        is_quiet() const;
     void        get_binaries_dir(StrBase& out) const;
@@ -34,5 +34,5 @@ public:
 
 private:
     Desc        _desc;
-    int         _id;
+    int32       _id;
 };

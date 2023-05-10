@@ -17,7 +17,7 @@ public:
 
 private:
     virtual bool    generate(const LineState& line, MatchBuilder& Builder) override;
-    virtual int     get_prefix_length(const LineState& line) const override;
+    virtual int32   get_prefix_length(const LineState& line) const override;
     void            initialise();
     void            print_error(const char* error) const;
     void            lua_pushlinestate(const LineState& line);

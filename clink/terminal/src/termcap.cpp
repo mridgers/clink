@@ -12,15 +12,15 @@
 threadlocal static char gt_termcap_buffer[64];
 
 //------------------------------------------------------------------------------
-static int get_cap(const char* name)
+static int32 get_cap(const char* name)
 {
-    int a = int(*name);
-    int b = a ? int(name[1]) : 0;
+    int32 a = int32(*name);
+    int32 b = a ? int32(name[1]) : 0;
     return (a << 8) | b;
 }
 
 //------------------------------------------------------------------------------
-static void get_screen_size(int& width, int& height)
+static void get_screen_size(int32& width, int32& height)
 {
     HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
     if (handle != INVALID_HANDLE_VALUE)
@@ -39,7 +39,7 @@ static void get_screen_size(int& width, int& height)
 }
 
 //------------------------------------------------------------------------------
-static void cursor_style(int style)
+static void cursor_style(int32 style)
 {
     HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
 
@@ -47,7 +47,7 @@ static void cursor_style(int style)
     GetConsoleCursorInfo(handle, &ci);
 
     // Assume first encounter of cursor size is the default size.
-    static int g_default_cursor_size = -1;
+    static int32 g_default_cursor_size = -1;
     if (g_default_cursor_size < 0)
         g_default_cursor_size = ci.dwSize;
 
@@ -65,7 +65,7 @@ extern "C" {
 #endif
 
 //------------------------------------------------------------------------------
-int tputs(const char* str, int count, int (*putc_func)(int))
+int32 tputs(const char* str, int32 count, int32 (*putc_func)(int32))
 {
     if (str != nullptr)
         while (*str)
@@ -75,17 +75,17 @@ int tputs(const char* str, int count, int (*putc_func)(int))
 }
 
 //------------------------------------------------------------------------------
-int tgetent(char* bp, const char* name)
+int32 tgetent(char* bp, const char* name)
 {
     *bp = '\0';
     return 1;
 }
 
 //------------------------------------------------------------------------------
-int tgetnum(char* name)
+int32 tgetnum(char* name)
 {
-    int width, height;
-    int cap = get_cap(name);
+    int32 width, height;
+    int32 cap = get_cap(name);
 
     get_screen_size(width, height);
 
@@ -99,9 +99,9 @@ int tgetnum(char* name)
 }
 
 //------------------------------------------------------------------------------
-int tgetflag(char* name)
+int32 tgetflag(char* name)
 {
-    int cap = get_cap(name);
+    int32 cap = get_cap(name);
 
     switch (cap)
     {
@@ -119,7 +119,7 @@ char* tgetstr(char* name, char** out)
 #define CSI(x) "\x1b[" #x
 #define SS3(x) "\x1bO" #x
 
-    int cap = get_cap(name);
+    int32 cap = get_cap(name);
     const char* str = nullptr;
     switch (cap)
     {
@@ -169,7 +169,7 @@ char* tgetstr(char* name, char** out)
 }
 
 //------------------------------------------------------------------------------
-char* tgoto(char* base, int x, int y)
+char* tgoto(char* base, int32 x, int32 y)
 {
     StrBase(gt_termcap_buffer).format(base, y);
     return gt_termcap_buffer;

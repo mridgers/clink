@@ -10,7 +10,7 @@
 #include <core/str.h>
 
 //------------------------------------------------------------------------------
-static const char* get_string(lua_State* state, int index)
+static const char* get_string(lua_State* state, int32 index)
 {
     if (lua_gettop(state) < index || !lua_isstring(state, index))
         return nullptr;
@@ -27,13 +27,13 @@ static const char* get_string(lua_State* state, int index)
 /// Cleans $path by normalising separators and removing ".[.]/" elements. If
 /// $separator is provided it is used to delimit path elements, otherwise a
 /// system-specific delimiter is used.
-static int normalise(lua_State* state)
+static int32 normalise(lua_State* state)
 {
     Str<288> out(get_string(state, 1));
     if (out.length() == 0)
         return 0;
 
-    int separator = 0;
+    int32 separator = 0;
     if (const char* sep_str = get_string(state, 2))
         separator = sep_str[0];
 
@@ -47,7 +47,7 @@ static int normalise(lua_State* state)
 /// -arg:   path:string
 /// -ret:   string
 /// -show:  path.getbasename("/foo/bar.ext") -- returns "bar"
-static int get_base_name(lua_State* state)
+static int32 get_base_name(lua_State* state)
 {
     const char* path = get_string(state, 1);
     if (path == nullptr)
@@ -65,7 +65,7 @@ static int get_base_name(lua_State* state)
 /// -ret:   nil or string
 /// -show:  path.getdirectory("/foo/bar") -- returns "/foo/"
 /// -show:  path.getdirectory("bar") -- returns nil
-static int get_directory(lua_State* state)
+static int32 get_directory(lua_State* state)
 {
     Str<288> out(get_string(state, 1));
     if (out.length() == 0)
@@ -84,7 +84,7 @@ static int get_directory(lua_State* state)
 /// -ret:   nil or string
 /// -show:  path.getdrive("e:/foo/bar") -- returns "e:"
 /// -show:  path.getdrive("foo/bar") -- returns nil
-static int get_drive(lua_State* state)
+static int32 get_drive(lua_State* state)
 {
     Str<8> out(get_string(state, 1));
     if (out.length() == 0)
@@ -103,7 +103,7 @@ static int get_drive(lua_State* state)
 /// -ret:   string
 /// -show:  path.getextension("bar.ext") -- returns ".ext"
 /// -show:  path.getextension("bar") -- returns ""
-static int get_extension(lua_State* state)
+static int32 get_extension(lua_State* state)
 {
     const char* path = get_string(state, 1);
     if (path == nullptr)
@@ -120,7 +120,7 @@ static int get_extension(lua_State* state)
 /// -arg:   path:string
 /// -ret:   string
 /// -show:  path.getname("/foo/bar.ext") -- returns "bar.ext"
-static int get_name(lua_State* state)
+static int32 get_name(lua_State* state)
 {
     const char* path = get_string(state, 1);
     if (path == nullptr)
@@ -138,7 +138,7 @@ static int get_name(lua_State* state)
 /// -arg:   right:string
 /// -ret:   string
 /// -show:  path.join("/foo", "bar") -- returns "foo\bar"
-static int join(lua_State* state)
+static int32 join(lua_State* state)
 {
     const char* lhs = get_string(state, 1);
     if (lhs == nullptr)
@@ -159,7 +159,7 @@ void path_lua_initialise(LuaState& lua)
 {
     struct {
         const char* name;
-        int         (*method)(lua_State*);
+        int32       (*method)(lua_State*);
     } methods[] = {
         { "normalise",     &normalise },
         { "getbasename",   &get_base_name },

@@ -20,7 +20,7 @@ public:
     virtual void    on_end_line() override {}
     virtual void    on_matches_changed(const Context& context) override {}
     virtual void    on_input(const Input& input, Result& result, const Context& context) override {}
-    virtual void    on_terminal_resize(int columns, int rows, const Context& context) override {}
+    virtual void    on_terminal_resize(int32 columns, int32 rows, const Context& context) override {}
 };
 
 
@@ -48,7 +48,7 @@ const Matches* TestModule::get_matches() const
 //------------------------------------------------------------------------------
 void TestModule::bind_input(Binder& binder)
 {
-    int default_group = binder.get_group();
+    int32 default_group = binder.get_group();
     binder.bind(default_group, DO_COMPLETE, 0);
 }
 
@@ -148,7 +148,7 @@ void LineEditorTester::run(bool expectationless)
         const Matches* matches = match_catch.get_matches();
         REQUIRE(matches != nullptr);
 
-        unsigned int match_count = matches->get_match_count();
+        uint32 match_count = matches->get_match_count();
         REQUIRE(_expected_matches.size() == match_count, [&] () {
             printf(" input; %s#\n", _input);
 
@@ -161,7 +161,7 @@ void LineEditorTester::run(bool expectationless)
                 printf("  %s\n", match);
 
             puts("\ngot;");
-            for (int i = 0, n = matches->get_match_count(); i < n; ++i)
+            for (int32 i = 0, n = matches->get_match_count(); i < n; ++i)
                 printf("  %s\n", matches->get_match(i));
         });
 
@@ -169,7 +169,7 @@ void LineEditorTester::run(bool expectationless)
         {
             bool match_found = false;
 
-            for (unsigned int i = 0; i < match_count; ++i)
+            for (uint32 i = 0; i < match_count; ++i)
                 if (match_found = (strcmp(expected, matches->get_match(i)) == 0))
                     break;
 
@@ -200,7 +200,7 @@ void LineEditorTester::run(bool expectationless)
 }
 
 //------------------------------------------------------------------------------
-void LineEditorTester::expected_matches_impl(int dummy, ...)
+void LineEditorTester::expected_matches_impl(int32 dummy, ...)
 {
     _expected_matches.clear();
 

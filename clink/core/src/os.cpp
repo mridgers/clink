@@ -10,7 +10,7 @@ namespace os
 {
 
 //------------------------------------------------------------------------------
-int get_path_type(const char* path)
+int32 get_path_type(const char* path)
 {
     Wstr<280> wpath(path);
     DWORD attr = GetFileAttributesW(wpath.c_str());
@@ -24,14 +24,14 @@ int get_path_type(const char* path)
 }
 
 //------------------------------------------------------------------------------
-int get_file_size(const char* path)
+int32 get_file_size(const char* path)
 {
     Wstr<280> wpath(path);
     void* handle = CreateFileW(wpath.c_str(), 0, 0, nullptr, OPEN_EXISTING, 0, nullptr);
     if (handle == INVALID_HANDLE_VALUE)
         return -1;
 
-    int ret = GetFileSize(handle, nullptr); // 2Gb max I suppose...
+    int32 ret = GetFileSize(handle, nullptr); // 2Gb max I suppose...
     CloseHandle(handle);
     return ret;
 }
@@ -54,7 +54,7 @@ bool set_current_dir(const char* dir)
 //------------------------------------------------------------------------------
 bool make_dir(const char* dir)
 {
-    int Type = get_path_type(dir);
+    int32 Type = get_path_type(dir);
     if (Type == path_type_dir)
         return true;
 
@@ -108,7 +108,7 @@ bool copy(const char* src_path, const char* dest_path)
 bool get_temp_dir(StrBase& out)
 {
     Wstr<280> wout;
-    unsigned int size = GetTempPathW(wout.size(), wout.data());
+    uint32 size = GetTempPathW(wout.size(), wout.data());
     if (!size)
         return false;
 
@@ -128,7 +128,7 @@ bool get_env(const char* name, StrBase& out)
 {
     Wstr<32> wname(name);
 
-    int len = GetEnvironmentVariableW(wname.c_str(), nullptr, 0);
+    int32 len = GetEnvironmentVariableW(wname.c_str(), nullptr, 0);
     if (!len)
         return false;
 

@@ -3,4 +3,6 @@
 
 #pragma once
 
+#include <core/base.h>
+
 #include <Windows.h>

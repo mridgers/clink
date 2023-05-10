@@ -31,8 +31,8 @@ public:
     virtual             ~LineEditor() = default;
     virtual bool        add_module(EditorModule& module) = 0;
     virtual bool        add_generator(MatchGenerator& generator) = 0;
-    virtual bool        get_line(char* out, int out_size) = 0;
-    virtual bool        edit(char* out, int out_size) = 0;
+    virtual bool        get_line(char* out, int32 out_size) = 0;
+    virtual bool        edit(char* out, int32 out_size) = 0;
     virtual bool        update() = 0;
 };
 

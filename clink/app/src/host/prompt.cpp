@@ -69,7 +69,7 @@ const wchar_t* Prompt::get() const
 }
 
 //------------------------------------------------------------------------------
-void Prompt::set(const wchar_t* chars, int char_count)
+void Prompt::set(const wchar_t* chars, int32 char_count)
 {
     clear();
 
@@ -77,7 +77,7 @@ void Prompt::set(const wchar_t* chars, int char_count)
         return;
 
     if (char_count <= 0)
-        char_count = int(wcslen(chars));
+        char_count = int32(wcslen(chars));
 
     _data = (wchar_t*)malloc(sizeof(*_data) * (char_count + 1));
     wcsncpy(_data, chars, char_count);
@@ -93,11 +93,11 @@ bool Prompt::is_set() const
 
 
 //------------------------------------------------------------------------------
-void TaggedPrompt::set(const wchar_t* chars, int char_count)
+void TaggedPrompt::set(const wchar_t* chars, int32 char_count)
 {
     clear();
 
-    if (int tag_length = is_tagged(chars, char_count))
+    if (int32 tag_length = is_tagged(chars, char_count))
         Prompt::set(chars + tag_length, char_count - tag_length);
 }
 
@@ -113,8 +113,8 @@ void TaggedPrompt::tag(const wchar_t* value)
         return;
     }
 
-    int length = int(wcslen(value));
-    length += int(wcslen(g_prompt_tag_hidden));
+    int32 length = int32(wcslen(value));
+    length += int32(wcslen(g_prompt_tag_hidden));
 
     _data = (wchar_t*)malloc(sizeof(*_data) * (length + 1));
     wcscpy(_data, g_prompt_tag_hidden);
@@ -122,16 +122,16 @@ void TaggedPrompt::tag(const wchar_t* value)
 }
 
 //------------------------------------------------------------------------------
-int TaggedPrompt::is_tagged(const wchar_t* chars, int char_count)
+int32 TaggedPrompt::is_tagged(const wchar_t* chars, int32 char_count)
 {
     if (char_count <= 0)
-        char_count = int(wcslen(chars));
+        char_count = int32(wcslen(chars));
 
     // For each accepted tag...
-    for (int i = 0; i < sizeof_array(g_prompt_tags); ++i)
+    for (int32 i = 0; i < sizeof_array(g_prompt_tags); ++i)
     {
         const wchar_t* tag = g_prompt_tags[i];
-        int tag_length = (int)wcslen(tag);
+        int32 tag_length = (int32)wcslen(tag);
 
         if (tag_length > char_count)
             continue;
@@ -192,7 +192,7 @@ Prompt PromptUtils::extract_from_console()
 
     // Work out prompt length.
     COORD cursorXy = csbi.dwCursorPosition;
-    unsigned int length = cursorXy.X;
+    uint32 length = cursorXy.X;
     cursorXy.X = 0;
 
     wchar_t buffer[256] = {};

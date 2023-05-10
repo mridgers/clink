@@ -14,8 +14,8 @@ static const char* colour_bg_values = COLOUR_XS "default";
 SettingColour::SettingColour(
     const char* name,
     const char* short_desc,
-    int default_fg,
-    int default_bg)
+    int32 default_fg,
+    int32 default_bg)
 : SettingColour(name, short_desc, nullptr, default_fg, default_bg)
 {
 }
@@ -25,8 +25,8 @@ SettingColour::SettingColour(
     const char* name,
     const char* short_desc,
     const char* long_desc,
-    int default_fg,
-    int default_bg)
+    int32 default_fg,
+    int32 default_bg)
 {
     Str<64> inner_name;
     inner_name << name << ".fg";
@@ -42,7 +42,7 @@ Attributes SettingColour::get() const
 {
     Attributes out = Attributes::defaults;
 
-    int fg = _fg->get();
+    int32 fg = _fg->get();
     switch (fg)
     {
     case value_fg_normal:   out.set_bold(false);    break;
@@ -51,7 +51,7 @@ Attributes SettingColour::get() const
     default:                out.set_fg(fg);         break;
     }
 
-    int bg = _bg->get();
+    int32 bg = _bg->get();
     switch (bg)
     {
     case value_bg_default:  out.reset_bg();         break;

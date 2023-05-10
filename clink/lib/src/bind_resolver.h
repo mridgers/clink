@@ -16,36 +16,36 @@ public:
     public:
         explicit        operator bool () const;
         EditorModule*   get_module() const;
-        unsigned char   get_id() const;
+        uint8           get_id() const;
         void            get_chord(StrBase& chord) const;
         void            claim();
 
     private:
         friend class    BindResolver;
                         Binding() = default;
-                        Binding(BindResolver* resolver, int node_index);
+                        Binding(BindResolver* resolver, int32 node_index);
         BindResolver*   _outer = nullptr;
-        unsigned short  _node_index;
-        unsigned char   _module;
-        unsigned char   _depth;
-        unsigned char   _id;
+        uint16          _node_index;
+        uint8           _module;
+        uint8           _depth;
+        uint8           _id;
     };
 
                         BindResolver(const Binder& binder);
-    void                set_group(int group);
-    int                 get_group() const;
-    bool                step(unsigned char key);
+    void                set_group(int32 group);
+    int32               get_group() const;
+    bool                step(uint8 key);
     Binding             next();
     void                reset();
 
 private:
     void                claim(Binding& Binding);
-    bool                step_impl(unsigned char key);
+    bool                step_impl(uint8 key);
     const Binder&       _binder;
-    unsigned short      _node_index = 1;
-    unsigned short      _group = 1;
+    uint16              _node_index = 1;
+    uint16              _group = 1;
     bool                _pending_input = false;
-    unsigned char       _tail = 0;
-    unsigned char       _key_count = 0;
+    uint8               _tail = 0;
+    uint8               _key_count = 0;
     char                _keys[8];
 };

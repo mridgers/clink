@@ -81,7 +81,7 @@ void TestEditor::press_keys(const char* keys)
     INPUT_RECORD input_record = { KEY_EVENT };
     KEY_EVENT_RECORD& key_event = input_record.Event.KeyEvent;
     key_event.bKeyDown = TRUE;
-    while (int c = *keys++)
+    while (int32 c = *keys++)
     {
         key_event.uChar.UnicodeChar = wchar_t(c);
         WriteConsoleInput(handle, &input_record, 1, &written);
@@ -96,16 +96,16 @@ class TestConsole
 public:
             TestConsole();
             ~TestConsole();
-    void    resize(int columns) { resize(columns, _rows); }
-    void    resize(int columns, int rows);
-    int     get_columns() const { return _columns; }
-    int     get_rows() const    { return _rows; }
+    void    resize(int32 columns) { resize(columns, _rows); }
+    void    resize(int32 columns, int32 rows);
+    int32   get_columns() const { return _columns; }
+    int32   get_rows() const    { return _rows; }
 
 private:
     Handle  _handle;
     HANDLE  _prev_handle;
-    int     _columns;
-    int     _rows;
+    int32   _columns;
+    int32   _rows;
 };
 
 //------------------------------------------------------------------------------
@@ -134,10 +134,10 @@ TestConsole::~TestConsole()
 }
 
 //------------------------------------------------------------------------------
-void TestConsole::resize(int columns, int rows)
+void TestConsole::resize(int32 columns, int32 rows)
 {
-    SMALL_RECT rect = { 0, 0, short(columns - 1), short(rows - 1) };
-    COORD size = { short(columns), short(rows) };
+    SMALL_RECT rect = { 0, 0, int16(columns - 1), int16(rows - 1) };
+    COORD size = { int16(columns), int16(rows) };
 
     SetConsoleWindowInfo(_handle, TRUE, &rect);
     SetConsoleScreenBufferSize(_handle, size);
@@ -153,7 +153,7 @@ void TestConsole::resize(int columns, int rows)
 class Stepper
 {
 public:
-                    Stepper(int timeout_ms);
+                    Stepper(int32 timeout_ms);
                     ~Stepper();
     bool            step();
 
@@ -169,11 +169,11 @@ private:
     void            run_input_thread();
     Handle          _input_thread;
     volatile State  _state;
-    int             _timeout_ms;
+    int32           _timeout_ms;
 };
 
 //------------------------------------------------------------------------------
-Stepper::Stepper(int timeout_ms)
+Stepper::Stepper(int32 timeout_ms)
 : _state(state_running)
 , _timeout_ms(timeout_ms)
 {
@@ -329,15 +329,15 @@ void Runner::line_test()
     editor.start("prompt$ ");
 #endif // 0
     const char word[] = "9876543210";
-    for (int i = 0; i < 100;)
+    for (int32 i = 0; i < 100;)
     {
         editor.press_keys("_");
-        int j = rand() % (sizeof(word) - 2);
+        int32 j = rand() % (sizeof(word) - 2);
         editor.press_keys(word + j);
         i += sizeof(word) - j;
     }
 
-    int columns = _console.get_columns();
+    int32 columns = _console.get_columns();
     for (; columns > 16 && step(); --columns)
         _console.resize(columns);
 
@@ -351,7 +351,7 @@ void Runner::line_test()
 
 
 //------------------------------------------------------------------------------
-int draw_test(int, char**)
+int32 draw_test(int32, char**)
 {
     Runner().go();
     return 0;

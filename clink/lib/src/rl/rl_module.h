@@ -22,11 +22,11 @@ private:
     virtual void    on_end_line() override;
     virtual void    on_matches_changed(const Context& context) override;
     virtual void    on_input(const Input& Input, Result& result, const Context& context) override;
-    virtual void    on_terminal_resize(int columns, int rows, const Context& context) override;
+    virtual void    on_terminal_resize(int32 columns, int32 rows, const Context& context) override;
     void            done(const char* line);
     char*           _rl_buffer;
-    int             _prev_group;
-    int             _catch_group;
+    int32           _prev_group;
+    int32           _catch_group;
     bool            _done;
     bool            _eof;
 };

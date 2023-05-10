@@ -74,7 +74,7 @@ bool Host::edit_line(const char* prompt, StrBase& out)
     settings::load(settings_file.c_str());
 
     // Set up the string comparison mode.
-    int cmp_mode;
+    int32 cmp_mode;
     switch (g_ignore_case.get())
     {
     case 1:     cmp_mode = StrCompareScope::caseless; break;

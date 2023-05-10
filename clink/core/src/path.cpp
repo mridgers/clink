@@ -15,7 +15,7 @@
 //------------------------------------------------------------------------------
 static const char* get_last_separator(const char* in)
 {
-    for (int i = int(strlen(in)) - 1; i >= 0; --i)
+    for (int32 i = int32(strlen(in)) - 1; i >= 0; --i)
         if (path::is_separator(in[i]))
             return in + i;
 
@@ -23,7 +23,7 @@ static const char* get_last_separator(const char* in)
 }
 
 //------------------------------------------------------------------------------
-static int get_directory_end(const char* path)
+static int32 get_directory_end(const char* path)
 {
     if (const char* slash = get_last_separator(path))
     {
@@ -51,7 +51,7 @@ static int get_directory_end(const char* path)
             ++slash;
 #endif
 
-        return int(slash - path);
+        return int32(slash - path);
     }
 
 #if defined(PLATFORM_WINDOWS)
@@ -68,13 +68,13 @@ namespace path
 {
 
 //------------------------------------------------------------------------------
-void normalise(StrBase& in_out, int sep)
+void normalise(StrBase& in_out, int32 sep)
 {
     normalise(in_out.data(), sep);
 }
 
 //------------------------------------------------------------------------------
-void normalise(char* in_out, int sep)
+void normalise(char* in_out, int32 sep)
 {
     if (!sep)
         sep = PATH_SEP[0];
@@ -84,7 +84,7 @@ void normalise(char* in_out, int sep)
         in_out += 2;
 #endif
 
-    unsigned int piece_count = 0;
+    uint32 piece_count = 0;
 
     char* __restrict write = in_out;
     if (is_separator(*write))
@@ -135,7 +135,7 @@ void normalise(char* in_out, int sep)
 }
 
 //------------------------------------------------------------------------------
-bool is_separator(int c)
+bool is_separator(int32 c)
 {
 #if defined(PLATFORM_WINDOWS)
     return (c == '/' || c == '\\');
@@ -161,7 +161,7 @@ bool get_base_name(const char* in, StrBase& out)
     if (!get_name(in, out))
         return false;
 
-    int dot = out.last_of('.');
+    int32 dot = out.last_of('.');
     if (dot >= 0)
         out.truncate(dot);
 
@@ -171,14 +171,14 @@ bool get_base_name(const char* in, StrBase& out)
 //------------------------------------------------------------------------------
 bool get_directory(const char* in, StrBase& out)
 {
-    int end = get_directory_end(in);
+    int32 end = get_directory_end(in);
     return out.concat(in, end);
 }
 
 //------------------------------------------------------------------------------
 bool get_directory(StrBase& in_out)
 {
-    int end = get_directory_end(in_out.c_str());
+    int32 end = get_directory_end(in_out.c_str());
     in_out.truncate(end);
     return true;
 }
@@ -187,7 +187,7 @@ bool get_directory(StrBase& in_out)
 bool get_drive(const char* in, StrBase& out)
 {
 #if defined(PLATFORM_WINDOWS)
-    if ((in[1] != ':') || (unsigned(tolower(in[0]) - 'a') > ('z' - 'a')))
+    if ((in[1] != ':') || (uint32(tolower(in[0]) - 'a') > ('z' - 'a')))
         return false;
 
     return out.concat(in, 2);
@@ -200,7 +200,7 @@ bool get_drive(const char* in, StrBase& out)
 bool get_drive(StrBase& in_out)
 {
 #if defined(PLATFORM_WINDOWS)
-    if ((in_out[1] != ':') || (unsigned(tolower(in_out[0]) - 'a') > ('z' - 'a')))
+    if ((in_out[1] != ':') || (uint32(tolower(in_out[0]) - 'a') > ('z' - 'a')))
         return false;
 
     in_out.truncate(2);
@@ -220,7 +220,7 @@ bool get_extension(const char* in, StrBase& out)
     if (dot[1] == '\0')
         return false;
 
-    int end = get_directory_end(in);
+    int32 end = get_directory_end(in);
     if (in + end > dot)
         return false;
 
@@ -297,7 +297,7 @@ bool append(StrBase& out, const char* rhs)
 
     bool add_seperator = true;
 
-    int last = int(out.length() - 1);
+    int32 last = int32(out.length() - 1);
     if (last >= 0)
     {
         add_seperator &= !is_separator(out[last]);

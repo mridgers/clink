@@ -15,7 +15,7 @@
 #include <getopt.h>
 
 //------------------------------------------------------------------------------
-void puts_help(const char**, int);
+void puts_help(const char**, int32);
 
 //------------------------------------------------------------------------------
 static void list_keys()
@@ -47,7 +47,7 @@ static void list_options(const char* key)
             const char* options = ((const SettingEnum*)setting)->get_options();
             StrTokeniser tokens(options, ",");
             const char* start;
-            int length;
+            int32 length;
             while (tokens.next(start, length))
                 printf("%.*s\n", length, start);
         }
@@ -60,9 +60,9 @@ static void list_options(const char* key)
 //------------------------------------------------------------------------------
 static bool print_keys()
 {
-    int longest = 0;
+    int32 longest = 0;
     for (auto* next = settings::first(); next != nullptr; next = next->next())
-        longest = max(longest, int(strlen(next->get_name())));
+        longest = max(longest, int32(strlen(next->get_name())));
 
     for (auto* next = settings::first(); next != nullptr; next = next->next())
     {
@@ -150,7 +150,7 @@ static void print_help()
 }
 
 //------------------------------------------------------------------------------
-int set(int argc, char** argv)
+int32 set(int32 argc, char** argv)
 {
     // Parse command line arguments.
     struct option options[] = {
@@ -160,7 +160,7 @@ int set(int argc, char** argv)
     };
 
     bool complete = false;
-    int i;
+    int32 i;
     while ((i = getopt_long(argc, argv, "+hl", options, nullptr)) != -1)
     {
         switch (i)

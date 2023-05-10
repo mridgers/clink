@@ -58,7 +58,7 @@ static class : public MatchGenerator
         return true;
     }
 
-    virtual int get_prefix_length(const LineState& line) const override
+    virtual int32 get_prefix_length(const LineState& line) const override
     {
         StrIter end_word = line.get_end_word();
         const char* start = end_word.get_pointer();
@@ -71,7 +71,7 @@ static class : public MatchGenerator
         if (start[0] && start[1] == ':')
             c = max(start + 2, c);
 
-        return int(c - start);
+        return int32(c - start);
     }
 } g_file_generator;
 

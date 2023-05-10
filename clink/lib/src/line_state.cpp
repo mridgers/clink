@@ -10,8 +10,8 @@
 //------------------------------------------------------------------------------
 LineState::LineState(
     const char* line,
-    unsigned int cursor,
-    unsigned int command_offset,
+    uint32 cursor,
+    uint32 command_offset,
     const Array<Word>& words)
 : _words(words)
 , _line(line)
@@ -27,13 +27,13 @@ const char* LineState::get_line() const
 }
 
 //------------------------------------------------------------------------------
-unsigned int LineState::get_cursor() const
+uint32 LineState::get_cursor() const
 {
     return _cursor;
 }
 
 //------------------------------------------------------------------------------
-unsigned int LineState::get_command_offset() const
+uint32 LineState::get_command_offset() const
 {
     return _command_offset;
 }
@@ -45,13 +45,13 @@ const Array<Word>& LineState::get_words() const
 }
 
 //------------------------------------------------------------------------------
-unsigned int LineState::get_word_count() const
+uint32 LineState::get_word_count() const
 {
     return _words.size();
 }
 
 //------------------------------------------------------------------------------
-bool LineState::get_word(unsigned int index, StrBase& out) const
+bool LineState::get_word(uint32 index, StrBase& out) const
 {
     const Word* word = _words[index];
     if (word == nullptr)
@@ -62,7 +62,7 @@ bool LineState::get_word(unsigned int index, StrBase& out) const
 }
 
 //------------------------------------------------------------------------------
-StrIter LineState::get_word(unsigned int index) const
+StrIter LineState::get_word(uint32 index) const
 {
     if (const Word* word = _words[index])
         return StrIter(_line + word->offset, word->length);
@@ -73,13 +73,13 @@ StrIter LineState::get_word(unsigned int index) const
 //------------------------------------------------------------------------------
 bool LineState::get_end_word(StrBase& out) const
 {
-    int n = get_word_count();
+    int32 n = get_word_count();
     return (n ? get_word(n - 1, out) : false);
 }
 
 //------------------------------------------------------------------------------
 StrIter LineState::get_end_word() const
 {
-    int n = get_word_count();
+    int32 n = get_word_count();
     return (n ? get_word(n - 1) : StrIter());
 }

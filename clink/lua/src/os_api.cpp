@@ -20,7 +20,7 @@ extern SettingBool g_glob_unc;
 
 
 //------------------------------------------------------------------------------
-static const char* get_string(lua_State* state, int index)
+static const char* get_string(lua_State* state, int32 index)
 {
     if (lua_gettop(state) < index || !lua_isstring(state, index))
         return nullptr;
@@ -32,7 +32,7 @@ static const char* get_string(lua_State* state, int index)
 /// -name:  os.chdir
 /// -arg:   path:string
 /// -ret:   boolean
-static int set_current_dir(lua_State* state)
+static int32 set_current_dir(lua_State* state)
 {
     bool ok = false;
     if (const char* dir = get_string(state, 1))
@@ -45,7 +45,7 @@ static int set_current_dir(lua_State* state)
 //------------------------------------------------------------------------------
 /// -name:  os.getcwd
 /// -ret:   string
-static int get_current_dir(lua_State* state)
+static int32 get_current_dir(lua_State* state)
 {
     Str<288> dir;
     os::get_current_dir(dir);
@@ -58,7 +58,7 @@ static int get_current_dir(lua_State* state)
 /// -name:  os.mkdir
 /// -arg:   path:string
 /// -ret:   boolean
-static int make_dir(lua_State* state)
+static int32 make_dir(lua_State* state)
 {
     bool ok = false;
     if (const char* dir = get_string(state, 1))
@@ -72,7 +72,7 @@ static int make_dir(lua_State* state)
 /// -name:  os.rmdir
 /// -arg:   path:string
 /// -ret:   boolean
-static int remove_dir(lua_State* state)
+static int32 remove_dir(lua_State* state)
 {
     bool ok = false;
     if (const char* dir = get_string(state, 1))
@@ -86,7 +86,7 @@ static int remove_dir(lua_State* state)
 /// -name:  os.isdir
 /// -arg:   path:string
 /// -ret:   boolean
-static int is_dir(lua_State* state)
+static int32 is_dir(lua_State* state)
 {
     const char* path = get_string(state, 1);
     if (path == nullptr)
@@ -100,7 +100,7 @@ static int is_dir(lua_State* state)
 /// -name:  os.isfile
 /// -arg:   path:string
 /// -ret:   boolean
-static int is_file(lua_State* state)
+static int32 is_file(lua_State* state)
 {
     const char* path = get_string(state, 1);
     if (path == nullptr)
@@ -114,7 +114,7 @@ static int is_file(lua_State* state)
 /// -name:  os.unlink
 /// -arg:   path:string
 /// -ret:   boolean
-static int unlink(lua_State* state)
+static int32 unlink(lua_State* state)
 {
     const char* path = get_string(state, 1);
     if (path == nullptr)
@@ -137,7 +137,7 @@ static int unlink(lua_State* state)
 /// -arg:   src:string
 /// -arg:   dest:string
 /// -ret:   boolean
-static int move(lua_State* state)
+static int32 move(lua_State* state)
 {
     const char* src = get_string(state, 1);
     const char* dest = get_string(state, 2);
@@ -158,7 +158,7 @@ static int move(lua_State* state)
 /// -arg:   src:string
 /// -arg:   dest:string
 /// -ret:   boolean
-static int copy(lua_State* state)
+static int32 copy(lua_State* state)
 {
     const char* src = get_string(state, 1);
     const char* dest = get_string(state, 2);
@@ -170,10 +170,10 @@ static int copy(lua_State* state)
 }
 
 //------------------------------------------------------------------------------
-static int glob_impl(lua_State* state, bool dirs_only)
+static int32 glob_impl(lua_State* state, bool dirs_only)
 {
     auto not_ok = [=] () {
-        lua_pushcclosure(state, [] (lua_State*) -> int { return 0; }, 0);
+        lua_pushcclosure(state, [] (lua_State*) -> int32 { return 0; }, 0);
         return 1;
     };
 
@@ -185,8 +185,8 @@ static int glob_impl(lua_State* state, bool dirs_only)
         if (!g_glob_unc.get())
             return not_ok();
 
-    auto impl = [] (lua_State* state) -> int {
-        int self_index = lua_upvalueindex(1);
+    auto impl = [] (lua_State* state) -> int32 {
+        int32 self_index = lua_upvalueindex(1);
         auto* glbbr = (Globber*)lua_touserdata(state, self_index);
 
         Str<288> file;
@@ -214,7 +214,7 @@ static int glob_impl(lua_State* state, bool dirs_only)
 /// -name:  os.globdirs
 /// -arg:   globpattern:string
 /// -ret:   table
-static int glob_dirs(lua_State* state)
+static int32 glob_dirs(lua_State* state)
 {
     return glob_impl(state, true);
 }
@@ -223,7 +223,7 @@ static int glob_dirs(lua_State* state)
 /// -name:  os.globfiles
 /// -arg:   globpattern:string
 /// -ret:   table
-static int glob_files(lua_State* state)
+static int32 glob_files(lua_State* state)
 {
     return glob_impl(state, false);
 }
@@ -232,7 +232,7 @@ static int glob_files(lua_State* state)
 /// -name:  os.getenv
 /// -arg:   path:string
 /// -ret:   string or nil
-static int get_env(lua_State* state)
+static int32 get_env(lua_State* state)
 {
     const char* name = get_string(state, 1);
     if (name == nullptr)
@@ -251,7 +251,7 @@ static int get_env(lua_State* state)
 /// -arg:   name:string
 /// -arg:   value:string
 /// -ret:   boolean
-static int set_env(lua_State* state)
+static int32 set_env(lua_State* state)
 {
     const char* name = get_string(state, 1);
     const char* value = get_string(state, 2);
@@ -266,7 +266,7 @@ static int set_env(lua_State* state)
 //------------------------------------------------------------------------------
 /// -name:  os.getenvnames
 /// -ret:   table
-static int get_env_names(lua_State* state)
+static int32 get_env_names(lua_State* state)
 {
     lua_createtable(state, 0, 0);
 
@@ -275,7 +275,7 @@ static int get_env_names(lua_State* state)
         return 1;
 
     char* strings = root;
-    int i = 1;
+    int32 i = 1;
     while (*strings)
     {
         // Skip env vars that start with a '='. They're hidden ones.
@@ -305,7 +305,7 @@ static int get_env_names(lua_State* state)
 //------------------------------------------------------------------------------
 /// -name:  os.gethost
 /// -ret:   string
-static int get_host(lua_State* state)
+static int32 get_host(lua_State* state)
 {
     Str<280> host;
     if (Process().get_file_name(host))
@@ -318,7 +318,7 @@ static int get_host(lua_State* state)
 //------------------------------------------------------------------------------
 /// -name:  os.getaliases
 /// -ret:   string
-static int get_aliases(lua_State* state)
+static int32 get_aliases(lua_State* state)
 {
     lua_createtable(state, 0, 0);
 
@@ -331,7 +331,7 @@ static int get_aliases(lua_State* state)
     char* name = (char*)path::get_name(path.c_str());
 
     // Get the aliases (aka. Doskey macros).
-    int buffer_size = GetConsoleAliasesLength(name);
+    int32 buffer_size = GetConsoleAliasesLength(name);
     if (buffer_size == 0)
         return 1;
 
@@ -342,7 +342,7 @@ static int get_aliases(lua_State* state)
 
     // Parse the result into a lua table.
     const char* alias = buffer.c_str();
-    for (int i = 1; int(alias - buffer.c_str()) < buffer_size; ++i)
+    for (int32 i = 1; int32(alias - buffer.c_str()) < buffer_size; ++i)
     {
         const char* c = strchr(alias, '=');
         if (c == nullptr)
@@ -364,7 +364,7 @@ void os_lua_initialise(LuaState& lua)
 {
     struct {
         const char* name;
-        int         (*method)(lua_State*);
+        int32       (*method)(lua_State*);
     } methods[] = {
         { "chdir",       &set_current_dir },
         { "getcwd",      &get_current_dir },

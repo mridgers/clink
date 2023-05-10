@@ -26,7 +26,7 @@ TEST_CASE("Lua os.glob*")
 
     lua_getglobal(state, "os");
 
-    int expected;
+    int32 expected;
     SECTION("globfiles")
     {
         lua_pushliteral(state, "globfiles");

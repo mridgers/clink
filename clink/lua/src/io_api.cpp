@@ -41,18 +41,18 @@ class HandleReader
 public:
                         HandleReader(HANDLE h) : HandleIo(h) {}
                         ~HandleReader();
-    bool                get(unsigned int index, int& c);
+    bool                get(uint32 index, int32& c);
     const char*         get_pointer() const;
-    void                consume(unsigned int size);
-    unsigned int        read(unsigned int size);
+    void                consume(uint32 size);
+    uint32              read(uint32 size);
 
 private:
     bool                acquire();
-    static const int    BUFFER_SIZE = 8192;
+    static const int32  BUFFER_SIZE = 8192;
     char*               _buffer = nullptr;
-    unsigned int        _buffer_size = 0;
-    unsigned int        _data_size = 0;
-    unsigned int        _cursor = 0;
+    uint32              _buffer_size = 0;
+    uint32              _data_size = 0;
+    uint32              _cursor = 0;
 };
 
 //------------------------------------------------------------------------------
@@ -62,14 +62,14 @@ HandleReader::~HandleReader()
 }
 
 //------------------------------------------------------------------------------
-bool HandleReader::get(unsigned int index, int& c)
+bool HandleReader::get(uint32 index, int32& c)
 {
     index += _cursor;
     while (index >= _data_size)
         if (!acquire())
             return false;
 
-    c = unsigned(_buffer[index]);
+    c = uint32(_buffer[index]);
     return true;
 }
 
@@ -80,7 +80,7 @@ const char* HandleReader::get_pointer() const
 }
 
 //------------------------------------------------------------------------------
-void HandleReader::consume(unsigned int size)
+void HandleReader::consume(uint32 size)
 {
     _cursor = min(_data_size, _cursor + size);
     if (_cursor == _data_size)
@@ -88,7 +88,7 @@ void HandleReader::consume(unsigned int size)
 }
 
 //------------------------------------------------------------------------------
-unsigned int HandleReader::read(unsigned int size)
+uint32 HandleReader::read(uint32 size)
 {
     while (_data_size - _cursor < size)
         if (!acquire())
@@ -103,7 +103,7 @@ bool HandleReader::acquire()
     if (!is_valid())
         return false;
 
-    unsigned int remaining = _buffer_size - _data_size;
+    uint32 remaining = _buffer_size - _data_size;
     if (remaining == 0)
     {
         remaining = BUFFER_SIZE;
@@ -132,11 +132,11 @@ class HandleWriter
 {
 public:
                 HandleWriter(HANDLE h) : HandleIo(h) {}
-    void        write(const char* data, unsigned int size);
+    void        write(const char* data, uint32 size);
 };
 
 //------------------------------------------------------------------------------
-void HandleWriter::write(const char* data, unsigned int size)
+void HandleWriter::write(const char* data, uint32 size)
 {
     DWORD written;
     if (WriteFile(_handle, data, DWORD(size), &written, nullptr) == FALSE)
@@ -151,13 +151,13 @@ class Popen2Lua
 public:
                     Popen2Lua(HANDLE job, HANDLE read, HANDLE write);
                     ~Popen2Lua();
-    int             read(lua_State* state);
-    int             lines(lua_State* state);
-    int             write(lua_State* state);
+    int32           read(lua_State* state);
+    int32           lines(lua_State* state);
+    int32           write(lua_State* state);
 
 private:
-    int             read_line(lua_State* state, bool include_eol);
-    int             read(lua_State* state, unsigned int bytes);
+    int32           read_line(lua_State* state, bool include_eol);
+    int32           read(lua_State* state, uint32 bytes);
     HANDLE          _job;
     HandleReader    _reader;
     HandleWriter    _writer;
@@ -179,10 +179,10 @@ Popen2Lua::~Popen2Lua()
 }
 
 //------------------------------------------------------------------------------
-int Popen2Lua::read_line(lua_State* state, bool include_eol)
+int32 Popen2Lua::read_line(lua_State* state, bool include_eol)
 {
-    unsigned int count = 0;
-    for (int c; _reader.get(count, c); )
+    uint32 count = 0;
+    for (int32 c; _reader.get(count, c); )
     {
         ++count;
         if (c == '\n')
@@ -192,7 +192,7 @@ int Popen2Lua::read_line(lua_State* state, bool include_eol)
     if (count == 0 && !_reader.is_valid())
         return 0;
 
-    unsigned int size = count;
+    uint32 size = count;
     const char* data = _reader.get_pointer();
 
     if (!include_eol)
@@ -208,9 +208,9 @@ int Popen2Lua::read_line(lua_State* state, bool include_eol)
 }
 
 //------------------------------------------------------------------------------
-int Popen2Lua::read(lua_State* state, unsigned int bytes)
+int32 Popen2Lua::read(lua_State* state, uint32 bytes)
 {
-    unsigned int size = _reader.read(bytes);
+    uint32 size = _reader.read(bytes);
     const char* data = _reader.get_pointer();
     lua_pushlstring(state, data, size);
     _reader.consume(size);
@@ -218,17 +218,17 @@ int Popen2Lua::read(lua_State* state, unsigned int bytes)
 }
 
 //------------------------------------------------------------------------------
-int Popen2Lua::read(lua_State* state)
+int32 Popen2Lua::read(lua_State* state)
 {
     if (!_reader.is_valid())
         return 0;
 
-    int arg_count = lua_gettop(state);
+    int32 arg_count = lua_gettop(state);
     if (arg_count >= 2)
     {
         if (lua_isnumber(state, 2))
         {
-            unsigned int size = unsigned(lua_tointeger(state, 2));
+            uint32 size = uint32(lua_tointeger(state, 2));
             return read(state, size);
         }
 
@@ -246,13 +246,13 @@ int Popen2Lua::read(lua_State* state)
 }
 
 //------------------------------------------------------------------------------
-int Popen2Lua::lines(lua_State* state)
+int32 Popen2Lua::lines(lua_State* state)
 {
     if (!_reader.is_valid())
         return 0;
 
-    auto impl = [] (lua_State* state) -> int {
-        int self_index = lua_upvalueindex(1);
+    auto impl = [] (lua_State* state) -> int32 {
+        int32 self_index = lua_upvalueindex(1);
         auto* self = (Popen2Lua*)lua_touserdata(state, self_index);
         return self->read_line(state, false);
     };
@@ -263,12 +263,12 @@ int Popen2Lua::lines(lua_State* state)
 }
 
 //------------------------------------------------------------------------------
-int Popen2Lua::write(lua_State* state)
+int32 Popen2Lua::write(lua_State* state)
 {
     if (!_writer.is_valid())
         return 0;
 
-    int arg_count = lua_gettop(state);
+    int32 arg_count = lua_gettop(state);
     if (arg_count < 2 || lua_isnil(state, 2))
     {
         _writer.close();
@@ -280,7 +280,7 @@ int Popen2Lua::write(lua_State* state)
     if (data == nullptr)
         return 0;
 
-    _writer.write(data, unsigned(bytes));
+    _writer.write(data, uint32(bytes));
     return 0;
 }
 
@@ -290,7 +290,7 @@ int Popen2Lua::write(lua_State* state)
 /// -name:  io.popen2
 /// -arg:   command:string
 /// -ret:   string
-static int popen2(lua_State* state)
+static int32 popen2(lua_State* state)
 {
     // Get the command line to execute.
     if (lua_gettop(state) < 1 || !lua_isstring(state, 1))
@@ -313,7 +313,7 @@ static int popen2(lua_State* state)
     pipe_handles pipes;
 
     SECURITY_ATTRIBUTES sa = { sizeof(sa), nullptr, TRUE };
-    for (int i = 0; i < sizeof_array(pipes.handles); i += 2)
+    for (int32 i = 0; i < sizeof_array(pipes.handles); i += 2)
         if (!CreatePipe(&pipes.handles[i], &pipes.handles[i + 1], &sa, 0))
             return 0;
 
@@ -360,7 +360,7 @@ static int popen2(lua_State* state)
         lua_createtable(state, 0, 0);
 
         #define BIND_METHOD(name) do {                                  \
-                auto name##_thunk = [] (lua_State* state) -> int {      \
+                auto name##_thunk = [] (lua_State* state) -> int32 {      \
                     auto* self = (Popen2Lua*)lua_touserdata(state, 1); \
                     return self ? self->name(state) : 0;                \
                 };                                                      \
@@ -375,7 +375,7 @@ static int popen2(lua_State* state)
 
         lua_setfield(state, -2, "__index");
 
-        auto gc_thunk = [] (lua_State* state) -> int {
+        auto gc_thunk = [] (lua_State* state) -> int32 {
             auto* self = (Popen2Lua*)lua_touserdata(state, 1);
             self->~Popen2Lua();
             return 0;
@@ -396,7 +396,7 @@ void io_lua_initialise(LuaState& lua)
 {
     struct {
         const char* name;
-        int         (*method)(lua_State*);
+        int32       (*method)(lua_State*);
     } methods[] = {
         { "popen2", &popen2 },
     };

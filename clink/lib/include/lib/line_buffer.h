@@ -12,11 +12,11 @@ public:
     virtual void            begin_line() = 0;
     virtual void            end_line() = 0;
     virtual const char*     get_buffer() const = 0;
-    virtual unsigned int    get_length() const = 0;
-    virtual unsigned int    get_cursor() const = 0;
-    virtual unsigned int    set_cursor(unsigned int pos) = 0;
+    virtual uint32          get_length() const = 0;
+    virtual uint32          get_cursor() const = 0;
+    virtual uint32          set_cursor(uint32 pos) = 0;
     virtual bool            insert(const char* text) = 0;
-    virtual bool            remove(unsigned int from, unsigned int to) = 0;
+    virtual bool            remove(uint32 from, uint32 to) = 0;
     virtual void            begin_undo_group() = 0;
     virtual void            end_undo_group() = 0;
     virtual void            draw() = 0;

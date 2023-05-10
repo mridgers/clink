@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <core/base.h>
+
 #include <ctype.h>
 
 #include <Windows.h>

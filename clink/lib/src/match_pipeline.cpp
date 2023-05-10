@@ -15,17 +15,17 @@
 #include <algorithm>
 
 //------------------------------------------------------------------------------
-static unsigned int normal_selector(
+static uint32 normal_selector(
     const char* needle,
     const MatchStore& Store,
     MatchInfo* infos,
-    int count)
+    int32 count)
 {
-    int select_count = 0;
-    for (int i = 0; i < count; ++i)
+    int32 select_count = 0;
+    for (int32 i = 0; i < count; ++i)
     {
         const char* name = Store.get(infos[i].store_id);
-        int j = str_compare(needle, name);
+        int32 j = str_compare(needle, name);
         infos[i].select = (j < 0 || !needle[j]);
         ++select_count;
     }
@@ -34,7 +34,7 @@ static unsigned int normal_selector(
 }
 
 //------------------------------------------------------------------------------
-static void alpha_sorter(const MatchStore& Store, MatchInfo* infos, int count)
+static void alpha_sorter(const MatchStore& Store, MatchInfo* infos, int32 count)
 {
     auto predicate = [&] (const MatchInfo& lhs, const MatchInfo& rhs) {
         const char* l = Store.get(lhs.store_id);
@@ -73,12 +73,12 @@ void MatchPipeline::generate(
 //------------------------------------------------------------------------------
 void MatchPipeline::fill_info() const
 {
-    int count = _matches.get_info_count();
+    int32 count = _matches.get_info_count();
     if (!count)
         return;
 
     MatchInfo* info = _matches.get_infos();
-    for (int i = 0; i < count; ++i, ++info)
+    for (int32 i = 0; i < count; ++i, ++info)
     {
         const char* displayable = _matches.get_displayable(i);
         info->cell_count = cell_count(displayable);
@@ -88,11 +88,11 @@ void MatchPipeline::fill_info() const
 //------------------------------------------------------------------------------
 void MatchPipeline::select(const char* needle) const
 {
-    int count = _matches.get_info_count();
+    int32 count = _matches.get_info_count();
     if (!count)
         return;
 
-    unsigned int selected_count = 0;
+    uint32 selected_count = 0;
     selected_count = normal_selector(needle, _matches.get_store(),
         _matches.get_infos(), count);
 
@@ -102,7 +102,7 @@ void MatchPipeline::select(const char* needle) const
 //------------------------------------------------------------------------------
 void MatchPipeline::sort() const
 {
-    int count = _matches.get_match_count();
+    int32 count = _matches.get_match_count();
     if (!count)
         return;
 

@@ -6,14 +6,14 @@
 
 //------------------------------------------------------------------------------
 template <>
-int StrIterImpl<char>::next()
+int32 StrIterImpl<char>::next()
 {
     if (!more())
         return 0;
 
-    int ax = 0;
-    int encode_length = 0;
-    while (int c = *_ptr++)
+    int32 ax = 0;
+    int32 encode_length = 0;
+    while (int32 c = *_ptr++)
     {
         ax = (ax << 6) | (c & 0x7f);
         if (encode_length)
@@ -39,13 +39,13 @@ int StrIterImpl<char>::next()
 
 //------------------------------------------------------------------------------
 template <>
-int StrIterImpl<wchar_t>::next()
+int32 StrIterImpl<wchar_t>::next()
 {
     if (!more())
         return 0;
 
-    int ax = 0;
-    while (int c = *_ptr++)
+    int32 ax = 0;
+    while (int32 c = *_ptr++)
     {
         // Decode surrogate pairs.
         if ((c & 0xfc00) == 0xd800)
@@ -64,14 +64,14 @@ int StrIterImpl<wchar_t>::next()
 
 //------------------------------------------------------------------------------
 template <>
-unsigned int StrIterImpl<char>::length() const
+uint32 StrIterImpl<char>::length() const
 {
-    return (unsigned int)((_ptr <= _end) ? _end - _ptr : strlen(_ptr));
+    return (uint32)((_ptr <= _end) ? _end - _ptr : strlen(_ptr));
 }
 
 //------------------------------------------------------------------------------
 template <>
-unsigned int StrIterImpl<wchar_t>::length() const
+uint32 StrIterImpl<wchar_t>::length() const
 {
-    return (unsigned int)((_ptr <= _end) ? _end - _ptr : wcslen(_ptr));
+    return (uint32)((_ptr <= _end) ? _end - _ptr : wcslen(_ptr));
 }

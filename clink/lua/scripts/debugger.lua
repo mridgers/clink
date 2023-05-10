@@ -366,7 +366,7 @@ help [command]      -- show this list or help for command|
 
 The statement can be anything that is legal in the context, including
 assignments. Such assignments affect the context and will be in force
-immediately. Any results returned are printed. Use '=' as a short-hand
+immediately. Any results returned are printed. Use '=' as a int16-hand
 for 'return', e.g. "=func(arg)" will call 'func' with 'arg' and print
 the results, and "=var" will just print the value of 'var'.
 ]],

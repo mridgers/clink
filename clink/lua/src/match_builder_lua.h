@@ -15,11 +15,11 @@ class MatchBuilderLua
 public:
                     MatchBuilderLua(MatchBuilder& Builder);
                     ~MatchBuilderLua();
-    int             add_match(lua_State* state);
-    int             add_matches(lua_State* state);
-    int             set_prefix_included(lua_State* state);
+    int32           add_match(lua_State* state);
+    int32           add_matches(lua_State* state);
+    int32           set_prefix_included(lua_State* state);
 
 private:
-    bool            add_match_impl(lua_State* state, int stack_index);
+    bool            add_match_impl(lua_State* state, int32 stack_index);
     MatchBuilder&   _builder;
 };

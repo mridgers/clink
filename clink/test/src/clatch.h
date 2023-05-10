@@ -42,7 +42,7 @@ struct Section
     Section*            _parent = nullptr;
     Section*            _child = nullptr;
     Section*            _sibling = nullptr;
-    unsigned int        _assert_count = 0;
+    uint32              _assert_count = 0;
     bool                _active = false;
 
     struct Scope
@@ -80,9 +80,9 @@ struct Test
 //------------------------------------------------------------------------------
 inline bool run(const char* prefix="")
 {
-    int fail_count = 0;
-    int test_count = 0;
-    int assert_count = 0;
+    int32 fail_count = 0;
+    int32 test_count = 0;
+    int32 assert_count = 0;
 
     for (Test* Test = Test::get_head(); Test != nullptr; Test = Test->_next)
     {
@@ -132,7 +132,7 @@ inline bool run(const char* prefix="")
 }
 
 //------------------------------------------------------------------------------
-inline void fail(const char* expr, const char* file, int line)
+inline void fail(const char* expr, const char* file, int32 line)
 {
     Section* failed_section = clatch::Section::get_outer_store();
 
@@ -149,7 +149,7 @@ inline void fail(const char* expr, const char* file, int line)
 
 //------------------------------------------------------------------------------
 template <typename CALLBACK>
-void fail(const char* expr, const char* file, int line, CALLBACK&& cb)
+void fail(const char* expr, const char* file, int32 line, CALLBACK&& cb)
 {
     puts("\n");
     cb();

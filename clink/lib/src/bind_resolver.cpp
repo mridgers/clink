@@ -11,7 +11,7 @@
 #include <new>
 
 //------------------------------------------------------------------------------
-BindResolver::Binding::Binding(BindResolver* resolver, int node_index)
+BindResolver::Binding::Binding(BindResolver* resolver, int32 node_index)
 : _outer(resolver)
 , _node_index(node_index)
 {
@@ -19,7 +19,7 @@ BindResolver::Binding::Binding(BindResolver* resolver, int node_index)
     const auto& Node = binder.get_node(_node_index);
 
     _module = Node.module;
-    _depth = max<unsigned char>(1, Node.depth);
+    _depth = max<uint8>(1, Node.depth);
     _id = Node.id;
 }
 
@@ -40,7 +40,7 @@ EditorModule* BindResolver::Binding::get_module() const
 }
 
 //------------------------------------------------------------------------------
-unsigned char BindResolver::Binding::get_id() const
+uint8 BindResolver::Binding::get_id() const
 {
     if (_outer == nullptr)
         return 0xff;
@@ -74,9 +74,9 @@ BindResolver::BindResolver(const Binder& binder)
 }
 
 //------------------------------------------------------------------------------
-void BindResolver::set_group(int group)
+void BindResolver::set_group(int32 group)
 {
-    if (unsigned(group) - 1 >= sizeof_array(_binder._nodes) - 1)
+    if (uint32(group) - 1 >= sizeof_array(_binder._nodes) - 1)
         return;
 
     if (_group == group || !_binder.get_node(group - 1).is_group)
@@ -88,7 +88,7 @@ void BindResolver::set_group(int group)
 }
 
 //------------------------------------------------------------------------------
-int BindResolver::get_group() const
+int32 BindResolver::get_group() const
 {
     return _group;
 }
@@ -96,7 +96,7 @@ int BindResolver::get_group() const
 //------------------------------------------------------------------------------
 void BindResolver::reset()
 {
-    int group = _group;
+    int32 group = _group;
 
     new (this) BindResolver(_binder);
 
@@ -105,7 +105,7 @@ void BindResolver::reset()
 }
 
 //------------------------------------------------------------------------------
-bool BindResolver::step(unsigned char key)
+bool BindResolver::step(uint8 key)
 {
     if (_key_count >= sizeof_array(_keys))
     {
@@ -120,9 +120,9 @@ bool BindResolver::step(unsigned char key)
 }
 
 //------------------------------------------------------------------------------
-bool BindResolver::step_impl(unsigned char key)
+bool BindResolver::step_impl(uint8 key)
 {
-    int next = _binder.find_child(_node_index, key);
+    int32 next = _binder.find_child(_node_index, key);
     if (!next)
         return true;
 
@@ -138,14 +138,14 @@ BindResolver::Binding BindResolver::next()
     {
         _pending_input = false;
 
-        unsigned int keys_remaining = _key_count - _tail;
+        uint32 keys_remaining = _key_count - _tail;
         if (!keys_remaining || keys_remaining >= sizeof_array(_keys))
         {
             reset();
             return Binding();
         }
 
-        for (int i = _tail, n = _key_count; i < n; ++i)
+        for (int32 i = _tail, n = _key_count; i < n; ++i)
             if (step_impl(_keys[i]))
                 break;
     }
@@ -156,12 +156,12 @@ BindResolver::Binding BindResolver::next()
         const Binder::Node& Node = _binder.get_node(_node_index);
 
         // Move iteration along to the next Node.
-        int node_index = _node_index;
+        int32 node_index = _node_index;
         _node_index = Node.next;
 
         // Check to see if where we're currently at a Node in the tree that is
         // a valid bind (at the point of call).
-        int key_index = _tail + Node.depth - 1;
+        int32 key_index = _tail + Node.depth - 1;
         if (Node.bound && (!Node.key || Node.key == _keys[key_index]))
             return Binding(this, node_index);
     }

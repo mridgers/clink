@@ -63,17 +63,17 @@ void LineEditorImpl::initialise()
         return;
 
     struct : public EditorModule::Binder {
-        virtual int get_group(const char* name) const override
+        virtual int32 get_group(const char* name) const override
         {
             return binder->get_group(name);
         }
 
-        virtual int create_group(const char* name) override
+        virtual int32 create_group(const char* name) override
         {
             return binder->create_group(name);
         }
 
-        virtual bool bind(unsigned int group, const char* chord, unsigned char key) override
+        virtual bool bind(uint32 group, const char* chord, uint8 key) override
         {
             return binder->bind(group, chord, *module, key);
         }
@@ -144,7 +144,7 @@ bool LineEditorImpl::add_generator(MatchGenerator& generator)
 }
 
 //------------------------------------------------------------------------------
-bool LineEditorImpl::get_line(char* out, int out_size)
+bool LineEditorImpl::get_line(char* out, int32 out_size)
 {
     if (check_flag(flag_editing))
         end_line();
@@ -158,7 +158,7 @@ bool LineEditorImpl::get_line(char* out, int out_size)
 }
 
 //------------------------------------------------------------------------------
-bool LineEditorImpl::edit(char* out, int out_size)
+bool LineEditorImpl::edit(char* out, int32 out_size)
 {
     // Update first so the init state goes through.
     while (update())
@@ -192,12 +192,12 @@ bool LineEditorImpl::update()
 //------------------------------------------------------------------------------
 void LineEditorImpl::update_input()
 {
-    int key = _desc.input->read();
+    int32 key = _desc.input->read();
 
     if (key == TerminalIn::input_terminal_resize)
     {
-        int columns = _desc.output->get_columns();
-        int rows = _desc.output->get_rows();
+        int32 columns = _desc.output->get_columns();
+        int32 rows = _desc.output->get_rows();
         LineState line = get_linestate();
         EditorModule::Context context = get_context(line);
         for (auto* module : _modules)
@@ -232,11 +232,11 @@ void LineEditorImpl::update_input()
         virtual void    done(bool eof) override                   { flags |= flag_done|(eof ? flag_eof : 0); }
         virtual void    redraw() override                         { flags |= flag_redraw; }
         virtual void    append_match_lcd() override               { flags |= flag_append_lcd; }
-        virtual void    accept_match(unsigned int index) override { match = index; }
-        virtual int     set_bind_group(int id) override           { int t = group; group = id; return t; }
-        int             match;  // = -1;  <!
-        unsigned short  group;  //        <! MSVC bugs; see connect
-        unsigned char   flags;  // = 0;   <! issues about C2905
+        virtual void    accept_match(uint32 index) override { match = index; }
+        virtual int32   set_bind_group(int32 id) override           { int32 t = group; group = id; return t; }
+        int32           match;  // = -1;  <!
+        uint16          group;  //        <! MSVC bugs; see connect
+        uint8           flags;  // = 0;   <! issues about C2905
     };
 
     while (auto Binding = _bind_resolver.next())
@@ -249,7 +249,7 @@ void LineEditorImpl::update_input()
 
         Str<16> chord;
         EditorModule* module = Binding.get_module();
-        unsigned char id = Binding.get_id();
+        uint8 id = Binding.get_id();
         Binding.get_chord(chord);
 
         LineState line = get_linestate();
@@ -289,10 +289,10 @@ void LineEditorImpl::update_input()
 }
 
 //------------------------------------------------------------------------------
-void LineEditorImpl::find_command_bounds(const char*& start, int& length)
+void LineEditorImpl::find_command_bounds(const char*& start, int32& length)
 {
     const char* line_buffer = _buffer.get_buffer();
-    unsigned int line_cursor = _buffer.get_cursor();
+    uint32 line_cursor = _buffer.get_cursor();
 
     start = line_buffer;
     length = line_cursor;
@@ -320,36 +320,36 @@ void LineEditorImpl::collect_words()
     _words.clear();
 
     const char* line_buffer = _buffer.get_buffer();
-    unsigned int line_cursor = _buffer.get_cursor();
+    uint32 line_cursor = _buffer.get_cursor();
 
     const char* command_start;
-    int command_length;
+    int32 command_length;
     find_command_bounds(command_start, command_length);
 
-    _command_offset = int(command_start - line_buffer);
+    _command_offset = int32(command_start - line_buffer);
 
     StrIter token_iter(command_start, command_length);
     StrTokeniser tokens(token_iter, _desc.word_delims);
     tokens.add_quote_pair(_desc.quote_pair);
     while (1)
     {
-        int length = 0;
+        int32 length = 0;
         const char* start = nullptr;
         StrToken token = tokens.next(start, length);
         if (!token)
             break;
 
         // Add the word.
-        unsigned int offset = unsigned(start - line_buffer);
+        uint32 offset = uint32(start - line_buffer);
         _words.push_back();
-        *(_words.back()) = { offset, unsigned(length), 0, token.delim };
+        *(_words.back()) = { offset, uint32(length), 0, token.delim };
     }
 
     // Add an empty word if the cursor is at the beginning of one.
     Word* end_word = _words.back();
     if (!end_word || end_word->offset + end_word->length < line_cursor)
     {
-        unsigned char delim = 0;
+        uint8 delim = 0;
         if (line_cursor)
             delim = line_buffer[line_cursor - 1];
 
@@ -365,8 +365,8 @@ void LineEditorImpl::collect_words()
 
         const char* start = line_buffer + word.offset;
 
-        int start_quoted = (start[0] == _desc.quote_pair[0]);
-        int end_quoted = 0;
+        int32 start_quoted = (start[0] == _desc.quote_pair[0]);
+        int32 end_quoted = 0;
         if (word.length > 1)
             end_quoted = (start[word.length - 1] == get_closing_quote(_desc.quote_pair));
 
@@ -379,18 +379,18 @@ void LineEditorImpl::collect_words()
     // generators. This is a little clunky but works well enough.
     LineState line = get_linestate();
     end_word = _words.back();
-    int prefix_length = 0;
+    int32 prefix_length = 0;
     const char* word_start = line_buffer + end_word->offset;
     for (const auto* generator : _generators)
     {
-        int i = generator->get_prefix_length(line);
+        int32 i = generator->get_prefix_length(line);
         prefix_length = max(prefix_length, i);
     }
-    end_word->length = min<unsigned int>(prefix_length, end_word->length);
+    end_word->length = min<uint32>(prefix_length, end_word->length);
 }
 
 //------------------------------------------------------------------------------
-void LineEditorImpl::accept_match(unsigned int index)
+void LineEditorImpl::accept_match(uint32 index)
 {
     if (index >= _matches.get_match_count())
         return;
@@ -400,8 +400,8 @@ void LineEditorImpl::accept_match(unsigned int index)
         return;
 
     Word end_word = *(_words.back());
-    int word_start = end_word.offset;
-    int word_end = end_word.offset + end_word.length;
+    int32 word_start = end_word.offset;
+    int32 word_end = end_word.offset + end_word.length;
 
     const char* buf_ptr = _buffer.get_buffer();
 
@@ -437,16 +437,16 @@ void LineEditorImpl::accept_match(unsigned int index)
     char suffix = match_suffix;
     if (!suffix)
     {
-        unsigned int match_length = unsigned(strlen(match));
+        uint32 match_length = uint32(strlen(match));
 
         Word match_word = { 0, match_length };
         Array<Word> match_words(&match_word, 1);
         LineState match_line = { match, match_length, 0, match_words };
 
-        int prefix_length = 0;
+        int32 prefix_length = 0;
         for (const auto* generator : _generators)
         {
-            int i = generator->get_prefix_length(match_line);
+            int32 i = generator->get_prefix_length(match_line);
             prefix_length = max(prefix_length, i);
         }
 
@@ -467,7 +467,7 @@ void LineEditorImpl::accept_match(unsigned int index)
 
         // Just move the cursor if the suffix will duplicate the character under
         // the cursor.
-        unsigned int cursor = _buffer.get_cursor();
+        uint32 cursor = _buffer.get_cursor();
         if (cursor >= _buffer.get_length() || _buffer.get_buffer()[cursor] != suffix)
         {
             char suffix_str[2] = { suffix };
@@ -484,18 +484,18 @@ void LineEditorImpl::append_match_lcd()
     Str<288> lcd;
     _matches.get_match_lcd(lcd);
 
-    unsigned int lcd_length = lcd.length();
+    uint32 lcd_length = lcd.length();
     if (!lcd_length)
         return;
 
-    unsigned int cursor = _buffer.get_cursor();
+    uint32 cursor = _buffer.get_cursor();
 
     Word end_word = *(_words.back());
-    int word_end = end_word.offset;
+    int32 word_end = end_word.offset;
     if (!_matches.is_prefix_included())
         word_end += end_word.length;
 
-    int dx = lcd_length - (cursor - word_end);
+    int32 dx = lcd_length - (cursor - word_end);
     if (dx < 0)
     {
         _buffer.remove(cursor + dx, cursor);
@@ -503,7 +503,7 @@ void LineEditorImpl::append_match_lcd()
     }
     else if (dx > 0)
     {
-        int start = end_word.offset;
+        int32 start = end_word.offset;
         if (!_matches.is_prefix_included())
             start += end_word.length;
 
@@ -517,7 +517,7 @@ void LineEditorImpl::append_match_lcd()
     for (const char* c = lcd.c_str(); *c && !needs_quote; ++c)
         needs_quote = (strchr(_desc.word_delims, *c) != nullptr);
 
-    for (int i = 0, n = _matches.get_match_count(); i < n && !needs_quote; ++i)
+    for (int32 i = 0, n = _matches.get_match_count(); i < n && !needs_quote; ++i)
     {
         const char* match = _matches.get_match(i) + lcd_length;
         if (match[0])
@@ -527,7 +527,7 @@ void LineEditorImpl::append_match_lcd()
     if (needs_quote && !end_word.quoted)
     {
         char quote[2] = { _desc.quote_pair[0] };
-        int cursor = _buffer.get_cursor();
+        int32 cursor = _buffer.get_cursor();
         _buffer.set_cursor(end_word.offset);
         _buffer.insert(quote);
         _buffer.set_cursor(cursor + 1);
@@ -554,19 +554,19 @@ EditorModule::Context LineEditorImpl::get_context(const LineState& line) const
 }
 
 //------------------------------------------------------------------------------
-void LineEditorImpl::set_flag(unsigned char flag)
+void LineEditorImpl::set_flag(uint8 flag)
 {
     _flags |= flag;
 }
 
 //------------------------------------------------------------------------------
-void LineEditorImpl::clear_flag(unsigned char flag)
+void LineEditorImpl::clear_flag(uint8 flag)
 {
     _flags &= ~flag;
 }
 
 //------------------------------------------------------------------------------
-bool LineEditorImpl::check_flag(unsigned char flag) const
+bool LineEditorImpl::check_flag(uint8 flag) const
 {
     return ((_flags & flag) != 0);
 }
@@ -580,11 +580,11 @@ void LineEditorImpl::update_internal()
 
     union key_t {
         struct {
-            unsigned int word_offset : 11;
-            unsigned int word_length : 10;
-            unsigned int cursor_pos  : 11;
+            uint32 word_offset : 11;
+            uint32 word_length : 10;
+            uint32 cursor_pos  : 11;
         };
-        unsigned int value;
+        uint32 value;
     };
 
     key_t next_key = { end_word.offset, end_word.length };
@@ -610,7 +610,7 @@ void LineEditorImpl::update_internal()
     if (next_key.value != prev_key.value)
     {
         Str<64> needle;
-        int needle_start = end_word.offset;
+        int32 needle_start = end_word.offset;
         if (!_matches.is_prefix_included())
             needle_start += end_word.length;
 
@@ -619,7 +619,7 @@ void LineEditorImpl::update_internal()
 
         if (!needle.empty() && end_word.quoted)
         {
-            int i = needle.length();
+            int32 i = needle.length();
             if (needle[i - 1] == get_closing_quote(_desc.quote_pair))
                 needle.truncate(i - 1);
         }

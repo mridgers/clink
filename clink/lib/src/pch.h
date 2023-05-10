@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <core/base.h>
+
 #define NOMINMAX
 #define VC_EXTRALEAN
 #define WIN32_LEAN_AND_MEAN

@@ -70,9 +70,9 @@ static void ctrl_c(
 //------------------------------------------------------------------------------
 static void strip_crlf(char* line)
 {
-    int setting = g_paste_crlf.get();
+    int32 setting = g_paste_crlf.get();
 
-    int prev_was_crlf = 0;
+    int32 prev_was_crlf = 0;
     char* write = line;
     const char* read = line;
     while (*read)
@@ -117,9 +117,9 @@ static void paste(LineBuffer& buffer)
 }
 
 //------------------------------------------------------------------------------
-static void copy_impl(const char* value, int length)
+static void copy_impl(const char* value, int32 length)
 {
-    int size = (length + 4) * sizeof(wchar_t);
+    int32 size = (length + 4) * sizeof(wchar_t);
     HGLOBAL mem = GlobalAlloc(GMEM_MOVEABLE, size);
     if (mem == nullptr)
         return;
@@ -146,7 +146,7 @@ static void copy_line(const LineBuffer& buffer)
 static void copy_cwd(const LineBuffer& buffer)
 {
     Str<270> cwd;
-    unsigned int length = GetCurrentDirectory(cwd.size(), cwd.data());
+    uint32 length = GetCurrentDirectory(cwd.size(), cwd.data());
     if (length < cwd.size())
     {
         cwd << "\\";
@@ -166,14 +166,14 @@ static void up_directory(EditorModule::Result& result, LineBuffer& buffer)
 }
 
 //------------------------------------------------------------------------------
-static void get_word_bounds(const LineBuffer& buffer, int* left, int* right)
+static void get_word_bounds(const LineBuffer& buffer, int32* left, int32* right)
 {
     const char* str = buffer.get_buffer();
-    unsigned int cursor = buffer.get_cursor();
+    uint32 cursor = buffer.get_cursor();
 
     // Determine the word delimiter depending on whether the word's quoted.
-    int delim = 0;
-    for (unsigned int i = 0; i < cursor; ++i)
+    int32 delim = 0;
+    for (uint32 i = 0; i < cursor; ++i)
     {
         char c = str[i];
         delim += (c == '\"');
@@ -182,7 +182,7 @@ static void get_word_bounds(const LineBuffer& buffer, int* left, int* right)
     // Search outwards from the cursor for the delimiter.
     delim = (delim & 1) ? '\"' : ' ';
     *left = 0;
-    for (int i = cursor - 1; i >= 0; --i)
+    for (int32 i = cursor - 1; i >= 0; --i)
     {
         char c = str[i];
         if (c == delim)
@@ -194,16 +194,16 @@ static void get_word_bounds(const LineBuffer& buffer, int* left, int* right)
 
     const char* post = strchr(str + cursor, delim);
     if (post != nullptr)
-        *right = int(post - str);
+        *right = int32(post - str);
     else
-        *right = int(strlen(str));
+        *right = int32(strlen(str));
 }
 
 //------------------------------------------------------------------------------
 static void expand_env_vars(LineBuffer& buffer)
 {
     // Extract the word under the cursor.
-    int word_left, word_right;
+    int32 word_left, word_right;
     get_word_bounds(buffer, &word_left, &word_right);
 
     Str<1024> in;
@@ -226,7 +226,7 @@ static void expand_env_vars(LineBuffer& buffer)
 //------------------------------------------------------------------------------
 static void insert_dot_dot(LineBuffer& buffer)
 {
-    if (unsigned int cursor = buffer.get_cursor())
+    if (uint32 cursor = buffer.get_cursor())
     {
         char last_char = buffer.get_buffer()[cursor - 1];
         if (last_char != ' ' && !path::is_separator(last_char))
@@ -261,7 +261,7 @@ HostModule::HostModule(const char* host_name)
 //------------------------------------------------------------------------------
 void HostModule::bind_input(Binder& binder)
 {
-    int default_group = binder.get_group();
+    int32 default_group = binder.get_group();
     binder.bind(default_group, g_key_paste.get(), bind_id_paste);
     binder.bind(default_group, g_key_ctrlc.get(), bind_id_ctrlc);
     binder.bind(default_group, g_key_copy_line.get(), bind_id_copy_line);
@@ -304,6 +304,6 @@ void HostModule::on_input(const Input& Input, Result& result, const Context& con
 }
 
 //------------------------------------------------------------------------------
-void HostModule::on_terminal_resize(int columns, int rows, const Context& context)
+void HostModule::on_terminal_resize(int32 columns, int32 rows, const Context& context)
 {
 }

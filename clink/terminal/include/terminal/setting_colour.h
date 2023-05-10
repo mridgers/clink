@@ -15,7 +15,7 @@ class SettingColour
 {
 public:
     #define COLOUR_X(x) value_##x,
-    enum : unsigned char
+    enum : uint8
     {
         COLOUR_XS
 
@@ -28,8 +28,8 @@ public:
         value_bg_count,
     };
     #undef COLOUR_X
-                        SettingColour(const char* name, const char* short_desc, int default_fg, int default_bg);
-                        SettingColour(const char* name, const char* short_desc, const char* long_desc, int default_fg, int default_bg);
+                        SettingColour(const char* name, const char* short_desc, int32 default_fg, int32 default_bg);
+                        SettingColour(const char* name, const char* short_desc, const char* long_desc, int32 default_fg, int32 default_bg);
     Attributes          get() const;
 
 private:

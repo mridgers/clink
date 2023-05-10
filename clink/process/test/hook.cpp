@@ -22,7 +22,7 @@ struct Originals
 };
 
 static Originals    g_originals;
-static unsigned int g_visited_bits;
+static uint32 g_visited_bits;
 
 //------------------------------------------------------------------------------
 BOOL WINAPI set_env_var(const wchar_t* name, const wchar_t* value)
@@ -44,7 +44,7 @@ BOOL WINAPI write_console(
 }
 
 //------------------------------------------------------------------------------
-HANDLE WINAPI get_std_handle(unsigned int handle_id)
+HANDLE WINAPI get_std_handle(uint32 handle_id)
 {
     g_visited_bits |= visitor_get_std_handle;
     return g_originals.get_std_handle(handle_id);

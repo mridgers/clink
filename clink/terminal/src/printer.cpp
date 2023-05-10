@@ -16,7 +16,7 @@ Printer::Printer(TerminalOut& Terminal)
 }
 
 //------------------------------------------------------------------------------
-void Printer::print(const char* data, int bytes)
+void Printer::print(const char* data, int32 bytes)
 {
     if (bytes <= 0)
         return;
@@ -28,7 +28,7 @@ void Printer::print(const char* data, int bytes)
 }
 
 //------------------------------------------------------------------------------
-void Printer::print(const Attributes attr, const char* data, int bytes)
+void Printer::print(const Attributes attr, const char* data, int32 bytes)
 {
     Attributes prev_attr = set_attributes(attr);
     print(data, bytes);
@@ -36,13 +36,13 @@ void Printer::print(const Attributes attr, const char* data, int bytes)
 }
 
 //------------------------------------------------------------------------------
-unsigned int Printer::get_columns() const
+uint32 Printer::get_columns() const
 {
     return _terminal.get_columns();
 }
 
 //------------------------------------------------------------------------------
-unsigned int Printer::get_rows() const
+uint32 Printer::get_rows() const
 {
     return _terminal.get_rows();
 }
@@ -125,12 +125,12 @@ Attributes Printer::get_attributes() const
 }
 
 //------------------------------------------------------------------------------
-void Printer::insert(int count)
+void Printer::insert(int32 count)
 {
 }
 
 //------------------------------------------------------------------------------
-void Printer::move_cursor(int dc, int dr)
+void Printer::move_cursor(int32 dc, int32 dr)
 {
 }
 

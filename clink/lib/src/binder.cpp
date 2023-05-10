@@ -11,14 +11,14 @@
 #include <algorithm>
 
 //------------------------------------------------------------------------------
-template <int SIZE> static bool translate_chord(const char* chord, char (&out)[SIZE])
+template <int32 SIZE> static bool translate_chord(const char* chord, char (&out)[SIZE])
 {
     // '\M-x'           = alt-x
     // '\C-x' or '^x'   = ctrl-x
     // '\e[t'           = ESC [ t (aka CSI t)
     // 'abc'            = abc
 
-    int i = 0;
+    int32 i = 0;
     for (; i < (SIZE - 1) && *chord; ++i, ++chord)
     {
         if (*chord != '\\' && *chord != '^')
@@ -102,18 +102,18 @@ Binder::Binder()
 }
 
 //------------------------------------------------------------------------------
-int Binder::get_group(const char* name)
+int32 Binder::get_group(const char* name)
 {
     if (name == nullptr || name[0] == '\0')
         return 1;
 
-    unsigned int hash = str_hash(name);
+    uint32 hash = str_hash(name);
 
-    int index = get_group_node(0)->next;
+    int32 index = get_group_node(0)->next;
     while (index)
     {
         const GroupNode* Node = get_group_node(index);
-        if (*(int*)(Node->hash) == hash)
+        if (*(int32*)(Node->hash) == hash)
             return index + 1;
 
         index = Node->next;
@@ -123,18 +123,18 @@ int Binder::get_group(const char* name)
 }
 
 //------------------------------------------------------------------------------
-int Binder::create_group(const char* name)
+int32 Binder::create_group(const char* name)
 {
     if (name == nullptr || name[0] == '\0')
         return -1;
 
-    int index = alloc_nodes(2);
+    int32 index = alloc_nodes(2);
     if (index < 0)
         return -1;
 
     // Create a new group Node;
     GroupNode* group = get_group_node(index);
-    *(int*)(group->hash) = str_hash(name);
+    *(int32*)(group->hash) = str_hash(name);
     group->is_group = 1;
 
     // Link the new Node into the front of the list.
@@ -150,10 +150,10 @@ int Binder::create_group(const char* name)
 
 //------------------------------------------------------------------------------
 bool Binder::bind(
-    unsigned int group,
+    uint32 group,
     const char* chord,
     EditorModule& module,
-    unsigned char id)
+    uint8 id)
 {
     // Validate Input
     if (group >= sizeof_array(_nodes))
@@ -167,13 +167,13 @@ bool Binder::bind(
     chord = translated;
 
     // Store the module pointer
-    int module_index = add_module(module);
+    int32 module_index = add_module(module);
     if (module_index < 0)
         return false;
 
     // Add the chord of keys into the Node graph.
-    int depth = 0;
-    int head = group;
+    int32 depth = 0;
+    int32 head = group;
     for (; *chord; ++chord, ++depth)
         if (!(head = insert_child(head, *chord)))
             return false;
@@ -185,7 +185,7 @@ bool Binder::bind(
     Node* bindee = _nodes + head;
     if (bindee->bound)
     {
-        int check = head;
+        int32 check = head;
         while (check > head)
         {
             if (bindee->key == *chord && bindee->module == module_index && bindee->id == id)
@@ -211,20 +211,20 @@ bool Binder::bind(
 }
 
 //------------------------------------------------------------------------------
-int Binder::insert_child(int parent, unsigned char key)
+int32 Binder::insert_child(int32 parent, uint8 key)
 {
-    if (int child = find_child(parent, key))
+    if (int32 child = find_child(parent, key))
         return child;
 
     return add_child(parent, key);
 }
 
 //------------------------------------------------------------------------------
-int Binder::find_child(int parent, unsigned char key) const
+int32 Binder::find_child(int32 parent, uint8 key) const
 {
     const Node* Node = _nodes + parent;
 
-    int index = Node->child;
+    int32 index = Node->child;
     for (; index > parent; index = Node->next)
     {
         Node = _nodes + index;
@@ -236,16 +236,16 @@ int Binder::find_child(int parent, unsigned char key) const
 }
 
 //------------------------------------------------------------------------------
-int Binder::add_child(int parent, unsigned char key)
+int32 Binder::add_child(int32 parent, uint8 key)
 {
-    int child = alloc_nodes();
+    int32 child = alloc_nodes();
     if (child < 0)
         return 0;
 
     Node addee = {};
     addee.key = key;
 
-    int current_child = _nodes[parent].child;
+    int32 current_child = _nodes[parent].child;
     if (current_child < parent)
     {
         addee.next = parent;
@@ -253,7 +253,7 @@ int Binder::add_child(int parent, unsigned char key)
     }
     else
     {
-        int tail = find_tail(current_child);
+        int32 tail = find_tail(current_child);
         addee.next = parent;
         _nodes[tail].next = child;
     }
@@ -263,7 +263,7 @@ int Binder::add_child(int parent, unsigned char key)
 }
 
 //------------------------------------------------------------------------------
-int Binder::find_tail(int head)
+int32 Binder::find_tail(int32 head)
 {
     while (_nodes[head].next > head)
         head = _nodes[head].next;
@@ -272,13 +272,13 @@ int Binder::find_tail(int head)
 }
 
 //------------------------------------------------------------------------------
-int Binder::append(int head, unsigned char key)
+int32 Binder::append(int32 head, uint8 key)
 {
-    int index = alloc_nodes();
+    int32 index = alloc_nodes();
     if (index < 0)
         return 0;
 
-    int tail = find_tail(head);
+    int32 tail = find_tail(head);
 
     Node addee = {};
     addee.key = key;
@@ -290,7 +290,7 @@ int Binder::append(int head, unsigned char key)
 }
 
 //------------------------------------------------------------------------------
-const Binder::Node& Binder::get_node(unsigned int index) const
+const Binder::Node& Binder::get_node(uint32 index) const
 {
     if (index < sizeof_array(_nodes))
         return _nodes[index];
@@ -300,7 +300,7 @@ const Binder::Node& Binder::get_node(unsigned int index) const
 }
 
 //------------------------------------------------------------------------------
-Binder::GroupNode* Binder::get_group_node(unsigned int index)
+Binder::GroupNode* Binder::get_group_node(uint32 index)
 {
     if (index < sizeof_array(_nodes))
         return (GroupNode*)(_nodes + index);
@@ -309,9 +309,9 @@ Binder::GroupNode* Binder::get_group_node(unsigned int index)
 }
 
 //------------------------------------------------------------------------------
-int Binder::alloc_nodes(unsigned int count)
+int32 Binder::alloc_nodes(uint32 count)
 {
-    int next = _next_node + count;
+    int32 next = _next_node + count;
     if (next > sizeof_array(_nodes))
         return -1;
 
@@ -320,23 +320,23 @@ int Binder::alloc_nodes(unsigned int count)
 }
 
 //------------------------------------------------------------------------------
-int Binder::add_module(EditorModule& module)
+int32 Binder::add_module(EditorModule& module)
 {
-    for (int i = 0, n = _modules.size(); i < n; ++i)
+    for (int32 i = 0, n = _modules.size(); i < n; ++i)
         if (*(_modules[i]) == &module)
             return i;
 
     if (EditorModule** slot = _modules.push_back())
     {
         *slot = &module;
-        return int(slot - _modules.front());
+        return int32(slot - _modules.front());
     }
 
     return -1;
 }
 
 //------------------------------------------------------------------------------
-EditorModule* Binder::get_module(unsigned int index) const
+EditorModule* Binder::get_module(uint32 index) const
 {
     auto b = _modules[index];
     return b ? *b : nullptr;

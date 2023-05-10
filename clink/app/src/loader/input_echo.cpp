@@ -8,9 +8,9 @@
 #include <terminal/terminal_in.h>
 
 //------------------------------------------------------------------------------
-int input_echo(int argc, char** argv)
+int32 input_echo(int32 argc, char** argv)
 {
-    for (int i = 1; i < argc; ++i)
+    for (int32 i = 1; i < argc; ++i)
     {
         const char* arg = argv[i];
         if (_stricmp(arg, "--help") == 0 || _stricmp(arg, "-h") == 0)
@@ -33,12 +33,12 @@ int input_echo(int argc, char** argv)
         Input.select();
         while (1)
         {
-            int c = Input.read();
+            int32 c = Input.read();
             if (c < 0)
                 break;
 
             if (c > 0x7f)
-                printf("\\x%02x", unsigned(c));
+                printf("\\x%02x", uint32(c));
             else if (c < 0x20)
                 printf("^%c", c|0x40);
             else

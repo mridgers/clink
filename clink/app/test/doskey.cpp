@@ -18,7 +18,7 @@ static void use_enhanced(bool state)
 //------------------------------------------------------------------------------
 TEST_CASE("doskey add/remove")
 {
-    for (int i = 0; i < 2; ++i)
+    for (int32 i = 0; i < 2; ++i)
     {
         use_enhanced(i != 0);
 
@@ -32,7 +32,7 @@ TEST_CASE("doskey add/remove")
 //------------------------------------------------------------------------------
 TEST_CASE("doskey expand : simple")
 {
-    for (int i = 0; i < 2; ++i)
+    for (int32 i = 0; i < 2; ++i)
     {
         use_enhanced(i != 0);
 
@@ -56,7 +56,7 @@ TEST_CASE("doskey expand : simple")
 //------------------------------------------------------------------------------
 TEST_CASE("doskey expand : leading")
 {
-    for (int i = 0; i < 2; ++i)
+    for (int32 i = 0; i < 2; ++i)
     {
         use_enhanced(i != 0);
 
@@ -79,7 +79,7 @@ TEST_CASE("doskey expand : leading")
 //------------------------------------------------------------------------------
 TEST_CASE("doskey args $1-9")
 {
-    for (int i = 0; i < 2; ++i)
+    for (int32 i = 0; i < 2; ++i)
     {
         use_enhanced(i != 0);
 
@@ -112,7 +112,7 @@ TEST_CASE("doskey args $1-9")
 //------------------------------------------------------------------------------
 TEST_CASE("doskey args $*")
 {
-    for (int i = 0; i < 2; ++i)
+    for (int32 i = 0; i < 2; ++i)
     {
         use_enhanced(i != 0);
 
@@ -140,7 +140,7 @@ TEST_CASE("doskey args $*")
 
         Wstr<> line;
         line << L"alias ";
-        for (int i = 0; i < 12; ++i)
+        for (int32 i = 0; i < 12; ++i)
             line << L"0123456789abcdef";
 
         DoskeyAlias alias;
@@ -151,7 +151,7 @@ TEST_CASE("doskey args $*")
 //------------------------------------------------------------------------------
 TEST_CASE("doskey $? chars")
 {
-    for (int i = 0; i < 2; ++i)
+    for (int32 i = 0; i < 2; ++i)
     {
         use_enhanced(i != 0);
 
@@ -175,7 +175,7 @@ TEST_CASE("doskey $? chars")
 //------------------------------------------------------------------------------
 TEST_CASE("doskey multi-command")
 {
-    for (int i = 0; i < 2; ++i)
+    for (int32 i = 0; i < 2; ++i)
     {
         use_enhanced(i != 0);
 

@@ -11,7 +11,7 @@ class MatchGenerator
 {
 public:
     virtual bool    generate(const LineState& line, MatchBuilder& Builder) = 0;
-    virtual int     get_prefix_length(const LineState& line) const = 0;
+    virtual int32   get_prefix_length(const LineState& line) const = 0;
 
 private:
 };

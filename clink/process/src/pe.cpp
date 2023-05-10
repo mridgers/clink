@@ -14,7 +14,7 @@ PeInfo::PeInfo(void* base)
 }
 
 //------------------------------------------------------------------------------
-void* PeInfo::rva_to_addr(unsigned int rva) const
+void* PeInfo::rva_to_addr(uint32 rva) const
 {
     return (char*)(uintptr_t)rva + (uintptr_t)_base;
 }
@@ -27,7 +27,7 @@ IMAGE_NT_HEADERS* PeInfo::get_nt_headers() const
 }
 
 //------------------------------------------------------------------------------
-void* PeInfo::get_data_directory(int index, int* size) const
+void* PeInfo::get_data_directory(int32 index, int32* size) const
 {
     IMAGE_NT_HEADERS* nt = get_nt_headers();
     IMAGE_DATA_DIRECTORY* data_dir = nt->OptionalHeader.DataDirectory + index;
@@ -71,7 +71,7 @@ PeInfo::funcptr_t* PeInfo::import_by_name(IMAGE_IMPORT_DESCRIPTOR* iid, const vo
         // Check that this import is imported by name (MSB not set)
         if (*nt > 0)
         {
-            unsigned rva = (unsigned)(*nt & 0x7fffffff);
+            uint32 rva = (uint32)(*nt & 0x7fffffff);
             IMAGE_IMPORT_BY_NAME* iin;
             iin = (IMAGE_IMPORT_BY_NAME*)rva_to_addr(rva);
 
@@ -115,7 +115,7 @@ PeInfo::funcptr_t PeInfo::get_export(const char* func_name) const
     WORD* ordinals = (WORD*)rva_to_addr(ied->AddressOfNameOrdinals);
     DWORD* addresses = (DWORD*)rva_to_addr(ied->AddressOfFunctions);
 
-    for (int i = 0; i < int(ied->NumberOfNames); ++i)
+    for (int32 i = 0; i < int32(ied->NumberOfNames); ++i)
     {
         const char* export_name = (const char*)rva_to_addr(names[i]);
         if (_stricmp(export_name, func_name))

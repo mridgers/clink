@@ -38,7 +38,7 @@ void Scroller::page_up()
     GetConsoleScreenBufferInfo(_handle, &csbi);
     SMALL_RECT* wnd = &csbi.srWindow;
 
-    int rows_per_page = wnd->Bottom - wnd->Top - 1;
+    int32 rows_per_page = wnd->Bottom - wnd->Top - 1;
     if (rows_per_page > wnd->Top)
         rows_per_page = wnd->Top;
 
@@ -54,7 +54,7 @@ void Scroller::page_down()
     GetConsoleScreenBufferInfo(_handle, &csbi);
     SMALL_RECT* wnd = &csbi.srWindow;
 
-    int rows_per_page = wnd->Bottom - wnd->Top - 1;
+    int32 rows_per_page = wnd->Bottom - wnd->Top - 1;
 
     csbi.dwCursorPosition.X = 0;
     csbi.dwCursorPosition.Y = wnd->Bottom + rows_per_page;
@@ -72,7 +72,7 @@ void ScrollerModule::bind_input(Binder& binder)
     _bind_group = binder.create_group("Scroller");
     if (_bind_group >= 0)
     {
-        int default_group = binder.get_group();
+        int32 default_group = binder.get_group();
         binder.bind(default_group, "\\e[5;2~", bind_id_start);
 
         binder.bind(_bind_group, "\\e[5;2~", bind_id_pgup);
@@ -128,6 +128,6 @@ void ScrollerModule::on_input(
 }
 
 //------------------------------------------------------------------------------
-void ScrollerModule::on_terminal_resize(int columns, int rows, const Context& context)
+void ScrollerModule::on_terminal_resize(int32 columns, int32 rows, const Context& context)
 {
 }

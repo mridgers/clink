@@ -4,7 +4,7 @@
 #include "pch.h"
 
 //------------------------------------------------------------------------------
-int main(int argc, char** argv)
+int32 main(int32 argc, char** argv)
 {
     const char* prefix = (argc > 1) ? argv[1] : "";
     return (clatch::run(prefix) != true);

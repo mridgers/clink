@@ -18,5 +18,5 @@ public:
     virtual void    begin() = 0;
     virtual void    end() = 0;
     virtual void    select() = 0;
-    virtual int     read() = 0;
+    virtual int32   read() = 0;
 };

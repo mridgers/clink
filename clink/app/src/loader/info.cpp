@@ -10,7 +10,7 @@
 #include <core/path.h>
 
 //------------------------------------------------------------------------------
-int clink_info(int argc, char** argv)
+int32 clink_info(int32 argc, char** argv)
 {
     struct {
         const char* name;
@@ -24,7 +24,7 @@ int clink_info(int argc, char** argv)
     };
 
     const auto* context = AppContext::get();
-    const int spacing = 8;
+    const int32 spacing = 8;
 
     // Version information
     printf("%-*s : %s\n", spacing, "version", CLINK_VERSION_STR);
@@ -62,10 +62,10 @@ int clink_info(int argc, char** argv)
         }
 
         path::append(out, ".inputrc");
-        for (int i = 0; i < 2; ++i)
+        for (int32 i = 0; i < 2; ++i)
         {
             printf("%-*s     %s\n", spacing, "", out.c_str());
-            int out_length = out.length();
+            int32 out_length = out.length();
             out.data()[out_length - 8] = '_';
         }
     }

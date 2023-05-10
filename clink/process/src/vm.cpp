@@ -7,8 +7,8 @@
 #include <Windows.h>
 
 //------------------------------------------------------------------------------
-static unsigned int g_alloc_granularity = 0;
-static unsigned int g_page_size         = 0;
+static uint32 g_alloc_granularity = 0;
+static uint32 g_page_size         = 0;
 
 //------------------------------------------------------------------------------
 static void initialise_page_constants()
@@ -20,9 +20,9 @@ static void initialise_page_constants()
 }
 
 //------------------------------------------------------------------------------
-static unsigned int to_access_flags(unsigned int ms_flags)
+static uint32 to_access_flags(uint32 ms_flags)
 {
-    unsigned int ret = 0;
+    uint32 ret = 0;
     if (ms_flags & 0x22) ret |= Vm::access_read;
     if (ms_flags & 0x44) ret |= Vm::access_write|Vm::access_read;
     if (ms_flags & 0x88) ret |= Vm::access_cow|Vm::access_write|Vm::access_read;
@@ -31,9 +31,9 @@ static unsigned int to_access_flags(unsigned int ms_flags)
 }
 
 //------------------------------------------------------------------------------
-static unsigned int to_ms_flags(unsigned int access_flags)
+static uint32 to_ms_flags(uint32 access_flags)
 {
-    unsigned int ret = PAGE_NOACCESS;
+    uint32 ret = PAGE_NOACCESS;
     if (access_flags & Vm::access_cow)          ret = PAGE_WRITECOPY;
     else if (access_flags & Vm::access_write)   ret = PAGE_READWRITE;
     else if (access_flags & Vm::access_read)    ret = PAGE_READONLY;
@@ -44,7 +44,7 @@ static unsigned int to_ms_flags(unsigned int access_flags)
 
 
 //------------------------------------------------------------------------------
-Vm::Vm(int pid)
+Vm::Vm(int32 pid)
 {
     if (pid > 0)
         _handle = OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_VM_OPERATION|
@@ -99,7 +99,7 @@ Vm::Region Vm::get_region(void* address)
 
     MEMORY_BASIC_INFORMATION mbi;
     if (VirtualQueryEx(_handle, address, &mbi, sizeof(mbi)))
-        return {mbi.BaseAddress, unsigned(mbi.RegionSize / get_page_size())};
+        return {mbi.BaseAddress, uint32(mbi.RegionSize / get_page_size())};
 
     return {};
 }
@@ -111,12 +111,12 @@ void* Vm::get_page(void* address)
 }
 
 //------------------------------------------------------------------------------
-Vm::Region Vm::alloc(unsigned int page_count, unsigned int access)
+Vm::Region Vm::alloc(uint32 page_count, uint32 access)
 {
     if (_handle == nullptr)
         return {};
 
-    int ms_access = to_ms_flags(access);
+    int32 ms_access = to_ms_flags(access);
     size_t size = page_count * get_page_size();
     if (void* base = VirtualAllocEx(_handle, nullptr, size, MEM_COMMIT, ms_access))
         return {base, page_count};
@@ -135,7 +135,7 @@ void Vm::free(const Region& Region)
 }
 
 //------------------------------------------------------------------------------
-int Vm::get_access(const Region& Region)
+int32 Vm::get_access(const Region& Region)
 {
     if (_handle == nullptr)
         return -1;
@@ -148,7 +148,7 @@ int Vm::get_access(const Region& Region)
 }
 
 //------------------------------------------------------------------------------
-void Vm::set_access(const Region& Region, unsigned int access)
+void Vm::set_access(const Region& Region, uint32 access)
 {
     if (_handle == nullptr)
         return;

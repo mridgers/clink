@@ -16,14 +16,14 @@ public:
                         Ecma48TerminalOut(ScreenBuffer& screen);
     virtual void        begin() override;
     virtual void        end() override;
-    virtual void        write(const char* chars, int length) override;
+    virtual void        write(const char* chars, int32 length) override;
     virtual void        flush() override;
-    virtual int         get_columns() const override;
-    virtual int         get_rows() const override;
+    virtual int32       get_columns() const override;
+    virtual int32       get_rows() const override;
 
 private:
     void                write_c1(const Ecma48Code& code);
-    void                write_c0(int c0);
+    void                write_c0(int32 c0);
     void                set_attributes(const Ecma48Code::CsiBase& csi);
     void                erase_in_display(const Ecma48Code::CsiBase& csi);
     void                erase_in_line(const Ecma48Code::CsiBase& csi);

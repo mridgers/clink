@@ -8,7 +8,7 @@
 #include <lib/match_generator.h>
 
 //------------------------------------------------------------------------------
-int testbed(int, char**)
+int32 testbed(int32, char**)
 {
     StrCompareScope _(StrCompareScope::relaxed);
 

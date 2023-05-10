@@ -28,7 +28,7 @@ enum
 };
 
 //------------------------------------------------------------------------------
-static const unsigned char op_table[] =
+static const uint8 op_table[] =
 {
 #if _M_X64
     //10    32    54    76    98    ba    dc    fe  // x64
@@ -70,17 +70,17 @@ static const unsigned char op_table[] =
 };
 
 //------------------------------------------------------------------------------
-static int lookup(int value)
+static int32 lookup(int32 value)
 {
-    int index = value >> 1;
-    int odd_shift = (value & 0x01) << 2;
+    int32 index = value >> 1;
+    int32 odd_shift = (value & 0x01) << 2;
     return (op_table[index] >> odd_shift) & 0x0f;
 }
 
 //------------------------------------------------------------------------------
-static int disassemble_modrm(const unsigned char* cursor)
+static int32 disassemble_modrm(const uint8* cursor)
 {
-    int modrm = *cursor;
+    int32 modrm = *cursor;
 
     if (modrm >= 0300)
         return 1;
@@ -90,14 +90,14 @@ static int disassemble_modrm(const unsigned char* cursor)
         return -5;
 #endif
 
-    int length = 1;
+    int32 length = 1;
     if ((modrm & 0307) == 0005) length += 4; // disp32
     if ((modrm & 0300) == 0100) length += 1; // +disp8
     if ((modrm & 0300) == 0200) length += 4; // +disp32
     if ((modrm & 0007) == 0004)              // sib
     {
         length += 1;
-        int sib = *(cursor + 1);
+        int32 sib = *(cursor + 1);
         if ((sib & 0007) == 0005)
         {
             switch (modrm & 0300)
@@ -119,20 +119,20 @@ static int disassemble_modrm(const unsigned char* cursor)
 }
 
 //------------------------------------------------------------------------------
-static Instruction disassemble(const unsigned char* ptr)
+static Instruction disassemble(const uint8* ptr)
 {
-    const unsigned char* cursor = ptr;
+    const uint8* cursor = ptr;
     
     auto end = [&] () -> Instruction {
-        return {int(intptr_t(cursor - ptr))};
+        return {int32(intptr_t(cursor - ptr))};
     };
 
     // prefixes
-    int code;
-    int imm_shift = 1;
+    int32 code;
+    int32 imm_shift = 1;
     while (true)
     {
-        int op = *cursor;
+        int32 op = *cursor;
         ++cursor;
 
         code = lookup(op);
@@ -172,7 +172,7 @@ static Instruction disassemble(const unsigned char* ptr)
         case code_immaddr:        cursor += 4;                         break;
         case code_imm16_imm16_32: cursor += 2; /* fallthrough */
 #endif
-        case code_imm16_32:       cursor += 2 << int(imm_shift != 0);  break;
+        case code_imm16_32:       cursor += 2 << int32(imm_shift != 0);  break;
         }
         return end();
     }
@@ -180,28 +180,28 @@ static Instruction disassemble(const unsigned char* ptr)
     // ip-relative immediates
     if (code <= code_rel16_32)
     {
-        const unsigned char* old_cursor = cursor;
+        const uint8* old_cursor = cursor;
 
-        int mask = (code_rel8 - code);
-        int shift = 1 + (imm_shift != 0);
-        cursor += int(1 << (shift & mask));
+        int32 mask = (code_rel8 - code);
+        int32 shift = 1 + (imm_shift != 0);
+        cursor += int32(1 << (shift & mask));
 
-        int rel_offset = int(intptr_t(old_cursor - ptr));
-        int rel_size = int(intptr_t(cursor - old_cursor));
+        int32 rel_offset = int32(intptr_t(old_cursor - ptr));
+        int32 rel_size = int32(intptr_t(cursor - old_cursor));
         cursor += (rel_offset << Instruction::rel_offset_shift);
         cursor += (rel_size << Instruction::rel_size_shift);
 
         return end();
     }
 
-    int modrm = *cursor;
+    int32 modrm = *cursor;
 
-    int modrm_length = disassemble_modrm(cursor);
+    int32 modrm_length = disassemble_modrm(cursor);
 #if _M_X64
     if (modrm_length < 0)
     {
-        int rel_offset = int(intptr_t(cursor + 1 - ptr)); // +1 to skip modrm
-        int rel_size = 4;
+        int32 rel_offset = int32(intptr_t(cursor + 1 - ptr)); // +1 to skip modrm
+        int32 rel_size = 4;
         cursor += (rel_offset << Instruction::rel_offset_shift);
         cursor += (rel_size << Instruction::rel_size_shift);
         modrm_length = -modrm_length;
@@ -224,7 +224,7 @@ static Instruction disassemble(const unsigned char* ptr)
         cursor += 1;
 
     else if (code == code_modrm_imm16_32)
-        cursor += 2 << int(imm_shift != 0);
+        cursor += 2 << int32(imm_shift != 0);
 
     return end();
 }
@@ -232,7 +232,7 @@ static Instruction disassemble(const unsigned char* ptr)
 
 
 //------------------------------------------------------------------------------
-void Instruction::copy(const unsigned char* from, unsigned char* to) const
+void Instruction::copy(const uint8* from, uint8* to) const
 {
     memcpy(to, from, get_length());
 
@@ -250,12 +250,12 @@ void Instruction::copy(const unsigned char* from, unsigned char* to) const
     {
     case 4:
         memcpy(to, from, 4);
-        *(int*)to += int(distance);
+        *(int32*)to += int32(distance);
         break;
 
     case 2:
         memcpy(to, from, 2);
-        *(short*)to += short(distance);
+        *(int16*)to += int16(distance);
         break;
 
     case 1:
@@ -269,7 +269,7 @@ void Instruction::copy(const unsigned char* from, unsigned char* to) const
 
 //------------------------------------------------------------------------------
 InstructionIter::InstructionIter(const void* data)
-: _data((const unsigned char*)data)
+: _data((const uint8*)data)
 {
 }
 

@@ -14,25 +14,25 @@ extern "C" {
 }
 
 //------------------------------------------------------------------------------
-int autorun(int, char**);
-int clink_info(int, char**);
-int draw_test(int, char**);
-int history(int, char**);
-int inject(int, char**);
-int input_echo(int, char**);
-int set(int, char**);
-int testbed(int, char**);
+int32 autorun(int32, char**);
+int32 clink_info(int32, char**);
+int32 draw_test(int32, char**);
+int32 history(int32, char**);
+int32 inject(int32, char**);
+int32 input_echo(int32, char**);
+int32 set(int32, char**);
+int32 testbed(int32, char**);
 
 //------------------------------------------------------------------------------
-void puts_help(const char** help_pairs, int count)
+void puts_help(const char** help_pairs, int32 count)
 {
     count &= ~1;
 
-    int max_len = -1;
-    for (int i = 0, n = count; i < n; i += 2)
-        max_len = max((int)strlen(help_pairs[i]), max_len);
+    int32 max_len = -1;
+    for (int32 i = 0, n = count; i < n; i += 2)
+        max_len = max((int32)strlen(help_pairs[i]), max_len);
 
-    for (int i = 0, n = count; i < n; i += 2)
+    for (int32 i = 0, n = count; i < n; i += 2)
     {
         const char* arg = help_pairs[i];
         const char* desc = help_pairs[i + 1];
@@ -68,11 +68,11 @@ static void show_usage()
 }
 
 //------------------------------------------------------------------------------
-static int dispatch_verb(const char* verb, int argc, char** argv)
+static int32 dispatch_verb(const char* verb, int32 argc, char** argv)
 {
     struct {
         const char* verb;
-        int (*handler)(int, char**);
+        int32 (*handler)(int32, char**);
     } handlers[] = {
         "autorun",   autorun,
         "drawtest",  draw_test,
@@ -84,12 +84,12 @@ static int dispatch_verb(const char* verb, int argc, char** argv)
         "testbed",   testbed,
     };
 
-    for (int i = 0; i < sizeof_array(handlers); ++i)
+    for (int32 i = 0; i < sizeof_array(handlers); ++i)
     {
         if (strcmp(verb, handlers[i].verb) == 0)
         {
-            int ret;
-            int t;
+            int32 ret;
+            int32 t;
 
             t = optind;
             optind = 1;
@@ -107,7 +107,7 @@ static int dispatch_verb(const char* verb, int argc, char** argv)
 }
 
 //------------------------------------------------------------------------------
-int loader(int argc, char** argv)
+int32 loader(int32 argc, char** argv)
 {
     SehScope seh;
 
@@ -129,7 +129,7 @@ int loader(int argc, char** argv)
     app_desc.inherit_id = true;
 
     // Parse arguments
-    int arg;
+    int32 arg;
     while ((arg = getopt_long(argc, argv, "+hp:", options, nullptr)) != -1)
     {
         switch (arg)
@@ -152,7 +152,7 @@ int loader(int argc, char** argv)
     }
 
     // Dispatch the verb if one was found.
-    int ret = 0;
+    int32 ret = 0;
     if (optind < argc)
     {
         AppContext app_context(app_desc);
@@ -165,14 +165,14 @@ int loader(int argc, char** argv)
 }
 
 //------------------------------------------------------------------------------
-int loader_main_impl()
+int32 loader_main_impl()
 {
-    int argc = 0;
+    int32 argc = 0;
     LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc);
-    for (int i = 0; i < argc; ++i)
+    for (int32 i = 0; i < argc; ++i)
         to_utf8((char*)argv[i], 0xffff, argv[i]);
 
-    int ret = loader(argc, (char**)argv);
+    int32 ret = loader(argc, (char**)argv);
 
     LocalFree(argv);
     return ret;

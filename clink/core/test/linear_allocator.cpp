@@ -25,9 +25,9 @@ TEST_CASE("LinearAllocator: invalid")
 //------------------------------------------------------------------------------
 TEST_CASE("LinearAllocator: calloc")
 {
-    LinearAllocator allocator(sizeof(int) * 8);
-    REQUIRE(allocator.calloc<int>(0) == nullptr);
-    REQUIRE(allocator.calloc<int>() != nullptr);
-    REQUIRE(allocator.calloc<int>(7) != nullptr);
-    REQUIRE(allocator.calloc<int>(1) == nullptr);
+    LinearAllocator allocator(sizeof(int32) * 8);
+    REQUIRE(allocator.calloc<int32>(0) == nullptr);
+    REQUIRE(allocator.calloc<int32>() != nullptr);
+    REQUIRE(allocator.calloc<int32>(7) != nullptr);
+    REQUIRE(allocator.calloc<int32>(1) == nullptr);
 }

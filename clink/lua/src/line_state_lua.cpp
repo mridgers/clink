@@ -32,7 +32,7 @@ LineStateLua::LineStateLua(const LineState& line)
 /// -name:  line:getlinE
 /// -ret:   string
 /// Returns the current line in its entirety.
-int LineStateLua::get_line(lua_State* state)
+int32 LineStateLua::get_line(lua_State* state)
 {
     lua_pushstring(state, _line.get_line());
     return 1;
@@ -42,7 +42,7 @@ int LineStateLua::get_line(lua_State* state)
 /// -name:  line:getcursor
 /// -ret:   integer
 /// Returns the position of the cursor.
-int LineStateLua::get_cursor(lua_State* state)
+int32 LineStateLua::get_cursor(lua_State* state)
 {
     lua_pushinteger(state, _line.get_cursor() + 1);
     return 1;
@@ -57,7 +57,7 @@ int LineStateLua::get_cursor(lua_State* state)
 /// Returns the offset to the start of the delimited command in the line that's
 /// being effectively edited. Note that this may not be the offset of the first
 /// command of the line unquoted as whitespace isn't considered for words.
-int LineStateLua::get_command_offset(lua_State* state)
+int32 LineStateLua::get_command_offset(lua_State* state)
 {
     lua_pushinteger(state, _line.get_command_offset() + 1);
     return 1;
@@ -67,7 +67,7 @@ int LineStateLua::get_command_offset(lua_State* state)
 /// -name:  line:getwordcount
 /// -ret:   integer
 /// Returns the number of words in the current line.
-int LineStateLua::get_word_count(lua_State* state)
+int32 LineStateLua::get_word_count(lua_State* state)
 {
     lua_pushinteger(state, _line.get_word_count());
     return 1;
@@ -80,13 +80,13 @@ int LineStateLua::get_word_count(lua_State* state)
 /// Returns a table of informationa about the Nth word in the line. The table
 /// returned has the following schema; { offset:integer, length:integer,
 /// quoted:boolean, delim:boolean }.
-int LineStateLua::get_word_info(lua_State* state)
+int32 LineStateLua::get_word_info(lua_State* state)
 {
     if (!lua_isnumber(state, 1))
         return 0;
 
     const Array<Word>& words = _line.get_words();
-    unsigned int index = int(lua_tointeger(state, 1)) - 1;
+    uint32 index = int32(lua_tointeger(state, 1)) - 1;
     if (index >= words.size())
         return 0;
 
@@ -119,12 +119,12 @@ int LineStateLua::get_word_info(lua_State* state)
 /// -arg:   index:integer
 /// -ret:   string
 /// Returns the word of the line at 'index'.
-int LineStateLua::get_word(lua_State* state)
+int32 LineStateLua::get_word(lua_State* state)
 {
     if (!lua_isnumber(state, 1))
         return 0;
 
-    unsigned int index = int(lua_tointeger(state, 1)) - 1;
+    uint32 index = int32(lua_tointeger(state, 1)) - 1;
     StrIter word = _line.get_word(index);
     lua_pushlstring(state, word.get_pointer(), word.length());
     return 1;
@@ -136,7 +136,7 @@ int LineStateLua::get_word(lua_State* state)
 /// -show:  line:getword(line:getwordcount()) == line:getendword()
 /// Returns the last word of the line. This is the word that matches are being
 /// generated for.
-int LineStateLua::get_end_word(lua_State* state)
+int32 LineStateLua::get_end_word(lua_State* state)
 {
     StrIter word = _line.get_end_word();
     lua_pushlstring(state, word.get_pointer(), word.length());

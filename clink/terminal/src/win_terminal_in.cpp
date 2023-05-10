@@ -63,7 +63,7 @@ static const char* const kfx[]   = {
 
 
 //------------------------------------------------------------------------------
-enum : unsigned char
+enum : uint8
 {
     input_abort_byte    = 0xff,
     input_none_byte     = 0xfe,
@@ -73,12 +73,12 @@ enum : unsigned char
 
 
 //------------------------------------------------------------------------------
-static unsigned int get_dimensions()
+static uint32 get_dimensions()
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
-    auto cols = short(csbi.dwSize.X);
-    auto rows = short(csbi.srWindow.Bottom - csbi.srWindow.Top) + 1;
+    auto cols = int16(csbi.dwSize.X);
+    auto rows = int16(csbi.srWindow.Bottom - csbi.srWindow.Top) + 1;
     return (cols << 16) | rows;
 }
 
@@ -106,8 +106,8 @@ static void adjust_cursor_on_resize(COORD prev_position)
         return;
 
     COORD fix_position = {
-        short(csbi.dwSize.X - 1),
-        short(csbi.dwCursorPosition.Y - 1)
+        int16(csbi.dwSize.X - 1),
+        int16(csbi.dwCursorPosition.Y - 1)
     };
     SetConsoleCursorPosition(handle, fix_position);
 }
@@ -119,7 +119,9 @@ void WinTerminalIn::begin()
 {
     _buffer_count = 0;
     _stdin = GetStdHandle(STD_INPUT_HANDLE);
-    GetConsoleMode(_stdin, &_prev_mode);
+    DWORD prev_mode;
+    GetConsoleMode(_stdin, &prev_mode);
+    _prev_mode = prev_mode;
     set_cursor_visibility(false);
 }
 
@@ -139,9 +141,9 @@ void WinTerminalIn::select()
 }
 
 //------------------------------------------------------------------------------
-int WinTerminalIn::read()
+int32 WinTerminalIn::read()
 {
-    unsigned int dimensions = get_dimensions();
+    uint32 dimensions = get_dimensions();
     if (dimensions != _dimensions)
     {
         _dimensions = dimensions;
@@ -151,7 +153,7 @@ int WinTerminalIn::read()
     if (!_buffer_count)
         return TerminalIn::input_none;
 
-    unsigned char c = pop();
+    uint8 c = pop();
     switch (c)
     {
     case input_none_byte:       return TerminalIn::input_none;
@@ -199,7 +201,7 @@ void WinTerminalIn::read_console()
 
     // Read input records sent from the Terminal (aka conhost) until some
     // input has beeen buffered.
-    unsigned int buffer_count = _buffer_count;
+    uint32 buffer_count = _buffer_count;
     while (buffer_count == _buffer_count)
     {
         DWORD count;
@@ -245,13 +247,13 @@ void WinTerminalIn::read_console()
 //------------------------------------------------------------------------------
 void WinTerminalIn::process_input(KEY_EVENT_RECORD const& record)
 {
-    static const int CTRL_PRESSED = LEFT_CTRL_PRESSED|RIGHT_CTRL_PRESSED;
-    static const int ALT_PRESSED = LEFT_ALT_PRESSED|RIGHT_ALT_PRESSED;
+    static const int32 CTRL_PRESSED = LEFT_CTRL_PRESSED|RIGHT_CTRL_PRESSED;
+    static const int32 ALT_PRESSED = LEFT_ALT_PRESSED|RIGHT_ALT_PRESSED;
 
-    int key_char = record.uChar.UnicodeChar;
-    int key_vk = record.wVirtualKeyCode;
-    int key_sc = record.wVirtualScanCode;
-    int key_flags = record.dwControlKeyState;
+    int32 key_char = record.uChar.UnicodeChar;
+    int32 key_vk = record.wVirtualKeyCode;
+    int32 key_sc = record.wVirtualScanCode;
+    int32 key_flags = record.dwControlKeyState;
 
     // We filter out Alt key presses unless they generated a character.
     if (key_vk == VK_MENU)
@@ -284,13 +286,13 @@ void WinTerminalIn::process_input(KEY_EVENT_RECORD const& record)
         return push(terminfo::kcbt);
 
     // Function keys (kf1-kf48 from xterm+pcf2)
-    unsigned key_func = key_vk - VK_F1;
+    uint32 key_func = key_vk - VK_F1;
     if (key_func <= (VK_F12 - VK_F1))
     {
         if (key_flags & ALT_PRESSED)
             push(0x1b);
 
-        int kfx_group = !!(key_flags & SHIFT_PRESSED);
+        int32 kfx_group = !!(key_flags & SHIFT_PRESSED);
         kfx_group |= !!(key_flags & CTRL_PRESSED) << 1;
         push((terminfo::kfx + (12 * kfx_group) + key_func)[0]);
 
@@ -319,12 +321,12 @@ void WinTerminalIn::process_input(KEY_EVENT_RECORD const& record)
 
     // The numpad keys such as PgUp, End, etc. don't come through with the
     // ENHANCED_KEY flag set so we'll infer it here.
-    static const int enhanced_vks[] = {
+    static const int32 enhanced_vks[] = {
         VK_UP, VK_DOWN, VK_LEFT, VK_RIGHT, VK_HOME, VK_END,
         VK_INSERT, VK_DELETE, VK_PRIOR, VK_NEXT,
     };
 
-    for (int i = 0; i < sizeof_array(enhanced_vks); ++i)
+    for (int32 i = 0; i < sizeof_array(enhanced_vks); ++i)
     {
         if (key_vk == enhanced_vks[i])
         {
@@ -337,7 +339,7 @@ void WinTerminalIn::process_input(KEY_EVENT_RECORD const& record)
     if (key_flags & ENHANCED_KEY)
     {
         static const struct {
-            int                 code;
+            int32               code;
             const char* const*  seqs;
         } sc_map[] = {
             { 'H', terminfo::kcuu1, }, // up
@@ -353,7 +355,7 @@ void WinTerminalIn::process_input(KEY_EVENT_RECORD const& record)
         };
 
         // Calculate Xterm's modifier number.
-        int i = 0;
+        int32 i = 0;
         i |= !!(key_flags & SHIFT_PRESSED);
         i |= !!(key_flags & ALT_PRESSED) << 1;
         i |= !!(key_flags & CTRL_PRESSED) << 2;
@@ -374,7 +376,7 @@ void WinTerminalIn::process_input(KEY_EVENT_RECORD const& record)
     // key_char and some don't.
     if (key_flags & CTRL_PRESSED)
     {
-        #define CONTAINS(l, r) (unsigned)(key_vk - l) <= (r - l)
+        #define CONTAINS(l, r) (uint32)(key_vk - l) <= (r - l)
              if (CONTAINS('A', 'Z'))    key_vk -= 'A' - 1;
         else if (CONTAINS(0xdb, 0xdd))  key_vk -= 0xdb - 0x1b;
         else if (key_vk == 0x32)        key_vk = 0;
@@ -393,25 +395,25 @@ void WinTerminalIn::process_input(KEY_EVENT_RECORD const& record)
 //------------------------------------------------------------------------------
 void WinTerminalIn::push(const char* seq)
 {
-    static const unsigned int mask = sizeof_array(_buffer) - 1;
+    static const uint32 mask = sizeof_array(_buffer) - 1;
 
     if (_buffer_count >= sizeof_array(_buffer))
         return;
 
-    int index = _buffer_head + _buffer_count;
+    int32 index = _buffer_head + _buffer_count;
     for (; _buffer_count <= mask && *seq; ++_buffer_count, ++index, ++seq)
         _buffer[index & mask] = *seq;
 }
 
 //------------------------------------------------------------------------------
-void WinTerminalIn::push(unsigned int value)
+void WinTerminalIn::push(uint32 value)
 {
-    static const unsigned int mask = sizeof_array(_buffer) - 1;
+    static const uint32 mask = sizeof_array(_buffer) - 1;
 
     if (_buffer_count >= sizeof_array(_buffer))
         return;
 
-    int index = _buffer_head + _buffer_count;
+    int32 index = _buffer_head + _buffer_count;
 
     if (value < 0x80)
     {
@@ -422,21 +424,21 @@ void WinTerminalIn::push(unsigned int value)
 
     wchar_t wc[2] = { (wchar_t)value, 0 };
     char utf8[mask + 1];
-    unsigned int n = to_utf8(utf8, sizeof_array(utf8), wc);
-    if (n <= unsigned(mask - _buffer_count))
-        for (unsigned int i = 0; i < n; ++i, ++index)
+    uint32 n = to_utf8(utf8, sizeof_array(utf8), wc);
+    if (n <= uint32(mask - _buffer_count))
+        for (uint32 i = 0; i < n; ++i, ++index)
             _buffer[index & mask] = utf8[i];
 
     _buffer_count += n;
 }
 
 //------------------------------------------------------------------------------
-unsigned char WinTerminalIn::pop()
+uint8 WinTerminalIn::pop()
 {
     if (!_buffer_count)
         return input_none_byte;
 
-    unsigned char value = _buffer[_buffer_head];
+    uint8 value = _buffer[_buffer_head];
 
     --_buffer_count;
     _buffer_head = (_buffer_head + 1) & (sizeof_array(_buffer) - 1);

@@ -17,7 +17,7 @@ HookSetter::HookSetter()
 }
 
 //------------------------------------------------------------------------------
-int HookSetter::commit()
+int32 HookSetter::commit()
 {
     // Each hook needs fixing up, so we find the base address of our module.
     void* self = Vm().get_alloc_base("clink");
@@ -25,8 +25,8 @@ int HookSetter::commit()
         return 0;
 
     // Apply all the hooks add to the setter.
-    int success = 0;
-    for (int i = 0; i < _desc_count; ++i)
+    int32 success = 0;
+    for (int32 i = 0; i < _desc_count; ++i)
     {
         const HookDesc& desc = _descs[i];
         switch (desc.type)

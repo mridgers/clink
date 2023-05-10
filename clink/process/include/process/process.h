@@ -13,20 +13,20 @@ class Process
 public:
     enum Arch { arch_unknown, arch_x86, arch_x64 };
 
-                                Process(int pid=-1);
-    int                         get_pid() const;
+                                Process(int32 pid=-1);
+    int32                       get_pid() const;
     bool                        get_file_name(StrBase& out) const;
     Arch                        get_arch() const;
-    int                         get_parent_pid() const;
+    int32                       get_parent_pid() const;
     void*                       inject_module(const char* dll);
     template <typename T> void* remote_call(void* function, T const& param);
     void                        pause();
     void                        unpause();
 
 private:
-    void*                       remote_call(void* function, const void* param, int param_size);
+    void*                       remote_call(void* function, const void* param, int32 param_size);
     void                        pause(bool suspend);
-    int                         _pid;
+    int32                       _pid;
 
     struct Handle
     {
@@ -39,7 +39,7 @@ private:
 };
 
 //------------------------------------------------------------------------------
-inline int Process::get_pid() const
+inline int32 Process::get_pid() const
 {
     return _pid;
 }

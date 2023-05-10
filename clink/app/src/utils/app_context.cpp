@@ -68,7 +68,7 @@ AppContext::AppContext(const Desc& desc)
 }
 
 //-----------------------------------------------------------------------------
-int AppContext::get_id() const
+int32 AppContext::get_id() const
 {
     return _id;
 }
@@ -100,14 +100,14 @@ void AppContext::get_binaries_dir(StrBase& out) const
         return;
 
     // Check for a .origin suffix indicating that we're using a copied DLL.
-    int out_length = wout.length();
+    int32 out_length = wout.length();
     wout << L".origin";
     HANDLE origin = CreateFileW(wout.c_str(), GENERIC_READ, 0, nullptr,
         OPEN_EXISTING, 0, nullptr);
     if (origin != INVALID_HANDLE_VALUE)
     {
         DWORD read;
-        int size = GetFileSize(origin, nullptr);
+        int32 size = GetFileSize(origin, nullptr);
         out.reserve(size);
         ReadFile(origin, out.data(), size, &read, nullptr);
         CloseHandle(origin);

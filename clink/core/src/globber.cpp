@@ -57,7 +57,7 @@ bool Globber::next(StrBase& out, bool rooted)
     const wchar_t* c = _data.cFileName;
     skip |= (c[0] == '.' && (!c[1] || (c[1] == '.' && !c[2])) && !_dots);
 
-    int attr = _data.dwFileAttributes;
+    int32 attr = _data.dwFileAttributes;
     skip |= (attr & FILE_ATTRIBUTE_SYSTEM) && !_system;
     skip |= (attr & FILE_ATTRIBUTE_HIDDEN) && !_hidden;
     skip |= (attr & FILE_ATTRIBUTE_DIRECTORY) && !_directories;

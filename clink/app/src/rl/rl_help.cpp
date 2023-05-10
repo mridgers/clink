@@ -15,7 +15,7 @@ extern "C" {
 extern SettingInt g_max_width;
 
 //------------------------------------------------------------------------------
-static const char* get_function_name(int (*func_addr)(int, int))
+static const char* get_function_name(int32 (*func_addr)(int32, int32))
 {
     FUNMAP** funcs = funmap;
     while (*funcs != nullptr)
@@ -33,7 +33,7 @@ static const char* get_function_name(int (*func_addr)(int, int))
 }
 
 //------------------------------------------------------------------------------
-static void get_key_string(int i, int map_id, char* buffer)
+static void get_key_string(int32 i, int32 map_id, char* buffer)
 {
     char* write = buffer;
 
@@ -62,22 +62,22 @@ static void get_key_string(int i, int map_id, char* buffer)
 static char** collect_keymap(
     Keymap map,
     char** collector,
-    int* offset,
-    int* max,
-    int map_id)
+    int32* offset,
+    int32* max,
+    int32 map_id)
 {
-    int i;
+    int32 i;
 
     for (i = 0; i < 127; ++i)
     {
         KEYMAP_ENTRY entry = map[i];
         if (entry.type == ISFUNC && entry.function != nullptr)
         {
-            int blacklisted;
-            int j;
+            int32 blacklisted;
+            int32 j;
 
             // Blacklist some functions
-            int (*blacklist[])(int, int) = {
+            int32 (*blacklist[])(int32, int32) = {
                 rl_insert,
                 rl_do_lowercase_version,
             };
@@ -128,8 +128,8 @@ static char** collect_keymap(
 void show_rl_help(Printer& Printer)
 {
     Keymap map = rl_get_keymap();
-    int offset = 1;
-    int max_collect = 64;
+    int32 offset = 1;
+    int32 max_collect = 64;
     char** collector = (char**)malloc(sizeof(char*) * max_collect);
     collector[0] = nullptr;
 
@@ -144,7 +144,7 @@ void show_rl_help(Printer& Printer)
     if (map == emacs_standard_keymap)
     {
         Keymap ctrlx_map = (KEYMAP_ENTRY*)(map[24].function);
-        int type = map[24].type;
+        int32 type = map[24].type;
         if (type == ISKMAP && ctrlx_map != nullptr)
         {
             collector = collect_keymap(ctrlx_map, collector, &offset, &max_collect, 2);
@@ -152,10 +152,10 @@ void show_rl_help(Printer& Printer)
     }
 
     // Find the longest match.
-    int longest = 0;
-    for (int i = 1; i < offset; ++i)
+    int32 longest = 0;
+    for (int32 i = 1; i < offset; ++i)
     {
-        int l = (int)strlen(collector[i]);
+        int32 l = (int32)strlen(collector[i]);
         if (l > longest)
             longest = l;
     }
@@ -163,18 +163,18 @@ void show_rl_help(Printer& Printer)
     // Display the Matches.
     Printer.print("\n");
 
-    int max_width = min<int>(Printer.get_columns() - 3, g_max_width.get());
-    int columns = max(1, max_width / (longest + 1));
-    for (int i = 1, j = columns - 1; i < offset; ++i, --j)
+    int32 max_width = min<int32>(Printer.get_columns() - 3, g_max_width.get());
+    int32 columns = max(1, max_width / (longest + 1));
+    for (int32 i = 1, j = columns - 1; i < offset; ++i, --j)
     {
         const char* match = collector[i];
 
-        int length = int(strlen(match));
+        int32 length = int32(strlen(match));
         Printer.print(match, length);
 
         const char spaces[] = "                                         ";
-        int space_count = max(longest - length, 0) + 1;
-        Printer.print(spaces, min<int>(sizeof(spaces) - 1, space_count));
+        int32 space_count = max(longest - length, 0) + 1;
+        Printer.print(spaces, min<int32>(sizeof(spaces) - 1, space_count));
 
         if (j)
             continue;

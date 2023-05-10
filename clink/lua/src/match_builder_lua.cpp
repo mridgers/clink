@@ -34,9 +34,9 @@ MatchBuilderLua::~MatchBuilderLua()
 /// -name:  Builder:addmatch
 /// -arg:   match:string|table
 /// -ret:   boolean
-int MatchBuilderLua::add_match(lua_State* state)
+int32 MatchBuilderLua::add_match(lua_State* state)
 {
-    int ret = 0;
+    int32 ret = 0;
     if (lua_gettop(state) > 0)
         ret = !!add_match_impl(state, 1);
 
@@ -47,7 +47,7 @@ int MatchBuilderLua::add_match(lua_State* state)
 //------------------------------------------------------------------------------
 /// -name:  Builder:setprefixincluded
 /// -arg:   [state:boolean]
-int MatchBuilderLua::set_prefix_included(lua_State* state)
+int32 MatchBuilderLua::set_prefix_included(lua_State* state)
 {
     bool included = true;
     if (lua_gettop(state) > 0)
@@ -65,17 +65,17 @@ int MatchBuilderLua::set_prefix_included(lua_State* state)
 /// This is the equivalent of calling Builder:addmatch() in a for-loop. Returns
 /// the number of matches added and a boolean indicating if all matches were
 /// added successfully. If matches is a function is called until it returns nil.
-int MatchBuilderLua::add_matches(lua_State* state)
+int32 MatchBuilderLua::add_matches(lua_State* state)
 {
-    int count = 0;
-    int total = -1;
+    int32 count = 0;
+    int32 total = -1;
 
     if (lua_gettop(state) > 0)
     {
         if (lua_istable(state, 1))
         {
-            total = int(lua_rawlen(state, 1));
-            for (int i = 1; i <= total; ++i)
+            total = int32(lua_rawlen(state, 1));
+            for (int32 i = 1; i <= total; ++i)
             {
                 lua_rawgeti(state, 1, i);
                 count += !!add_match_impl(state, -1);
@@ -105,7 +105,7 @@ int MatchBuilderLua::add_matches(lua_State* state)
 }
 
 //------------------------------------------------------------------------------
-bool MatchBuilderLua::add_match_impl(lua_State* state, int stack_index)
+bool MatchBuilderLua::add_match_impl(lua_State* state, int32 stack_index)
 {
     if (lua_isstring(state, stack_index))
     {

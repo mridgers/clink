@@ -24,7 +24,7 @@ bool                save(const char* file);
 class Setting
 {
 public:
-    enum TypeE : unsigned char {
+    enum TypeE : uint8 {
         type_unknown,
         type_int,
         type_bool,
@@ -132,26 +132,26 @@ template <typename T> T SettingImpl<T>::get() const
 
 //------------------------------------------------------------------------------
 template <> struct SettingImpl<bool>::Type        { enum { id = Setting::type_bool }; };
-template <> struct SettingImpl<int>::Type         { enum { id = Setting::type_int }; };
+template <> struct SettingImpl<int32>::Type         { enum { id = Setting::type_int }; };
 template <> struct SettingImpl<const char*>::Type { enum { id = Setting::type_string }; };
 
 //------------------------------------------------------------------------------
 typedef SettingImpl<bool>           SettingBool;
-typedef SettingImpl<int>            SettingInt;
+typedef SettingImpl<int32>            SettingInt;
 typedef SettingImpl<const char*>    SettingStr;
 
 //------------------------------------------------------------------------------
 class SettingEnum
-    : public SettingImpl<int>
+    : public SettingImpl<int32>
 {
 public:
-                       SettingEnum(const char* name, const char* short_desc, const char* values, int default_value);
-                       SettingEnum(const char* name, const char* short_desc, const char* long_desc, const char* values, int default_value);
+                       SettingEnum(const char* name, const char* short_desc, const char* values, int32 default_value);
+                       SettingEnum(const char* name, const char* short_desc, const char* long_desc, const char* values, int32 default_value);
     virtual bool       set(const char* value) override;
     virtual void       get(StrBase& out) const override;
     const char*        get_options() const;
 
-    using SettingImpl<int>::get;
+    using SettingImpl<int32>::get;
 
 protected:
     static const char* next_option(const char* option);

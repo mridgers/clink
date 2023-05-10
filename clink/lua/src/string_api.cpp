@@ -8,7 +8,7 @@
 #include <core/str_tokeniser.h>
 
 //------------------------------------------------------------------------------
-static const char* get_string(lua_State* state, int index)
+static const char* get_string(lua_State* state, int32 index)
 {
     if (lua_gettop(state) < index || !lua_isstring(state, index))
         return nullptr;
@@ -20,7 +20,7 @@ static const char* get_string(lua_State* state, int index)
 /// -name:  string.hash
 /// -arg:   x
 /// -ret:   x
-static int hash(lua_State* state)
+static int32 hash(lua_State* state)
 {
     const char* in = get_string(state, 1);
     if (in == nullptr)
@@ -34,7 +34,7 @@ static int hash(lua_State* state)
 /// -name:  string.explode
 /// -arg:   x
 /// -ret:   x
-static int explode(lua_State* state)
+static int32 explode(lua_State* state)
 {
     const char* in = get_string(state, 1);
     if (in == nullptr)
@@ -51,9 +51,9 @@ static int explode(lua_State* state)
 
     lua_createtable(state, 16, 0);
 
-    int count = 0;
+    int32 count = 0;
     const char* start;
-    int length;
+    int32 length;
     while (StrToken token = tokens.next(start, length))
     {
         lua_pushlstring(state, start, length);
@@ -68,7 +68,7 @@ void string_lua_initialise(LuaState& lua)
 {
     struct {
         const char* name;
-        int         (*method)(lua_State*);
+        int32       (*method)(lua_State*);
     } methods[] = {
         { "hash",       &hash },
         { "explode",    &explode },

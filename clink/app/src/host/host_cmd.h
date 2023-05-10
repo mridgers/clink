@@ -29,8 +29,8 @@ private:
     bool                initialise_system();
     virtual void        initialise_lua(LuaState& lua) override;
     virtual void        initialise_editor_desc(LineEditor::Desc& desc) override;
-    void                edit_line(const wchar_t* prompt, wchar_t* chars, int max_chars);
-    bool                capture_prompt(const wchar_t* chars, int char_count);
+    void                edit_line(const wchar_t* prompt, wchar_t* chars, int32 max_chars);
+    bool                capture_prompt(const wchar_t* chars, int32 char_count);
     bool                is_interactive() const;
     TaggedPrompt        _prompt;
     Doskey              _doskey;

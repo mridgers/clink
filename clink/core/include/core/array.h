@@ -10,7 +10,7 @@ class Array
     /* This class is really rather poor */
 
 public:
-    template <int D, typename U>
+    template <int32 D, typename U>
     class IterImpl
     {
     public:
@@ -29,7 +29,7 @@ public:
     typedef IterImpl<-1, T>        Riter;
     typedef IterImpl<-1, T const>  RCiter;
 
-                    Array(T* ptr, unsigned int size, unsigned int capacity=0);
+                    Array(T* ptr, uint32 size, uint32 capacity=0);
     Iter            begin()          { return _ptr; }
     Iter            end()            { return _ptr + _size; }
     Citer           begin() const    { return _ptr; }
@@ -38,8 +38,8 @@ public:
     Riter           rend()           { return _ptr - 1; }
     RCiter          rbegin() const   { return _ptr + _size - 1; }
     RCiter          rend() const     { return _ptr - 1; }
-    unsigned int    size() const     { return _size; }
-    unsigned int    capacity() const { return _capacity; }
+    uint32          size() const     { return _size; }
+    uint32          capacity() const { return _capacity; }
     bool            empty() const    { return !_size; }
     bool            full() const     { return (_size == _capacity); }
     T const*        front() const    { return _ptr; }
@@ -48,17 +48,17 @@ public:
     T*              back()           { return empty() ? nullptr : (_ptr + _size - 1); }
     T*              push_back()      { return full() ? nullptr : (_ptr + _size++); }
     void            clear();
-    T const*        operator [] (unsigned int index) const;
+    T const*        operator [] (uint32 index) const;
 
 protected:
     T*              _ptr;
-    unsigned int    _size;
-    unsigned int    _capacity;
+    uint32          _size;
+    uint32          _capacity;
 };
 
 //------------------------------------------------------------------------------
 template <typename T>
-Array<T>::Array(T* ptr, unsigned int size, unsigned int capacity)
+Array<T>::Array(T* ptr, uint32 size, uint32 capacity)
 : _ptr(ptr)
 , _size(size)
 , _capacity(capacity ? capacity : size)
@@ -67,7 +67,7 @@ Array<T>::Array(T* ptr, unsigned int size, unsigned int capacity)
 
 //------------------------------------------------------------------------------
 template <typename T>
-T const* Array<T>::operator [] (unsigned int index) const
+T const* Array<T>::operator [] (uint32 index) const
 {
     return (index >= capacity()) ? nullptr : (_ptr + index);
 }
@@ -85,7 +85,7 @@ void Array<T>::clear()
 
 
 //------------------------------------------------------------------------------
-template <typename T, unsigned int SIZE>
+template <typename T, uint32 SIZE>
 class FixedArray
     : public Array<T>
 {

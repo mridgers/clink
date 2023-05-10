@@ -7,21 +7,21 @@
 class LinearAllocator
 {
 public:
-                          LinearAllocator(int size);
-                          LinearAllocator(void* buffer, int size);
+                          LinearAllocator(int32 size);
+                          LinearAllocator(void* buffer, int32 size);
                           ~LinearAllocator();
-    void*                 alloc(int size);
-    template <class T> T* calloc(int count=1);
+    void*                 alloc(int32 size);
+    template <class T> T* calloc(int32 count=1);
 
 private:
     char*                 _buffer;
-    int                   _used;
-    int                   _max;
+    int32                 _used;
+    int32                 _max;
     bool                  _owned;
 };
 
 //------------------------------------------------------------------------------
-inline LinearAllocator::LinearAllocator(int size)
+inline LinearAllocator::LinearAllocator(int32 size)
 : _buffer((char*)malloc(size))
 , _used(0)
 , _max(size)
@@ -30,7 +30,7 @@ inline LinearAllocator::LinearAllocator(int size)
 }
 
 //------------------------------------------------------------------------------
-inline LinearAllocator::LinearAllocator(void* buffer, int size)
+inline LinearAllocator::LinearAllocator(void* buffer, int32 size)
 : _buffer((char*)buffer)
 , _used(0)
 , _max(size)
@@ -46,12 +46,12 @@ inline LinearAllocator::~LinearAllocator()
 }
 
 //------------------------------------------------------------------------------
-inline void* LinearAllocator::alloc(int size)
+inline void* LinearAllocator::alloc(int32 size)
 {
     if (size == 0)
         return nullptr;
 
-    int used = _used + size;
+    int32 used = _used + size;
     if (used > _max)
         return nullptr;
 
@@ -61,7 +61,7 @@ inline void* LinearAllocator::alloc(int size)
 }
 
 //------------------------------------------------------------------------------
-template <class T> T* LinearAllocator::calloc(int count)
+template <class T> T* LinearAllocator::calloc(int32 count)
 {
     return (T*)(alloc(sizeof(T) * count));
 }

@@ -14,13 +14,13 @@ class LineStateLua
 {
 public:
                         LineStateLua(const LineState& line);
-    int                 get_line(lua_State* state);
-    int                 get_cursor(lua_State* state);
-    int                 get_command_offset(lua_State* state);
-    int                 get_word_count(lua_State* state);
-    int                 get_word_info(lua_State* state);
-    int                 get_word(lua_State* state);
-    int                 get_end_word(lua_State* state);
+    int32               get_line(lua_State* state);
+    int32               get_cursor(lua_State* state);
+    int32               get_command_offset(lua_State* state);
+    int32               get_word_count(lua_State* state);
+    int32               get_word_info(lua_State* state);
+    int32               get_word(lua_State* state);
+    int32               get_end_word(lua_State* state);
 
 private:
     const LineState&    _line;

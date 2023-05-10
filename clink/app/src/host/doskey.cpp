@@ -30,18 +30,18 @@ public:
     struct RangeDesc
     {
         const TYPE* const   ptr;
-        unsigned int        count;
+        uint32              count;
     };
 
                             WstrStream();
     void                    operator << (TYPE c);
     void                    operator << (const RangeDesc desc);
     void                    collect(StrImpl<TYPE>& out);
-    static RangeDesc        range(TYPE const* ptr, unsigned int count);
+    static RangeDesc        range(TYPE const* ptr, uint32 count);
     static RangeDesc        range(const StrIterImpl<TYPE>& iter);
 
 private:
-    void                    grow(unsigned int hint=128);
+    void                    grow(uint32 hint=128);
     wchar_t* __restrict     _start;
     wchar_t* __restrict     _end;
     wchar_t* __restrict     _cursor;
@@ -70,12 +70,12 @@ void WstrStream::operator << (const RangeDesc desc)
     if (_cursor + desc.count >= _end)
         grow(desc.count);
 
-    for (unsigned int i = 0; i < desc.count; ++i, ++_cursor)
+    for (uint32 i = 0; i < desc.count; ++i, ++_cursor)
         *_cursor = desc.ptr[i];
 }
 
 //------------------------------------------------------------------------------
-WstrStream::RangeDesc WstrStream::range(const TYPE* ptr, unsigned int count)
+WstrStream::RangeDesc WstrStream::range(const TYPE* ptr, uint32 count)
 {
     return { ptr, count };
 }
@@ -89,15 +89,15 @@ WstrStream::RangeDesc WstrStream::range(const StrIterImpl<TYPE>& iter)
 //------------------------------------------------------------------------------
 void WstrStream::collect(StrImpl<TYPE>& out)
 {
-    out.attach(_start, int(_cursor - _start));
+    out.attach(_start, int32(_cursor - _start));
     _start = _end = _cursor = nullptr;
 }
 
 //------------------------------------------------------------------------------
-void WstrStream::grow(unsigned int hint)
+void WstrStream::grow(uint32 hint)
 {
     hint = (hint + 127) & ~127;
-    unsigned int size = int(_end - _start) + hint;
+    uint32 size = int32(_end - _start) + hint;
     TYPE* next = (TYPE*)realloc(_start, size * sizeof(TYPE));
     _cursor = next + (_cursor - _start);
     _end = next + size;
@@ -200,19 +200,19 @@ bool Doskey::resolve_impl(const WstrIter& in, WstrStream* out)
     if (g_enhanced_doskey.get())
         tokens.add_quote_pair("\"");
 
-    struct ArgDesc { const wchar_t* ptr; int length; };
+    struct ArgDesc { const wchar_t* ptr; int32 length; };
     FixedArray<ArgDesc, 10> args;
     ArgDesc* desc;
     while (tokens.next(token) && (desc = args.push_back()))
     {
         desc->ptr = token.get_pointer();
-        desc->length = short(token.length());
+        desc->length = int16(token.length());
     }
 
     // Expand the alias' text into 'out'.
     WstrStream& stream = *out;
     const wchar_t* read = text.c_str();
-    for (int c = *read; c = *read; ++read)
+    for (int32 c = *read; c = *read; ++read)
     {
         if (c != '$')
         {
@@ -235,7 +235,7 @@ bool Doskey::resolve_impl(const WstrIter& in, WstrStream* out)
         }
 
         // Unknown tag? Perhaps it is a argument one?
-        if (unsigned(c - '1') < 9)  c -= '1';
+        if (uint32(c - '1') < 9)  c -= '1';
         else if (c == '*')          c = -1;
         else
         {
@@ -244,7 +244,7 @@ bool Doskey::resolve_impl(const WstrIter& in, WstrStream* out)
             continue;
         }
 
-        int arg_count = args.size();
+        int32 arg_count = args.size();
         if (!arg_count)
             continue;
 
@@ -253,7 +253,7 @@ bool Doskey::resolve_impl(const WstrIter& in, WstrStream* out)
         {
             const wchar_t* end = in.get_pointer() + in.length();
             const wchar_t* start = args.front()->ptr;
-            stream << WstrStream::range(start, int(end - start));
+            stream << WstrStream::range(start, int32(end - start));
         }
         else if (c < arg_count)
         {
@@ -296,7 +296,7 @@ void Doskey::resolve(const wchar_t* chars, DoskeyAlias& out)
             while (commands.next(command))
             {
                 // Copy delimiters into the output buffer verbatim.
-                if (int delim_length = int(command.get_pointer() - last))
+                if (int32 delim_length = int32(command.get_pointer() - last))
                     stream << WstrStream::range(last, delim_length);
                 last = command.get_pointer() + command.length();
 

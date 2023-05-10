@@ -23,7 +23,7 @@ public:
     virtual void            begin() override {}
     virtual void            end() override {}
     virtual void            select() override {}
-    virtual int             read() override { return *(unsigned char*)_read++; }
+    virtual int32           read() override { return *(uint8*)_read++; }
 
 private:
     const char*             _input = nullptr;
@@ -37,10 +37,10 @@ class TestTerminalOut
 public:
     virtual void            begin() override {}
     virtual void            end() override {}
-    virtual void            write(const char* chars, int length) override {}
+    virtual void            write(const char* chars, int32 length) override {}
     virtual void            flush() override {}
-    virtual int             get_columns() const override { return 80; }
-    virtual int             get_rows() const override { return 25; }
+    virtual int32           get_columns() const override { return 80; }
+    virtual int32           get_rows() const override { return 25; }
     virtual void            set_attributes(const Attributes attr) {}
 };
 
@@ -61,7 +61,7 @@ public:
 
 private:
     void                        create_line_editor(const LineEditor::Desc* desc=nullptr);
-    void                        expected_matches_impl(int dummy, ...);
+    void                        expected_matches_impl(int32 dummy, ...);
     TestTerminalIn              _terminal_in;
     TestTerminalOut             _terminal_out;
     std::vector<const char*>    _expected_matches;

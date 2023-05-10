@@ -106,7 +106,7 @@ bool __stdcall initialise_clink(const AppContext::Desc& app_desc)
         { "cmd.exe", []() -> Host* { return new HostCmd(); } },
     };
 
-    for (int i = 0; i < sizeof_array(hosts); ++i)
+    for (int32 i = 0; i < sizeof_array(hosts); ++i)
         if (stricmp(host_name.c_str(), hosts[i].name) == 0)
             if (g_host = (hosts[i].creator)())
                 break;

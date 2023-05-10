@@ -44,7 +44,7 @@ bool load(const char* file)
 
     // Buffer the file.
     fseek(in, 0, SEEK_END);
-    int size = ftell(in);
+    int32 size = ftell(in);
     fseek(in, 0, SEEK_SET);
 
     if (size == 0)
@@ -122,7 +122,7 @@ bool save(const char* file)
         fprintf(out, "# name: %s\n", iter->get_short_desc());
 
         // Write out the Setting's type.
-        int type = iter->get_type();
+        int32 type = iter->get_type();
         const char* type_name = nullptr;
         switch (type)
         {
@@ -248,7 +248,7 @@ template <> bool SettingImpl<bool>::set(const char* value)
 }
 
 //------------------------------------------------------------------------------
-template <> bool SettingImpl<int>::set(const char* value)
+template <> bool SettingImpl<int32>::set(const char* value)
 {
     if ((*value < '0' || *value > '9') && *value != '-')
         return false;
@@ -273,7 +273,7 @@ template <> void SettingImpl<bool>::get(StrBase& out) const
 }
 
 //------------------------------------------------------------------------------
-template <> void SettingImpl<int>::get(StrBase& out) const
+template <> void SettingImpl<int32>::get(StrBase& out) const
 {
     out.format("%d", _store.value);
 }
@@ -291,7 +291,7 @@ SettingEnum::SettingEnum(
     const char* name,
     const char* short_desc,
     const char* options,
-    int default_value)
+    int32 default_value)
 : SettingEnum(name, short_desc, nullptr, options, default_value)
 {
 }
@@ -302,8 +302,8 @@ SettingEnum::SettingEnum(
     const char* short_desc,
     const char* long_desc,
     const char* options,
-    int default_value)
-: SettingImpl<int>(name, short_desc, long_desc, default_value)
+    int32 default_value)
+: SettingImpl<int32>(name, short_desc, long_desc, default_value)
 , _options(options)
 {
     _type = type_enum;
@@ -312,12 +312,12 @@ SettingEnum::SettingEnum(
 //------------------------------------------------------------------------------
 bool SettingEnum::set(const char* value)
 {
-    int i = 0;
+    int32 i = 0;
     for (const char* option = _options.c_str(); *option; ++i)
     {
         const char* next = next_option(option);
 
-        int option_len = int(next - option);
+        int32 option_len = int32(next - option);
         if (*next)
             --option_len;
 
@@ -336,12 +336,12 @@ bool SettingEnum::set(const char* value)
 //------------------------------------------------------------------------------
 void SettingEnum::get(StrBase& out) const
 {
-    int index = _store.value;
+    int32 index = _store.value;
     if (index < 0)
         return;
 
     const char* option = _options.c_str();
-    for (int i = 0; i < index && *option; ++i)
+    for (int32 i = 0; i < index && *option; ++i)
         option = next_option(option);
 
     if (*option)
@@ -351,7 +351,7 @@ void SettingEnum::get(StrBase& out) const
             --next;
 
         out.clear();
-        out.concat(option, int(next - option));
+        out.concat(option, int32(next - option));
     }
 }
 

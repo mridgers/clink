@@ -109,10 +109,10 @@ void LuaState::shutdown()
 }
 
 //------------------------------------------------------------------------------
-bool LuaState::do_string(const char* string, int length)
+bool LuaState::do_string(const char* string, int32 length)
 {
     if (length < 0)
-        length = int(strlen(string));
+        length = int32(strlen(string));
 
     bool ok;
     if (ok = !luaL_loadbuffer(_state, string, length, string))
@@ -161,7 +161,7 @@ bool LuaState::do_file(const char* path)
         return io.buffer;
     };
 
-    int ok;
+    int32 ok;
     {
         Str<280> at_path;
         at_path << "@";

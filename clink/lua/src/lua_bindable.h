@@ -15,7 +15,7 @@ template <class T>
 class LuaBindable
 {
 public:
-    typedef int         (T::*method_t)(lua_State*);
+    typedef int32       (T::*method_t)(lua_State*);
 
     struct Method
     {
@@ -28,13 +28,13 @@ public:
     void                push(lua_State* state);
 
 private:
-    static int          call(lua_State* state);
+    static int32        call(lua_State* state);
     void                bind();
     void                unbind();
     const char*         _name;
     const Method*       _methods;
     lua_State*          _state;
-    int                 _registry_ref;
+    int32               _registry_ref;
 };
 
 //------------------------------------------------------------------------------
@@ -124,7 +124,7 @@ void LuaBindable<T>::push(lua_State* state)
 
 //------------------------------------------------------------------------------
 template <class T>
-int LuaBindable<T>::call(lua_State* state)
+int32 LuaBindable<T>::call(lua_State* state)
 {
     auto* const* self = (T* const*)lua_touserdata(state, 2);
     if (self == nullptr || *self == nullptr)

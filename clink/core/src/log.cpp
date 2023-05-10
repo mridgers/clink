@@ -12,7 +12,7 @@ Logger::~Logger()
 }
 
 //------------------------------------------------------------------------------
-void Logger::info(const char* function, int line, const char* fmt, ...)
+void Logger::info(const char* function, int32 line, const char* fmt, ...)
 {
     Logger* instance = Logger::get();
     if (instance == nullptr)
@@ -25,7 +25,7 @@ void Logger::info(const char* function, int line, const char* fmt, ...)
 }
 
 //------------------------------------------------------------------------------
-void Logger::error(const char* function, int line, const char* fmt, ...)
+void Logger::error(const char* function, int32 line, const char* fmt, ...)
 {
     Logger* instance = Logger::get();
     if (instance == nullptr)
@@ -52,7 +52,7 @@ FileLogger::FileLogger(const char* log_path)
 }
 
 //------------------------------------------------------------------------------
-void FileLogger::emit(const char* function, int line, const char* fmt, va_list args)
+void FileLogger::emit(const char* function, int32 line, const char* fmt, va_list args)
 {
     FILE* file;
 

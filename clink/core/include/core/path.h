@@ -9,9 +9,9 @@ class StrBase;
 namespace path
 {
 
-void        normalise(StrBase& in_out, int sep=0);
-void        normalise(char* in_out, int sep=0);
-bool        is_separator(int c);
+void        normalise(StrBase& in_out, int32 sep=0);
+void        normalise(char* in_out, int32 sep=0);
+bool        is_separator(int32 c);
 const char* next_element(const char* in);
 bool        get_base_name(const char* in, StrBase& out);
 bool        get_directory(const char* in, StrBase& out);

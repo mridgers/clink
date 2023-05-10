@@ -20,24 +20,24 @@ extern "C" {
 //------------------------------------------------------------------------------
 static FILE*        null_stream = (FILE*)1;
 void                show_rl_help(Printer&);
-extern "C" int      wcwidth(int);
+extern "C" int32    wcwidth(int32);
 extern "C" char*    tgetstr(char*, char**);
-static const int    RL_MORE_INPUT_STATES = ~(
+static const int32  RL_MORE_INPUT_STATES = ~(
                         RL_STATE_CALLBACK|
                         RL_STATE_INITIALIZED|
                         RL_STATE_OVERWRITE|
                         RL_STATE_VICMDONCE);
 
 extern "C" {
-extern void         (*rl_fwrite_function)(FILE*, const char*, int);
+extern void         (*rl_fwrite_function)(FILE*, const char*, int32);
 extern void         (*rl_fflush_function)(FILE*);
 extern char*        _rl_comment_begin;
-extern int          _rl_convert_meta_chars_to_ascii;
-extern int          _rl_output_meta_chars;
+extern int32        _rl_convert_meta_chars_to_ascii;
+extern int32        _rl_output_meta_chars;
 #if defined(PLATFORM_WINDOWS)
-extern int          _rl_vis_botlin;
-extern int          _rl_last_c_pos;
-extern int          _rl_last_v_pos;
+extern int32        _rl_vis_botlin;
+extern int32        _rl_last_c_pos;
+extern int32        _rl_last_v_pos;
 #endif
 } // extern "C"
 
@@ -60,13 +60,13 @@ static void load_user_inputrc()
     for (const char* env_var : env_vars)
     {
         Str<MAX_PATH> path;
-        int path_length = GetEnvironmentVariable(env_var, path.data(), path.size());
-        if (!path_length || path_length > int(path.size()))
+        int32 path_length = GetEnvironmentVariable(env_var, path.data(), path.size());
+        if (!path_length || path_length > int32(path.size()))
             continue;
 
         path << "\\.inputrc";
 
-        for (int j = 0; j < 2; ++j)
+        for (int32 j = 0; j < 2; ++j)
         {
             if (!rl_read_init_file(path.c_str()))
             {
@@ -79,7 +79,7 @@ static void load_user_inputrc()
                 break;
             }
 
-            int dot = path.last_of('.');
+            int32 dot = path.last_of('.');
             if (dot >= 0)
                 path.data()[dot] = '_';
         }
@@ -99,7 +99,7 @@ enum {
 
 
 //------------------------------------------------------------------------------
-static int terminal_read_thunk(FILE* stream)
+static int32 terminal_read_thunk(FILE* stream)
 {
     if (stream == null_stream)
         return 0;
@@ -109,7 +109,7 @@ static int terminal_read_thunk(FILE* stream)
 }
 
 //------------------------------------------------------------------------------
-static void terminal_write_thunk(FILE* stream, const char* chars, int char_count)
+static void terminal_write_thunk(FILE* stream, const char* chars, int32 char_count)
 {
     if (stream == stderr || stream == null_stream)
         return;
@@ -141,8 +141,8 @@ RlModule::RlModule(const char* shell_name)
     _rl_output_meta_chars = 1;
 
     // Disable completion and match display.
-    rl_completion_entry_function = [](const char*, int) -> char* { return nullptr; };
-    rl_completion_display_matches_hook = [](char**, int, int) {};
+    rl_completion_entry_function = [](const char*, int32) -> char* { return nullptr; };
+    rl_completion_display_matches_hook = [](char**, int32, int32) {};
 
     // Bind extended keys so editing follows Windows' conventions.
     static const char* ext_key_binds[][2] = {
@@ -160,7 +160,7 @@ RlModule::RlModule(const char* shell_name)
         { "\\C-w",    "backward-kill-word" },
     };
 
-    for (int i = 0; i < sizeof_array(ext_key_binds); ++i)
+    for (int32 i = 0; i < sizeof_array(ext_key_binds); ++i)
         rl_bind_keyseq(ext_key_binds[i][0], rl_named_function(ext_key_binds[i][1]));
 
     load_user_inputrc();
@@ -176,7 +176,7 @@ RlModule::~RlModule()
 //------------------------------------------------------------------------------
 void RlModule::bind_input(Binder& binder)
 {
-    int default_group = binder.get_group();
+    int32 default_group = binder.get_group();
     binder.bind(default_group, "", bind_id_input);
     binder.bind(default_group, "\\M-h", bind_id_rl_help);
 
@@ -245,7 +245,7 @@ void RlModule::on_input(const Input& Input, Result& result, const Context& conte
         virtual void begin() override   {}
         virtual void end() override     {}
         virtual void select() override  {}
-        virtual int  read() override    { return *(unsigned char*)(data++); }
+        virtual int32  read() override    { return *(uint8*)(data++); }
         const char*  data;
     } term_in;
 
@@ -253,7 +253,7 @@ void RlModule::on_input(const Input& Input, Result& result, const Context& conte
     rl_instream = (FILE*)(&term_in);
 
     // Call Readline's until there's no characters left.
-    int is_inc_searching = rl_readline_state & RL_STATE_ISEARCH;
+    int32 is_inc_searching = rl_readline_state & RL_STATE_ISEARCH;
     while (*term_in.data && !_done)
     {
         rl_callback_read_char();
@@ -302,18 +302,18 @@ void RlModule::done(const char* line)
 }
 
 //------------------------------------------------------------------------------
-void RlModule::on_terminal_resize(int columns, int rows, const Context& context)
+void RlModule::on_terminal_resize(int32 columns, int32 rows, const Context& context)
 {
 #if 1
     rl_reset_screen_size();
     rl_redisplay();
 #else
-    static int prev_columns = columns;
+    static int32 prev_columns = columns;
 
-    int remaining = prev_columns;
-    int line_count = 1;
+    int32 remaining = prev_columns;
+    int32 line_count = 1;
 
-    auto measure = [&] (const char* Input, int length) {
+    auto measure = [&] (const char* Input, int32 length) {
         Ecma48State state;
         Ecma48Iter iter(Input, state, length);
         while (const Ecma48Code& code = iter.next())
@@ -323,7 +323,7 @@ void RlModule::on_terminal_resize(int columns, int rows, const Context& context)
             case Ecma48Code::type_chars:
                 for (StrIter i(code.get_pointer(), code.get_length()); i.more(); )
                 {
-                    int n = wcwidth(i.next());
+                    int32 n = wcwidth(i.next());
                     remaining -= n;
                     if (remaining > 0)
                         continue;
@@ -346,7 +346,7 @@ void RlModule::on_terminal_resize(int columns, int rows, const Context& context)
                     break;
 
                 case Ecma48Code::c0_ht:
-                    if (int n = 8 - ((prev_columns - remaining) & 7))
+                    if (int32 n = 8 - ((prev_columns - remaining) & 7))
                         remaining = max(remaining - n, 0);
                     break;
 
@@ -364,7 +364,7 @@ void RlModule::on_terminal_resize(int columns, int rows, const Context& context)
     const LineBuffer& buffer = context.buffer;
     const char* buffer_ptr = buffer.get_buffer();
     measure(buffer_ptr, buffer.get_cursor());
-    int cursor_line = line_count - 1;
+    int32 cursor_line = line_count - 1;
 
     buffer_ptr += buffer.get_cursor();
     measure(buffer_ptr, -1);
@@ -377,7 +377,7 @@ void RlModule::on_terminal_resize(int columns, int rows, const Context& context)
     auto& printer = context.printer;
 
     // Move cursor to bottom line.
-    for (int i = line_count - cursor_line; --i;)
+    for (int32 i = line_count - cursor_line; --i;)
         printer.print(termcap_down, 64);
 
     printer.print(termcap_cr, 64);

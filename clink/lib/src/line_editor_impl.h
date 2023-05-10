@@ -23,8 +23,8 @@ public:
                         LineEditorImpl(const Desc& desc);
     virtual bool        add_module(EditorModule& module) override;
     virtual bool        add_generator(MatchGenerator& generator) override;
-    virtual bool        get_line(char* out, int out_size) override;
-    virtual bool        edit(char* out, int out_size) override;
+    virtual bool        get_line(char* out, int32 out_size) override;
+    virtual bool        edit(char* out, int32 out_size) override;
     virtual bool        update() override;
 
 private:
@@ -33,7 +33,7 @@ private:
     typedef FixedArray<MatchGenerator*, 32> Generators;
     typedef FixedArray<Word, 72>            Words;
 
-    enum Flags : unsigned char
+    enum Flags : uint8
     {
         flag_init       = 1 << 0,
         flag_editing    = 1 << 1,
@@ -44,17 +44,17 @@ private:
     void                initialise();
     void                begin_line();
     void                end_line();
-    void                find_command_bounds(const char*& start, int& length);
+    void                find_command_bounds(const char*& start, int32& length);
     void                collect_words();
     void                update_internal();
     void                update_input();
-    void                accept_match(unsigned int index);
+    void                accept_match(uint32 index);
     void                append_match_lcd();
     Module::Context     get_context(const LineState& line) const;
     LineState           get_linestate() const;
-    void                set_flag(unsigned char flag);
-    void                clear_flag(unsigned char flag);
-    bool                check_flag(unsigned char flag) const;
+    void                set_flag(uint8 flag);
+    void                clear_flag(uint8 flag);
+    bool                check_flag(uint8 flag) const;
     RlModule            _module;
     RlBuffer            _buffer;
     Desc                _desc;
@@ -65,8 +65,8 @@ private:
     Words               _words;
     MatchesImpl         _matches;
     Printer             _printer;
-    unsigned int        _prev_key;
-    unsigned short      _command_offset;
-    unsigned char       _keys_size;
-    unsigned char       _flags = 0;
+    uint32              _prev_key;
+    uint16              _command_offset;
+    uint8               _keys_size;
+    uint8               _flags = 0;
 };

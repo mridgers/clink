@@ -12,13 +12,13 @@ class WinTerminalOut
 public:
     virtual void    begin() override;
     virtual void    end() override;
-    virtual void    write(const char* chars, int length) override;
+    virtual void    write(const char* chars, int32 length) override;
     virtual void    flush() override;
-    virtual int     get_columns() const override;
-    virtual int     get_rows() const override;
+    virtual int32   get_columns() const override;
+    virtual int32   get_rows() const override;
 
 private:
     void*           _stdout = nullptr;
-    unsigned long   _prev_mode = 0;
-    unsigned short  _default_attr = 0x07;
+    uint32          _prev_mode = 0;
+    uint16          _default_attr = 0x07;
 };

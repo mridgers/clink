@@ -9,12 +9,12 @@ class StrBase;
 class Matches
 {
 public:
-    virtual unsigned int    get_match_count() const = 0;
-    virtual const char*     get_match(unsigned int index) const = 0;
-    virtual const char*     get_displayable(unsigned int index) const = 0;
-    virtual const char*     get_aux(unsigned int index) const = 0;
-    virtual char            get_suffix(unsigned int index) const = 0;
-    virtual unsigned int    get_cell_count(unsigned int index) const = 0;
+    virtual uint32          get_match_count() const = 0;
+    virtual const char*     get_match(uint32 index) const = 0;
+    virtual const char*     get_displayable(uint32 index) const = 0;
+    virtual const char*     get_aux(uint32 index) const = 0;
+    virtual char            get_suffix(uint32 index) const = 0;
+    virtual uint32          get_cell_count(uint32 index) const = 0;
     virtual bool            has_aux() const = 0;
     virtual void            get_match_lcd(StrBase& out) const = 0;
 };

@@ -63,14 +63,14 @@ bool LuaMatchGenerator::generate(const LineState& line, MatchBuilder& Builder)
         return false;
     }
 
-    int use_matches = lua_toboolean(state, -1);
+    int32 use_matches = lua_toboolean(state, -1);
     lua_settop(state, 0);
 
     return !!use_matches;
 }
 
 //------------------------------------------------------------------------------
-int LuaMatchGenerator::get_prefix_length(const LineState& line) const
+int32 LuaMatchGenerator::get_prefix_length(const LineState& line) const
 {
     lua_State* state = _state.get_state();
 
@@ -91,7 +91,7 @@ int LuaMatchGenerator::get_prefix_length(const LineState& line) const
         return 0;
     }
 
-    int prefix = int(lua_tointeger(state, -1));
+    int32 prefix = int32(lua_tointeger(state, -1));
     lua_settop(state, 0);
     return prefix;
 }

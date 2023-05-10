@@ -18,7 +18,7 @@ static void write_addr(funcptr_t* where, funcptr_t to_write)
 {
     Vm vm;
     Vm::Region Region = { vm.get_page(where), 1 };
-    unsigned int prev_access = vm.get_access(Region);
+    uint32 prev_access = vm.get_access(Region);
     vm.set_access(Region, Vm::access_write);
 
     if (!vm.write(where, &to_write, sizeof(to_write)))
@@ -43,7 +43,7 @@ funcptr_t hook_iat(
     const char* dll,
     const char* func_name,
     funcptr_t hook,
-    int find_by_name
+    int32 find_by_name
 )
 {
     LOG("Attempting to hook IAT for module %p", base);
@@ -91,15 +91,15 @@ class TrampolineAllocator
 public:
     static TrampolineAllocator*     get(funcptr_t to_hook);
 
-    void*                           alloc(int size);
+    void*                           alloc(int32 size);
     void                            reset_access();
 
 private:
-                                    TrampolineAllocator(int prev_access);
-    unsigned int                    _magic = magic;
-    unsigned int                    _prev_access;
-    unsigned int                    _used = 0;
-    static const unsigned int       magic = 0x4b4e4c43;
+                                    TrampolineAllocator(int32 prev_access);
+    uint32                          _magic = magic;
+    uint32                          _prev_access;
+    uint32                          _used = 0;
+    static const uint32             magic = 0x4b4e4c43;
 };
 
 //------------------------------------------------------------------------------
@@ -116,7 +116,7 @@ TrampolineAllocator* TrampolineAllocator::get(funcptr_t to_hook)
     auto make_writeable = [&] ()
     {
         Vm::Region last_page = { text_end - Vm::get_page_size(), 1 };
-        int prev_access = vm.get_access(last_page);
+        int32 prev_access = vm.get_access(last_page);
         vm.set_access(last_page, prev_access|Vm::access_write);
         return prev_access;
     };
@@ -134,26 +134,26 @@ TrampolineAllocator* TrampolineAllocator::get(funcptr_t to_hook)
         if (*c != '\0')
             return nullptr;
 
-    int prev_access = make_writeable();
+    int32 prev_access = make_writeable();
     return new (ret) TrampolineAllocator(prev_access);
 }
 
 //------------------------------------------------------------------------------
-TrampolineAllocator::TrampolineAllocator(int prev_access)
+TrampolineAllocator::TrampolineAllocator(int32 prev_access)
 : _prev_access(prev_access)
 {
 }
 
 //------------------------------------------------------------------------------
-void* TrampolineAllocator::alloc(int size)
+void* TrampolineAllocator::alloc(int32 size)
 {
     size += 15;
     size &= ~15;
 
-    int next_used = _used + size;
-    auto* ptr = ((unsigned char*)this) - next_used;
+    int32 next_used = _used + size;
+    auto* ptr = ((uint8*)this) - next_used;
 
-    for (int i = 0; i < size; ++i)
+    for (int32 i = 0; i < size; ++i)
         if (ptr[i] != 0)
             return nullptr;
 
@@ -175,7 +175,7 @@ void TrampolineAllocator::reset_access()
 //------------------------------------------------------------------------------
 static void* follow_jump(void* addr)
 {
-    unsigned char* t = (unsigned char*)addr;
+    uint8* t = (uint8*)addr;
 
     // Check the opcode.
     if ((t[0] & 0xf0) == 0x40) // REX prefix.
@@ -188,7 +188,7 @@ static void* follow_jump(void* addr)
     if (t[1] != 0x25)
         return addr;
 
-    int* imm = (int*)(t + 2);
+    int32* imm = (int32*)(t + 2);
 
     void* dest = addr;
     switch (t[1] & 007)
@@ -217,7 +217,7 @@ static funcptr_t hook_jmp_impl(funcptr_t to_hook, funcptr_t hook)
 
     // Disassemble enough bytes to be able to write a jmp Instruction at the
     // start of what we want to hook.
-    int insts_size = 0;
+    int32 insts_size = 0;
     FixedArray<Instruction, 8> instructions;
     for (InstructionIter iter(target);;)
     {
@@ -228,7 +228,7 @@ static funcptr_t hook_jmp_impl(funcptr_t to_hook, funcptr_t hook)
             return nullptr;
         }
 
-        if (unsigned(inst.get_rel_size() - 1) < 3)
+        if (uint32(inst.get_rel_size() - 1) < 3)
         {
             /* relative immediate too small to be relocated */
             return nullptr;
@@ -264,7 +264,7 @@ static funcptr_t hook_jmp_impl(funcptr_t to_hook, funcptr_t hook)
     struct Trampoline
     {
         funcptr_t       hook;
-        unsigned char   trampoline_in[];
+        uint8           trampoline_in[];
     };
 #if defined(_MSC_VER)
 #   pragma warning(pop)
@@ -281,8 +281,8 @@ static funcptr_t hook_jmp_impl(funcptr_t to_hook, funcptr_t hook)
     }
 
     // Write Trampoline in
-    const unsigned char* read_cursor = (unsigned char*)target;
-    unsigned char* write_cursor = tramp->trampoline_in;
+    const uint8* read_cursor = (uint8*)target;
+    uint8* write_cursor = tramp->trampoline_in;
     for (const Instruction& inst : instructions)
     {
         inst.copy(read_cursor, write_cursor);
@@ -290,22 +290,22 @@ static funcptr_t hook_jmp_impl(funcptr_t to_hook, funcptr_t hook)
         read_cursor += inst.get_length();
     }
     *(char*)(write_cursor + 0) = (char)0xe9;
-    *(int*) (write_cursor + 1) = int(ptrdiff_t(read_cursor) - ptrdiff_t(write_cursor + 5));
+    *(int32*) (write_cursor + 1) = int32(ptrdiff_t(read_cursor) - ptrdiff_t(write_cursor + 5));
 
     // Write Trampoline out
     tramp->hook = hook;
 
     Vm vm;
     Vm::Region target_region = { vm.get_page(target), 1 };
-    unsigned int prev_access = vm.get_access(target_region);
+    uint32 prev_access = vm.get_access(target_region);
     vm.set_access(target_region, Vm::access_write);
 
-    write_cursor = (unsigned char*)target;
-    *(short*)(write_cursor + 0) = 0x25ff;
+    write_cursor = (uint8*)target;
+    *(int16*)(write_cursor + 0) = 0x25ff;
 #ifdef _M_X64
-    *(int*)  (write_cursor + 2) = int(ptrdiff_t(&tramp->hook) - ptrdiff_t(write_cursor) - 6);
+    *(int32*)  (write_cursor + 2) = int32(ptrdiff_t(&tramp->hook) - ptrdiff_t(write_cursor) - 6);
 #else
-    *(int*)  (write_cursor + 2) = int(intptr_t(&tramp->hook));
+    *(int32*)  (write_cursor + 2) = int32(intptr_t(&tramp->hook));
 #endif
 
     vm.set_access(target_region, prev_access);

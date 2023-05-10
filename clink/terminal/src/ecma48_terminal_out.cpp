@@ -31,13 +31,13 @@ void Ecma48TerminalOut::flush()
 }
 
 //------------------------------------------------------------------------------
-int Ecma48TerminalOut::get_columns() const
+int32 Ecma48TerminalOut::get_columns() const
 {
     return _screen.get_columns();
 }
 
 //------------------------------------------------------------------------------
-int Ecma48TerminalOut::get_rows() const
+int32 Ecma48TerminalOut::get_rows() const
 {
     return _screen.get_rows();
 }
@@ -79,7 +79,7 @@ void Ecma48TerminalOut::write_c1(const Ecma48Code& code)
 }
 
 //------------------------------------------------------------------------------
-void Ecma48TerminalOut::write_c0(int c0)
+void Ecma48TerminalOut::write_c0(int32 c0)
 {
     switch (c0)
     {
@@ -106,7 +106,7 @@ void Ecma48TerminalOut::write_c0(int c0)
 }
 
 //------------------------------------------------------------------------------
-void Ecma48TerminalOut::write(const char* chars, int length)
+void Ecma48TerminalOut::write(const char* chars, int32 length)
 {
     Ecma48Iter iter(chars, _state, length);
     while (const Ecma48Code& code = iter.next())
@@ -137,9 +137,9 @@ void Ecma48TerminalOut::set_attributes(const Ecma48Code::CsiBase& csi)
 
     // Process each code that is supported.
     Attributes attr;
-    for (int i = 0; i < csi.param_count; ++i)
+    for (int32 i = 0; i < csi.param_count; ++i)
     {
-        unsigned int param = csi.params[i];
+        uint32 param = csi.params[i];
 
         // Resets
         if (param == 0)  { attr = Attributes::defaults; continue; }
@@ -217,8 +217,8 @@ void Ecma48TerminalOut::erase_in_line(const Ecma48Code::CsiBase& csi)
 void Ecma48TerminalOut::set_cursor(const Ecma48Code::CsiBase& csi)
 {
     /* CSI Ps ; Ps H : Cursor Position [row;column] (default = [1,1]) (CUP). */
-    int row = csi.get_param(0, 1);
-    int column = csi.get_param(1, 1);
+    int32 row = csi.get_param(0, 1);
+    int32 column = csi.get_param(1, 1);
     _screen.set_cursor(column - 1, row - 1);
 }
 
@@ -226,7 +226,7 @@ void Ecma48TerminalOut::set_cursor(const Ecma48Code::CsiBase& csi)
 void Ecma48TerminalOut::insert_chars(const Ecma48Code::CsiBase& csi)
 {
     /* CSI Ps @  Insert Ps (Blank) Character(s) (default = 1) (ICH). */
-    int count = csi.get_param(0, 1);
+    int32 count = csi.get_param(0, 1);
     _screen.insert_chars(count);
 }
 
@@ -234,7 +234,7 @@ void Ecma48TerminalOut::insert_chars(const Ecma48Code::CsiBase& csi)
 void Ecma48TerminalOut::delete_chars(const Ecma48Code::CsiBase& csi)
 {
     /* CSI Ps P : Delete Ps Character(s) (default = 1) (DCH). */
-    int count = csi.get_param(0, 1);
+    int32 count = csi.get_param(0, 1);
     _screen.delete_chars(count);
 }
 
@@ -245,7 +245,7 @@ void Ecma48TerminalOut::set_private_mode(const Ecma48Code::CsiBase& csi)
             Ps = 5  -> Reverse Video (DECSCNM).
             Ps = 12 -> Start Blinking Cursor (att610).
             Ps = 25 -> Show Cursor (DECTCEM). */
-    for (int i = 0; i < csi.param_count; ++i)
+    for (int32 i = 0; i < csi.param_count; ++i)
     {
         switch (csi.params[i])
         {
@@ -262,7 +262,7 @@ void Ecma48TerminalOut::reset_private_mode(const Ecma48Code::CsiBase& csi)
             Ps = 5  -> Normal Video (DECSCNM).
             Ps = 12 -> Stop Blinking Cursor (att610).
             Ps = 25 -> Hide Cursor (DECTCEM). */
-    for (int i = 0; i < csi.param_count; ++i)
+    for (int32 i = 0; i < csi.param_count; ++i)
     {
         switch (csi.params[i])
         {

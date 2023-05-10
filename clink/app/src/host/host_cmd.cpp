@@ -34,20 +34,20 @@ static SettingEnum g_autoanswer(
 
 
 //------------------------------------------------------------------------------
-static bool get_mui_string(int id, WstrBase& out)
+static bool get_mui_string(int32 id, WstrBase& out)
 {
     DWORD flags = FORMAT_MESSAGE_FROM_HMODULE|FORMAT_MESSAGE_IGNORE_INSERTS;
     return !!FormatMessageW(flags, nullptr, id, 0, out.data(), out.size(), nullptr);
 }
 
 //------------------------------------------------------------------------------
-static int check_auto_answer()
+static int32 check_auto_answer()
 {
     static Wstr<72> target_prompt;
     static Wstr<16> no_yes;
 
     // Skip the feature if it's not enabled.
-    int setting = g_autoanswer.get();
+    int32 setting = g_autoanswer.get();
     if (setting <= 0)
         return 0;
 
@@ -92,13 +92,13 @@ static BOOL WINAPI single_char_read(
     LPDWORD read_in,
     CONSOLE_READCONSOLE_CONTROL* control)
 {
-    int reply;
+    int32 reply;
 
     if (reply = check_auto_answer())
     {
         // cmd.exe's PromptUser() method reads a character at a time until
         // it encounters a \n. The way Clink handle's this is a bit 'wacky'.
-        static int visit_count = 0;
+        static int32 visit_count = 0;
 
         ++visit_count;
         if (visit_count >= 2)
@@ -160,7 +160,7 @@ bool HostCmd::initialise()
     hooks.add_iat(base, "WriteConsoleW",            &HostCmd::write_console);
 
     // Set a trap to get a callback when cmd.exe fetches stdin handle.
-    auto get_std_handle = [] (unsigned int handle_id) -> void*
+    auto get_std_handle = [] (uint32 handle_id) -> void*
     {
         SehScope seh;
 
@@ -174,7 +174,7 @@ bool HostCmd::initialise()
         HostCmd::get()->initialise_system();
         return ret;
     };
-    auto* as_stdcall = static_cast<void* (__stdcall *)(unsigned)>(get_std_handle);
+    auto* as_stdcall = static_cast<void* (__stdcall *)(uint32)>(get_std_handle);
     hooks.add_iat(base, "GetStdHandle", as_stdcall);
 
     return (hooks.commit() == 3);
@@ -240,7 +240,7 @@ bool HostCmd::is_interactive() const
 }
 
 //------------------------------------------------------------------------------
-void HostCmd::edit_line(const wchar_t* prompt, wchar_t* chars, int max_chars)
+void HostCmd::edit_line(const wchar_t* prompt, wchar_t* chars, int32 max_chars)
 {
     // Doskey is implemented on the server side of a ReadConsoleW() call (i.e.
     // in conhost.exe). Commands separated by a "$T" are returned one command
@@ -320,7 +320,7 @@ BOOL WINAPI HostCmd::read_console(
     chars[max_chars - 1] = L'\0';
 
     if (read_in != nullptr)
-        *read_in = (unsigned)wcslen(chars);
+        *read_in = (uint32)wcslen(chars);
 
     return TRUE;
 }
@@ -352,7 +352,7 @@ BOOL WINAPI HostCmd::write_console(
 }
 
 //------------------------------------------------------------------------------
-bool HostCmd::capture_prompt(const wchar_t* chars, int char_count)
+bool HostCmd::capture_prompt(const wchar_t* chars, int32 char_count)
 {
     // Clink tags the prompt so that it can be detected when cmd.exe
     // writes it to the console.
