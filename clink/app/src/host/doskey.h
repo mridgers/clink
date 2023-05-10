@@ -18,8 +18,8 @@ public:
 
 private:
     friend class    Doskey;
-    Wstr<32>        m_buffer;
-    const wchar_t*  m_cursor;
+    Wstr<32>        _buffer;
+    const wchar_t*  _cursor;
 };
 
 
@@ -35,5 +35,5 @@ public:
 
 private:
     bool            resolve_impl(const WstrIter& in, class WstrStream* out);
-    const char*     m_shell_name;
+    const char*     _shell_name;
 };

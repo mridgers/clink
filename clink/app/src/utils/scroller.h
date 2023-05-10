@@ -16,8 +16,8 @@ public:
     void            page_down();
 
 private:
-    HANDLE          m_handle;
-    COORD           m_cursor_position;
+    HANDLE          _handle;
+    COORD           _cursor_position;
 };
 
 //------------------------------------------------------------------------------
@@ -31,9 +31,9 @@ private:
     virtual void    on_matches_changed(const Context& context) override;
     virtual void    on_input(const Input& Input, Result& result, const Context& context) override;
     virtual void    on_terminal_resize(int columns, int rows, const Context& context) override;
-    Scroller        m_scroller;
-    int             m_bind_group;
-    int             m_prev_group;
+    Scroller        _scroller;
+    int             _bind_group;
+    int             _prev_group;
 
     enum
     {

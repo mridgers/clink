@@ -45,12 +45,12 @@ public:
 
 protected:
                     Setting(const char* name, const char* short_desc, const char* long_desc, TypeE Type);
-    Str<32, false>  m_name;
-    Str<48, false>  m_short_desc;
-    Str<128>        m_long_desc;
-    Setting*        m_prev;
-    Setting*        m_next;
-    TypeE           m_type;
+    Str<32, false>  _name;
+    Str<48, false>  _short_desc;
+    Str<128>        _long_desc;
+    Setting*        _prev;
+    Setting*        _next;
+    TypeE           _type;
 
     template <typename T>
     struct Store
@@ -85,8 +85,8 @@ public:
 
 protected:
     struct          Type;
-    Store<T>        m_store;
-    Store<T>        m_default;
+    Store<T>        _store;
+    Store<T>        _default;
 };
 
 //------------------------------------------------------------------------------
@@ -106,26 +106,26 @@ template <typename T> SettingImpl<T>::SettingImpl(
     T default_value)
 : Setting(name, short_desc, long_desc, TypeE(Type::id))
 {
-    m_default.value = default_value;
-    m_store.value = default_value;
+    _default.value = default_value;
+    _store.value = default_value;
 }
 
 //------------------------------------------------------------------------------
 template <typename T> void SettingImpl<T>::set()
 {
-    m_store.value = T(m_default);
+    _store.value = T(_default);
 }
 
 //------------------------------------------------------------------------------
 template <typename T> bool SettingImpl<T>::is_default() const
 {
-    return m_store == m_default;
+    return _store == _default;
 }
 
 //------------------------------------------------------------------------------
 template <typename T> T SettingImpl<T>::get() const
 {
-    return T(m_store);
+    return T(_store);
 }
 
 
@@ -155,5 +155,5 @@ public:
 
 protected:
     static const char* next_option(const char* option);
-    Str<48>            m_options;
+    Str<48>            _options;
 };

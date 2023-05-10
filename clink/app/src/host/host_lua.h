@@ -18,6 +18,6 @@ public:
 private:
     void                load_scripts(const char* paths);
     void                load_script(const char* path);
-    LuaState            m_state;
-    LuaMatchGenerator m_generator;
+    LuaState            _state;
+    LuaMatchGenerator _generator;
 };

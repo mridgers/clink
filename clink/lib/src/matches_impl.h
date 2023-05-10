@@ -29,8 +29,8 @@ public:
 protected:
     static const int        alignment_bits = 1;
     static const int        alignment = 1 << alignment_bits;
-    char*                   m_ptr;
-    unsigned int            m_size;
+    char*                   _ptr;
+    unsigned int            _size;
 };
 
 
@@ -75,16 +75,16 @@ private:
 
     private:
         unsigned int        get_size(const char* str) const;
-        unsigned int        m_front;
-        unsigned int        m_back;
+        unsigned int        _front;
+        unsigned int        _back;
     };
 
     typedef std::vector<MatchInfo> Infos;
 
-    StoreImpl               m_store;
-    Infos                   m_infos;
-    unsigned short          m_count = 0;
-    bool                    m_coalesced = false;
-    bool                    m_has_aux = false;
-    bool                    m_prefix_included = false;
+    StoreImpl               _store;
+    Infos                   _infos;
+    unsigned short          _count = 0;
+    bool                    _coalesced = false;
+    bool                    _has_aux = false;
+    bool                    _prefix_included = false;
 };

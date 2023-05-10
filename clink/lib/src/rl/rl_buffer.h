@@ -25,5 +25,5 @@ public:
     virtual void            end_undo_group() override;
 
 private:
-    bool                    m_need_draw;
+    bool                    _need_draw;
 };

@@ -161,10 +161,10 @@ Setting::Setting(
     const char* short_desc,
     const char* long_desc,
     TypeE type)
-: m_name(name)
-, m_short_desc(short_desc)
-, m_long_desc(long_desc ? long_desc : "")
-, m_type(type)
+: _name(name)
+, _short_desc(short_desc)
+, _long_desc(long_desc ? long_desc : "")
+, _type(type)
 {
     Setting* insert_at = nullptr;
     for (auto* i = g_setting_list; i != nullptr; insert_at = i, i = i->next())
@@ -173,61 +173,61 @@ Setting::Setting(
 
     if (insert_at == nullptr)
     {
-        m_prev = nullptr;
-        m_next = g_setting_list;
+        _prev = nullptr;
+        _next = g_setting_list;
         g_setting_list = this;
     }
     else
     {
-        m_next = insert_at->m_next;
-        m_prev = insert_at;
-        insert_at->m_next = this;
+        _next = insert_at->_next;
+        _prev = insert_at;
+        insert_at->_next = this;
     }
 
-    if (m_next != nullptr)
-        m_next->m_prev = this;
+    if (_next != nullptr)
+        _next->_prev = this;
 }
 
 //------------------------------------------------------------------------------
 Setting::~Setting()
 {
-    if (m_prev != nullptr)
-        m_prev->m_next = m_next;
+    if (_prev != nullptr)
+        _prev->_next = _next;
     else
-        g_setting_list = m_next;
+        g_setting_list = _next;
 
-    if (m_next != nullptr)
-        m_next->m_prev = m_prev;
+    if (_next != nullptr)
+        _next->_prev = _prev;
 }
 
 //------------------------------------------------------------------------------
 Setting* Setting::next() const
 {
-    return m_next;
+    return _next;
 }
 
 //------------------------------------------------------------------------------
 Setting::TypeE Setting::get_type() const
 {
-    return m_type;
+    return _type;
 }
 
 //------------------------------------------------------------------------------
 const char* Setting::get_name() const
 {
-    return m_name.c_str();
+    return _name.c_str();
 }
 
 //------------------------------------------------------------------------------
 const char* Setting::get_short_desc() const
 {
-    return m_short_desc.c_str();
+    return _short_desc.c_str();
 }
 
 //------------------------------------------------------------------------------
 const char* Setting::get_long_desc() const
 {
-    return m_long_desc.c_str();
+    return _long_desc.c_str();
 }
 
 
@@ -235,12 +235,12 @@ const char* Setting::get_long_desc() const
 //------------------------------------------------------------------------------
 template <> bool SettingImpl<bool>::set(const char* value)
 {
-    if (stricmp(value, "true") == 0)  { m_store.value = 1; return true; }
-    if (stricmp(value, "false") == 0) { m_store.value = 0; return true; }
+    if (stricmp(value, "true") == 0)  { _store.value = 1; return true; }
+    if (stricmp(value, "false") == 0) { _store.value = 0; return true; }
 
     if (*value >= '0' && *value <= '9')
     {
-        m_store.value = !!atoi(value);
+        _store.value = !!atoi(value);
         return true;
     }
 
@@ -253,14 +253,14 @@ template <> bool SettingImpl<int>::set(const char* value)
     if ((*value < '0' || *value > '9') && *value != '-')
         return false;
 
-    m_store.value = atoi(value);
+    _store.value = atoi(value);
     return true;
 }
 
 //------------------------------------------------------------------------------
 template <> bool SettingImpl<const char*>::set(const char* value)
 {
-    m_store.value = value;
+    _store.value = value;
     return true;
 }
 
@@ -269,19 +269,19 @@ template <> bool SettingImpl<const char*>::set(const char* value)
 //------------------------------------------------------------------------------
 template <> void SettingImpl<bool>::get(StrBase& out) const
 {
-    out = m_store.value ? "True" : "False";
+    out = _store.value ? "True" : "False";
 }
 
 //------------------------------------------------------------------------------
 template <> void SettingImpl<int>::get(StrBase& out) const
 {
-    out.format("%d", m_store.value);
+    out.format("%d", _store.value);
 }
 
 //------------------------------------------------------------------------------
 template <> void SettingImpl<const char*>::get(StrBase& out) const
 {
-    out = m_store.value.c_str();
+    out = _store.value.c_str();
 }
 
 
@@ -304,16 +304,16 @@ SettingEnum::SettingEnum(
     const char* options,
     int default_value)
 : SettingImpl<int>(name, short_desc, long_desc, default_value)
-, m_options(options)
+, _options(options)
 {
-    m_type = type_enum;
+    _type = type_enum;
 }
 
 //------------------------------------------------------------------------------
 bool SettingEnum::set(const char* value)
 {
     int i = 0;
-    for (const char* option = m_options.c_str(); *option; ++i)
+    for (const char* option = _options.c_str(); *option; ++i)
     {
         const char* next = next_option(option);
 
@@ -323,7 +323,7 @@ bool SettingEnum::set(const char* value)
 
         if (_strnicmp(option, value, option_len) == 0)
         {
-            m_store.value = i;
+            _store.value = i;
             return true;
         }
 
@@ -336,11 +336,11 @@ bool SettingEnum::set(const char* value)
 //------------------------------------------------------------------------------
 void SettingEnum::get(StrBase& out) const
 {
-    int index = m_store.value;
+    int index = _store.value;
     if (index < 0)
         return;
 
-    const char* option = m_options.c_str();
+    const char* option = _options.c_str();
     for (int i = 0; i < index && *option; ++i)
         option = next_option(option);
 
@@ -358,7 +358,7 @@ void SettingEnum::get(StrBase& out) const
 //------------------------------------------------------------------------------
 const char* SettingEnum::get_options() const
 {
-    return m_options.c_str();
+    return _options.c_str();
 }
 
 //------------------------------------------------------------------------------

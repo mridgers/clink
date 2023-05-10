@@ -117,9 +117,9 @@ static void adjust_cursor_on_resize(COORD prev_position)
 //------------------------------------------------------------------------------
 void WinTerminalIn::begin()
 {
-    m_buffer_count = 0;
-    m_stdin = GetStdHandle(STD_INPUT_HANDLE);
-    GetConsoleMode(m_stdin, &m_prev_mode);
+    _buffer_count = 0;
+    _stdin = GetStdHandle(STD_INPUT_HANDLE);
+    GetConsoleMode(_stdin, &_prev_mode);
     set_cursor_visibility(false);
 }
 
@@ -127,14 +127,14 @@ void WinTerminalIn::begin()
 void WinTerminalIn::end()
 {
     set_cursor_visibility(true);
-    SetConsoleMode(m_stdin, m_prev_mode);
-    m_stdin = nullptr;
+    SetConsoleMode(_stdin, _prev_mode);
+    _stdin = nullptr;
 }
 
 //------------------------------------------------------------------------------
 void WinTerminalIn::select()
 {
-    if (!m_buffer_count)
+    if (!_buffer_count)
         read_console();
 }
 
@@ -142,13 +142,13 @@ void WinTerminalIn::select()
 int WinTerminalIn::read()
 {
     unsigned int dimensions = get_dimensions();
-    if (dimensions != m_dimensions)
+    if (dimensions != _dimensions)
     {
-        m_dimensions = dimensions;
+        _dimensions = dimensions;
         return TerminalIn::input_terminal_resize;
     }
 
-    if (!m_buffer_count)
+    if (!_buffer_count)
         return TerminalIn::input_none;
 
     unsigned char c = pop();
@@ -180,7 +180,7 @@ void WinTerminalIn::read_console()
         {
             SetConsoleMode(handle, prev_mode);
         }
-    } _ms(m_stdin);
+    } _ms(_stdin);
 
     // Hide the cursor unless we're accepting input so we don't have to see it
     // jump around as the screen's drawn.
@@ -199,16 +199,16 @@ void WinTerminalIn::read_console()
 
     // Read input records sent from the Terminal (aka conhost) until some
     // input has beeen buffered.
-    unsigned int buffer_count = m_buffer_count;
-    while (buffer_count == m_buffer_count)
+    unsigned int buffer_count = _buffer_count;
+    while (buffer_count == _buffer_count)
     {
         DWORD count;
         INPUT_RECORD record;
-        if (!ReadConsoleInputW(m_stdin, &record, 1, &count))
+        if (!ReadConsoleInputW(_stdin, &record, 1, &count))
         {
             // Handle's probably invalid if ReadConsoleInput() failed.
-            m_buffer_count = 1;
-            m_buffer[0] = input_abort_byte;
+            _buffer_count = 1;
+            _buffer[0] = input_abort_byte;
             return;
         }
 
@@ -280,7 +280,7 @@ void WinTerminalIn::process_input(KEY_EVENT_RECORD const& record)
     }
 
     // Special case for shift-tab (aka. back-tab or kcbt).
-    if (key_char == '\t' && !m_buffer_count && (key_flags & SHIFT_PRESSED))
+    if (key_char == '\t' && !_buffer_count && (key_flags & SHIFT_PRESSED))
         return push(terminfo::kcbt);
 
     // Function keys (kf1-kf48 from xterm+pcf2)
@@ -393,53 +393,53 @@ void WinTerminalIn::process_input(KEY_EVENT_RECORD const& record)
 //------------------------------------------------------------------------------
 void WinTerminalIn::push(const char* seq)
 {
-    static const unsigned int mask = sizeof_array(m_buffer) - 1;
+    static const unsigned int mask = sizeof_array(_buffer) - 1;
 
-    if (m_buffer_count >= sizeof_array(m_buffer))
+    if (_buffer_count >= sizeof_array(_buffer))
         return;
 
-    int index = m_buffer_head + m_buffer_count;
-    for (; m_buffer_count <= mask && *seq; ++m_buffer_count, ++index, ++seq)
-        m_buffer[index & mask] = *seq;
+    int index = _buffer_head + _buffer_count;
+    for (; _buffer_count <= mask && *seq; ++_buffer_count, ++index, ++seq)
+        _buffer[index & mask] = *seq;
 }
 
 //------------------------------------------------------------------------------
 void WinTerminalIn::push(unsigned int value)
 {
-    static const unsigned int mask = sizeof_array(m_buffer) - 1;
+    static const unsigned int mask = sizeof_array(_buffer) - 1;
 
-    if (m_buffer_count >= sizeof_array(m_buffer))
+    if (_buffer_count >= sizeof_array(_buffer))
         return;
 
-    int index = m_buffer_head + m_buffer_count;
+    int index = _buffer_head + _buffer_count;
 
     if (value < 0x80)
     {
-        m_buffer[index & mask] = value;
-        ++m_buffer_count;
+        _buffer[index & mask] = value;
+        ++_buffer_count;
         return;
     }
 
     wchar_t wc[2] = { (wchar_t)value, 0 };
     char utf8[mask + 1];
     unsigned int n = to_utf8(utf8, sizeof_array(utf8), wc);
-    if (n <= unsigned(mask - m_buffer_count))
+    if (n <= unsigned(mask - _buffer_count))
         for (unsigned int i = 0; i < n; ++i, ++index)
-            m_buffer[index & mask] = utf8[i];
+            _buffer[index & mask] = utf8[i];
 
-    m_buffer_count += n;
+    _buffer_count += n;
 }
 
 //------------------------------------------------------------------------------
 unsigned char WinTerminalIn::pop()
 {
-    if (!m_buffer_count)
+    if (!_buffer_count)
         return input_none_byte;
 
-    unsigned char value = m_buffer[m_buffer_head];
+    unsigned char value = _buffer[_buffer_head];
 
-    --m_buffer_count;
-    m_buffer_head = (m_buffer_head + 1) & (sizeof_array(m_buffer) - 1);
+    --_buffer_count;
+    _buffer_head = (_buffer_head + 1) & (sizeof_array(_buffer) - 1);
 
     return value;
 }

@@ -70,21 +70,21 @@ private:
     typedef unsigned short ushort;
 
     void                free_data();
-    TYPE*               m_data;
-    ushort              m_size : 15;
-    ushort              m_growable : 1;
-    mutable ushort      m_length : 15;
-    ushort              m_owns_ptr : 1;
+    TYPE*               _data;
+    ushort              _size : 15;
+    ushort              _growable : 1;
+    mutable ushort      _length : 15;
+    ushort              _owns_ptr : 1;
 };
 
 //------------------------------------------------------------------------------
 template <typename TYPE>
 StrImpl<TYPE>::StrImpl(TYPE* data, unsigned int size)
-: m_data(data)
-, m_size(size)
-, m_growable(0)
-, m_owns_ptr(0)
-, m_length(0)
+: _data(data)
+, _size(size)
+, _growable(0)
+, _owns_ptr(0)
+, _length(0)
 {
 }
 
@@ -102,9 +102,9 @@ void StrImpl<TYPE>::attach(TYPE* data, unsigned int size)
     if (is_growable())
     {
         free_data();
-        m_data = data;
-        m_size = size;
-        m_owns_ptr = 1;
+        _data = data;
+        _size = size;
+        _owns_ptr = 1;
     }
     else
     {
@@ -117,7 +117,7 @@ void StrImpl<TYPE>::attach(TYPE* data, unsigned int size)
 template <typename TYPE>
 void StrImpl<TYPE>::set_growable(bool state)
 {
-    m_growable = state ? 1 : 0;
+    _growable = state ? 1 : 0;
 }
 
 //------------------------------------------------------------------------------
@@ -125,7 +125,7 @@ template <typename TYPE>
 bool StrImpl<TYPE>::reserve(unsigned int new_size)
 {
     ++new_size;
-    if (m_size >= new_size)
+    if (_size >= new_size)
         return true;
 
     if (!is_growable())
@@ -134,13 +134,13 @@ bool StrImpl<TYPE>::reserve(unsigned int new_size)
     new_size = (new_size + 63) & ~63;
 
     TYPE* new_data = (TYPE*)malloc(new_size * sizeof(TYPE));
-    memcpy(new_data, c_str(), m_size * sizeof(TYPE));
+    memcpy(new_data, c_str(), _size * sizeof(TYPE));
 
     free_data();
 
-    m_data = new_data;
-    m_size = new_size;
-    m_owns_ptr = 1;
+    _data = new_data;
+    _size = new_size;
+    _owns_ptr = 1;
     return true;
 }
 
@@ -148,47 +148,47 @@ bool StrImpl<TYPE>::reserve(unsigned int new_size)
 template <typename TYPE>
 void StrImpl<TYPE>::free_data()
 {
-    if (m_owns_ptr)
-        free(m_data);
+    if (_owns_ptr)
+        free(_data);
 }
 
 //------------------------------------------------------------------------------
 template <typename TYPE>
 TYPE* StrImpl<TYPE>::data()
 {
-    m_length = 0;
-    return m_data;
+    _length = 0;
+    return _data;
 }
 
 //------------------------------------------------------------------------------
 template <typename TYPE>
 const TYPE* StrImpl<TYPE>::c_str() const
 {
-    return m_data;
+    return _data;
 }
 
 //------------------------------------------------------------------------------
 template <typename TYPE>
 unsigned int StrImpl<TYPE>::size() const
 {
-    return m_size;
+    return _size;
 }
 
 //------------------------------------------------------------------------------
 template <typename TYPE>
 bool StrImpl<TYPE>::is_growable() const
 {
-    return m_growable;
+    return _growable;
 }
 
 //------------------------------------------------------------------------------
 template <typename TYPE>
 unsigned int StrImpl<TYPE>::length() const
 {
-    if (!m_length & !empty())
-        m_length = str_len(c_str());
+    if (!_length & !empty())
+        _length = str_len(c_str());
 
-    return m_length;
+    return _length;
 }
 
 //------------------------------------------------------------------------------
@@ -202,8 +202,8 @@ unsigned int StrImpl<TYPE>::char_count() const
 template <typename TYPE>
 void StrImpl<TYPE>::clear()
 {
-    m_data[0] = '\0';
-    m_length = 0;
+    _data[0] = '\0';
+    _length = 0;
 }
 
 //------------------------------------------------------------------------------
@@ -217,11 +217,11 @@ bool StrImpl<TYPE>::empty() const
 template <typename TYPE>
 void StrImpl<TYPE>::truncate(unsigned int pos)
 {
-    if (pos >= m_size)
+    if (pos >= _size)
         return;
 
-    m_data[pos] = '\0';
-    m_length = pos;
+    _data[pos] = '\0';
+    _length = pos;
 }
 
 //------------------------------------------------------------------------------
@@ -275,7 +275,7 @@ bool StrImpl<TYPE>::concat(const TYPE* src, int n)
     int len = length();
     reserve(len + n);
 
-    int remaining = m_size - len - 1;
+    int remaining = _size - len - 1;
 
     bool truncated = (remaining < n);
     if (!truncated)
@@ -283,8 +283,8 @@ bool StrImpl<TYPE>::concat(const TYPE* src, int n)
 
     if (remaining > 0)
     {
-        str_ncat(m_data + len, src, remaining);
-        m_length += remaining;
+        str_ncat(_data + len, src, remaining);
+        _length += remaining;
     }
 
     return !truncated;
@@ -296,13 +296,13 @@ bool StrImpl<TYPE>::format(const TYPE* format, ...)
 {
     va_list args;
     va_start(args, format);
-    unsigned int ret = vsnprint(m_data, m_size, format, args);
+    unsigned int ret = vsnprint(_data, _size, format, args);
     va_end(args);
 
-    m_data[m_size - 1] = '\0';
-    m_length = 0;
+    _data[_size - 1] = '\0';
+    _length = 0;
 
-    return (ret <= m_size);
+    return (ret <= _size);
 }
 
 //------------------------------------------------------------------------------
@@ -387,7 +387,7 @@ template <int COUNT=128, bool GROWABLE=true>
 class Str : public StrBase
 {
 public:
-                Str() : StrBase(m_data, COUNT)     { clear(); set_growable(GROWABLE); }
+                Str() : StrBase(_data, COUNT)     { clear(); set_growable(GROWABLE); }
     explicit    Str(const char* value) : Str()      { copy(value); }
     explicit    Str(const wchar_t* value) : Str()   { from_utf16(value); }
                 Str(const Str&) = delete;
@@ -395,14 +395,14 @@ public:
     using       StrBase::operator =;
 
 private:
-    char        m_data[COUNT];
+    char        _data[COUNT];
 };
 
 template <int COUNT=128, bool GROWABLE=true>
 class Wstr : public WstrBase
 {
 public:
-                Wstr() : WstrBase(m_data, COUNT)   { clear(); set_growable(GROWABLE); }
+                Wstr() : WstrBase(_data, COUNT)   { clear(); set_growable(GROWABLE); }
     explicit    Wstr(const wchar_t* value) : Wstr() { copy(value); }
     explicit    Wstr(const char* value) : Wstr()    { from_utf8(value); }
                 Wstr(const Wstr&) = delete;
@@ -410,7 +410,7 @@ public:
     using       WstrBase::operator =;
 
 private:
-    wchar_t     m_data[COUNT];
+    wchar_t     _data[COUNT];
 };
 
 

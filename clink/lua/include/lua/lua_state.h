@@ -18,11 +18,11 @@ public:
     lua_State*      get_state() const;
 
 private:
-    lua_State*      m_state;
+    lua_State*      _state;
 };
 
 //------------------------------------------------------------------------------
 inline lua_State* LuaState::get_state() const
 {
-    return m_state;
+    return _state;
 }

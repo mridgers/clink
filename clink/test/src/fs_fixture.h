@@ -15,6 +15,6 @@ public:
 
 private:
     void            clean(const char* path);
-    Str<>           m_root;
-    const char**    m_fs;
+    Str<>           _root;
+    const char**    _fs;
 };

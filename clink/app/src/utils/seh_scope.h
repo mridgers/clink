@@ -11,5 +11,5 @@ public:
                 ~SehScope();
 
 private:
-    void*       m_prev_filter;
+    void*       _prev_filter;
 };

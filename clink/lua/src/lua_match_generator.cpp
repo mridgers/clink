@@ -20,10 +20,10 @@ extern "C" {
 
 //------------------------------------------------------------------------------
 LuaMatchGenerator::LuaMatchGenerator(LuaState& state)
-: m_state(state)
+: _state(state)
 {
-    lua_load_script(m_state, lib, generator);
-    lua_load_script(m_state, lib, arguments);
+    lua_load_script(_state, lib, generator);
+    lua_load_script(_state, lib, arguments);
 }
 
 //------------------------------------------------------------------------------
@@ -41,7 +41,7 @@ void LuaMatchGenerator::print_error(const char* error) const
 //------------------------------------------------------------------------------
 bool LuaMatchGenerator::generate(const LineState& line, MatchBuilder& Builder)
 {
-    lua_State* state = m_state.get_state();
+    lua_State* state = _state.get_state();
 
     // Call to Lua to generate matches.
     lua_getglobal(state, "clink");
@@ -72,7 +72,7 @@ bool LuaMatchGenerator::generate(const LineState& line, MatchBuilder& Builder)
 //------------------------------------------------------------------------------
 int LuaMatchGenerator::get_prefix_length(const LineState& line) const
 {
-    lua_State* state = m_state.get_state();
+    lua_State* state = _state.get_state();
 
     // Call to Lua to calculate prefix length.
     lua_getglobal(state, "clink");

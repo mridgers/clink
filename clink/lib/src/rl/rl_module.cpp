@@ -122,8 +122,8 @@ static void terminal_write_thunk(FILE* stream, const char* chars, int char_count
 
 //------------------------------------------------------------------------------
 RlModule::RlModule(const char* shell_name)
-: m_rl_buffer(nullptr)
-, m_prev_group(-1)
+: _rl_buffer(nullptr)
+, _prev_group(-1)
 {
     rl_getc_function = terminal_read_thunk;
     rl_fwrite_function = terminal_write_thunk;
@@ -180,8 +180,8 @@ void RlModule::bind_input(Binder& binder)
     binder.bind(default_group, "", bind_id_input);
     binder.bind(default_group, "\\M-h", bind_id_rl_help);
 
-    m_catch_group = binder.create_group("readline");
-    binder.bind(m_catch_group, "", bind_id_more_input);
+    _catch_group = binder.create_group("readline");
+    binder.bind(_catch_group, "", bind_id_more_input);
 }
 
 //------------------------------------------------------------------------------
@@ -206,18 +206,18 @@ void RlModule::on_begin_line(const Context& context)
     auto handler = [] (char* line) { RlModule::get()->done(line); };
     rl_callback_handler_install(rl_prompt.c_str(), handler);
 
-    m_done = false;
-    m_eof = false;
-    m_prev_group = -1;
+    _done = false;
+    _eof = false;
+    _prev_group = -1;
 }
 
 //------------------------------------------------------------------------------
 void RlModule::on_end_line()
 {
-    if (m_rl_buffer != nullptr)
+    if (_rl_buffer != nullptr)
     {
-        rl_line_buffer = m_rl_buffer;
-        m_rl_buffer = nullptr;
+        rl_line_buffer = _rl_buffer;
+        _rl_buffer = nullptr;
     }
 
     // This prevents any partial Readline state leaking from one line to the next
@@ -254,7 +254,7 @@ void RlModule::on_input(const Input& Input, Result& result, const Context& conte
 
     // Call Readline's until there's no characters left.
     int is_inc_searching = rl_readline_state & RL_STATE_ISEARCH;
-    while (*term_in.data && !m_done)
+    while (*term_in.data && !_done)
     {
         rl_callback_read_char();
 
@@ -267,35 +267,35 @@ void RlModule::on_input(const Input& Input, Result& result, const Context& conte
         }
     }
 
-    if (m_done)
+    if (_done)
     {
-        result.done(m_eof);
+        result.done(_eof);
         return;
     }
 
     // Check if Readline want's more Input or if we're done.
     if (rl_readline_state & RL_MORE_INPUT_STATES)
     {
-        if (m_prev_group < 0)
-            m_prev_group = result.set_bind_group(m_catch_group);
+        if (_prev_group < 0)
+            _prev_group = result.set_bind_group(_catch_group);
     }
-    else if (m_prev_group >= 0)
+    else if (_prev_group >= 0)
     {
-        result.set_bind_group(m_prev_group);
-        m_prev_group = -1;
+        result.set_bind_group(_prev_group);
+        _prev_group = -1;
     }
 }
 
 //------------------------------------------------------------------------------
 void RlModule::done(const char* line)
 {
-    m_done = true;
-    m_eof = (line == nullptr);
+    _done = true;
+    _eof = (line == nullptr);
 
     // Readline will reset the line state on returning from this call. Here we
     // trick it into reseting something else so we can use rl_line_buffer later.
     static char dummy_buffer = 0;
-    m_rl_buffer = rl_line_buffer;
+    _rl_buffer = rl_line_buffer;
     rl_line_buffer = &dummy_buffer;
 
     rl_callback_handler_remove();

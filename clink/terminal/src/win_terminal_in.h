@@ -21,10 +21,10 @@ private:
     void            push(unsigned int value);
     void            push(const char* seq);
     unsigned char   pop();
-    void*           m_stdin = nullptr;
-    unsigned int    m_dimensions = 0;
-    unsigned long   m_prev_mode = 0;
-    unsigned char   m_buffer_head = 0;
-    unsigned char   m_buffer_count = 0;
-    unsigned char   m_buffer[16]; // must be power of two.
+    void*           _stdin = nullptr;
+    unsigned int    _dimensions = 0;
+    unsigned long   _prev_mode = 0;
+    unsigned char   _buffer_head = 0;
+    unsigned char   _buffer_count = 0;
+    unsigned char   _buffer[16]; // must be power of two.
 };

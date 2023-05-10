@@ -46,14 +46,14 @@ void line_editor_destroy(LineEditor* editor)
 
 //------------------------------------------------------------------------------
 LineEditorImpl::LineEditorImpl(const Desc& desc)
-: m_module(desc.shell_name)
-, m_desc(desc)
-, m_printer(*desc.output)
+: _module(desc.shell_name)
+, _desc(desc)
+, _printer(*desc.output)
 {
-    if (m_desc.quote_pair == nullptr)
-        m_desc.quote_pair = "";
+    if (_desc.quote_pair == nullptr)
+        _desc.quote_pair = "";
 
-    add_module(m_module);
+    add_module(_module);
 }
 
 //------------------------------------------------------------------------------
@@ -82,8 +82,8 @@ void LineEditorImpl::initialise()
         EditorModule*   module;
     } binder_impl;
 
-    binder_impl.binder = &m_binder;
-    for (auto* module : m_modules)
+    binder_impl.binder = &_binder;
+    for (auto* module : _modules)
     {
         binder_impl.module = module;
         module->bind_input(binder_impl);
@@ -98,33 +98,33 @@ void LineEditorImpl::begin_line()
     clear_flag(~flag_init);
     set_flag(flag_editing);
 
-    m_bind_resolver.reset();
-    m_command_offset = 0;
-    m_keys_size = 0;
-    m_prev_key = ~0u;
+    _bind_resolver.reset();
+    _command_offset = 0;
+    _keys_size = 0;
+    _prev_key = ~0u;
 
-    MatchPipeline pipeline(m_matches);
+    MatchPipeline pipeline(_matches);
     pipeline.reset();
 
-    m_desc.input->begin();
-    m_desc.output->begin();
-    m_buffer.begin_line();
+    _desc.input->begin();
+    _desc.output->begin();
+    _buffer.begin_line();
 
     LineState line = get_linestate();
     EditorModule::Context context = get_context(line);
-    for (auto module : m_modules)
+    for (auto module : _modules)
         module->on_begin_line(context);
 }
 
 //------------------------------------------------------------------------------
 void LineEditorImpl::end_line()
 {
-    for (auto i = m_modules.rbegin(), n = m_modules.rend(); i != n; ++i)
+    for (auto i = _modules.rbegin(), n = _modules.rend(); i != n; ++i)
         i->on_end_line();
 
-    m_buffer.end_line();
-    m_desc.output->end();
-    m_desc.input->end();
+    _buffer.end_line();
+    _desc.output->end();
+    _desc.input->end();
 
     clear_flag(flag_editing);
 }
@@ -132,14 +132,14 @@ void LineEditorImpl::end_line()
 //------------------------------------------------------------------------------
 bool LineEditorImpl::add_module(EditorModule& module)
 {
-    EditorModule** slot = m_modules.push_back();
+    EditorModule** slot = _modules.push_back();
     return (slot != nullptr) ? *slot = &module, true : false;
 }
 
 //------------------------------------------------------------------------------
 bool LineEditorImpl::add_generator(MatchGenerator& generator)
 {
-    MatchGenerator** slot = m_generators.push_back();
+    MatchGenerator** slot = _generators.push_back();
     return (slot != nullptr) ? *slot = &generator, true : false;
 }
 
@@ -152,7 +152,7 @@ bool LineEditorImpl::get_line(char* out, int out_size)
     if (check_flag(flag_eof))
         return false;
 
-    const char* line = m_buffer.get_buffer();
+    const char* line = _buffer.get_buffer();
     StrBase(out, out_size).copy(line);
     return true;
 }
@@ -162,7 +162,7 @@ bool LineEditorImpl::edit(char* out, int out_size)
 {
     // Update first so the init state goes through.
     while (update())
-        m_desc.input->select();
+        _desc.input->select();
 
     return get_line(out, out_size);
 }
@@ -192,21 +192,21 @@ bool LineEditorImpl::update()
 //------------------------------------------------------------------------------
 void LineEditorImpl::update_input()
 {
-    int key = m_desc.input->read();
+    int key = _desc.input->read();
 
     if (key == TerminalIn::input_terminal_resize)
     {
-        int columns = m_desc.output->get_columns();
-        int rows = m_desc.output->get_rows();
+        int columns = _desc.output->get_columns();
+        int rows = _desc.output->get_rows();
         LineState line = get_linestate();
         EditorModule::Context context = get_context(line);
-        for (auto* module : m_modules)
+        for (auto* module : _modules)
             module->on_terminal_resize(columns, rows, context);
     }
 
     if (key == TerminalIn::input_abort)
     {
-        m_buffer.reset();
+        _buffer.reset();
         end_line();
         return;
     }
@@ -214,7 +214,7 @@ void LineEditorImpl::update_input()
     if (key < 0)
         return;
 
-    if (!m_bind_resolver.step(key))
+    if (!_bind_resolver.step(key))
         return;
 
     struct ResultImpl : public EditorModule::Result
@@ -239,13 +239,13 @@ void LineEditorImpl::update_input()
         unsigned char   flags;  // = 0;   <! issues about C2905
     };
 
-    while (auto Binding = m_bind_resolver.next())
+    while (auto Binding = _bind_resolver.next())
     {
         // Binding found, dispatch it off to the module.
         ResultImpl result;
         result.match = -1;
         result.flags = 0;
-        result.group = m_bind_resolver.get_group();
+        result.group = _bind_resolver.get_group();
 
         Str<16> chord;
         EditorModule* module = Binding.get_module();
@@ -257,7 +257,7 @@ void LineEditorImpl::update_input()
         EditorModule::Input input = { chord.c_str(), id };
         module->on_input(input, result, context);
 
-        m_bind_resolver.set_group(result.group);
+        _bind_resolver.set_group(result.group);
 
         // Process what ResultImpl has collected.
         if (result.flags & ResultImpl::flag_pass)
@@ -277,7 +277,7 @@ void LineEditorImpl::update_input()
             return;
 
         if (result.flags & ResultImpl::flag_redraw)
-            m_buffer.redraw();
+            _buffer.redraw();
 
         if (result.match >= 0)
             accept_match(result.match);
@@ -285,24 +285,24 @@ void LineEditorImpl::update_input()
             append_match_lcd();
     }
 
-    m_buffer.draw();
+    _buffer.draw();
 }
 
 //------------------------------------------------------------------------------
 void LineEditorImpl::find_command_bounds(const char*& start, int& length)
 {
-    const char* line_buffer = m_buffer.get_buffer();
-    unsigned int line_cursor = m_buffer.get_cursor();
+    const char* line_buffer = _buffer.get_buffer();
+    unsigned int line_cursor = _buffer.get_cursor();
 
     start = line_buffer;
     length = line_cursor;
 
-    if (m_desc.command_delims == nullptr)
+    if (_desc.command_delims == nullptr)
         return;
 
     StrIter token_iter(start, length);
-    StrTokeniser tokens(token_iter, m_desc.command_delims);
-    tokens.add_quote_pair(m_desc.quote_pair);
+    StrTokeniser tokens(token_iter, _desc.command_delims);
+    tokens.add_quote_pair(_desc.quote_pair);
     while (tokens.next(start, length));
 
     // We should expect to reach the cursor. If not then there's a trailing
@@ -317,20 +317,20 @@ void LineEditorImpl::find_command_bounds(const char*& start, int& length)
 //------------------------------------------------------------------------------
 void LineEditorImpl::collect_words()
 {
-    m_words.clear();
+    _words.clear();
 
-    const char* line_buffer = m_buffer.get_buffer();
-    unsigned int line_cursor = m_buffer.get_cursor();
+    const char* line_buffer = _buffer.get_buffer();
+    unsigned int line_cursor = _buffer.get_cursor();
 
     const char* command_start;
     int command_length;
     find_command_bounds(command_start, command_length);
 
-    m_command_offset = int(command_start - line_buffer);
+    _command_offset = int(command_start - line_buffer);
 
     StrIter token_iter(command_start, command_length);
-    StrTokeniser tokens(token_iter, m_desc.word_delims);
-    tokens.add_quote_pair(m_desc.quote_pair);
+    StrTokeniser tokens(token_iter, _desc.word_delims);
+    tokens.add_quote_pair(_desc.quote_pair);
     while (1)
     {
         int length = 0;
@@ -341,34 +341,34 @@ void LineEditorImpl::collect_words()
 
         // Add the word.
         unsigned int offset = unsigned(start - line_buffer);
-        m_words.push_back();
-        *(m_words.back()) = { offset, unsigned(length), 0, token.delim };
+        _words.push_back();
+        *(_words.back()) = { offset, unsigned(length), 0, token.delim };
     }
 
     // Add an empty word if the cursor is at the beginning of one.
-    Word* end_word = m_words.back();
+    Word* end_word = _words.back();
     if (!end_word || end_word->offset + end_word->length < line_cursor)
     {
         unsigned char delim = 0;
         if (line_cursor)
             delim = line_buffer[line_cursor - 1];
 
-        m_words.push_back();
-        *(m_words.back()) = { line_cursor, 0, 0, delim };
+        _words.push_back();
+        *(_words.back()) = { line_cursor, 0, 0, delim };
     }
 
     // Adjust for quotes.
-    for (Word& word : m_words)
+    for (Word& word : _words)
     {
         if (word.length == 0)
             continue;
 
         const char* start = line_buffer + word.offset;
 
-        int start_quoted = (start[0] == m_desc.quote_pair[0]);
+        int start_quoted = (start[0] == _desc.quote_pair[0]);
         int end_quoted = 0;
         if (word.length > 1)
-            end_quoted = (start[word.length - 1] == get_closing_quote(m_desc.quote_pair));
+            end_quoted = (start[word.length - 1] == get_closing_quote(_desc.quote_pair));
 
         word.offset += start_quoted;
         word.length -= start_quoted + end_quoted;
@@ -378,10 +378,10 @@ void LineEditorImpl::collect_words()
     // The last word is truncated to the longest length returned by the match
     // generators. This is a little clunky but works well enough.
     LineState line = get_linestate();
-    end_word = m_words.back();
+    end_word = _words.back();
     int prefix_length = 0;
     const char* word_start = line_buffer + end_word->offset;
-    for (const auto* generator : m_generators)
+    for (const auto* generator : _generators)
     {
         int i = generator->get_prefix_length(line);
         prefix_length = max(prefix_length, i);
@@ -392,21 +392,21 @@ void LineEditorImpl::collect_words()
 //------------------------------------------------------------------------------
 void LineEditorImpl::accept_match(unsigned int index)
 {
-    if (index >= m_matches.get_match_count())
+    if (index >= _matches.get_match_count())
         return;
 
-    const char* match = m_matches.get_match(index);
+    const char* match = _matches.get_match(index);
     if (!*match)
         return;
 
-    Word end_word = *(m_words.back());
+    Word end_word = *(_words.back());
     int word_start = end_word.offset;
     int word_end = end_word.offset + end_word.length;
 
-    const char* buf_ptr = m_buffer.get_buffer();
+    const char* buf_ptr = _buffer.get_buffer();
 
     Str<288> to_insert;
-    if (!m_matches.is_prefix_included())
+    if (!_matches.is_prefix_included())
         to_insert.concat(buf_ptr + word_start, end_word.length);
     to_insert << match;
 
@@ -418,22 +418,22 @@ void LineEditorImpl::accept_match(unsigned int index)
     // Does the selected match need quoting?
     bool needs_quote = end_word.quoted;
     for (const char* c = match; *c && !needs_quote; ++c)
-        needs_quote = (strchr(m_desc.word_delims, *c) != nullptr);
+        needs_quote = (strchr(_desc.word_delims, *c) != nullptr);
 
     // Clear the word.
-    m_buffer.remove(word_start, m_buffer.get_cursor());
-    m_buffer.set_cursor(word_start);
+    _buffer.remove(word_start, _buffer.get_cursor());
+    _buffer.set_cursor(word_start);
 
     // Read the word plus the match.
     if (needs_quote && !end_word.quoted)
     {
-        char quote[2] = { m_desc.quote_pair[0] };
-        m_buffer.insert(quote);
+        char quote[2] = { _desc.quote_pair[0] };
+        _buffer.insert(quote);
     }
-    m_buffer.insert(to_insert.c_str());
+    _buffer.insert(to_insert.c_str());
 
     // Use a suffix if one's associated with the match, otherwise derive it.
-    char match_suffix = m_matches.get_suffix(index);
+    char match_suffix = _matches.get_suffix(index);
     char suffix = match_suffix;
     if (!suffix)
     {
@@ -444,14 +444,14 @@ void LineEditorImpl::accept_match(unsigned int index)
         LineState match_line = { match, match_length, 0, match_words };
 
         int prefix_length = 0;
-        for (const auto* generator : m_generators)
+        for (const auto* generator : _generators)
         {
             int i = generator->get_prefix_length(match_line);
             prefix_length = max(prefix_length, i);
         }
 
         if (prefix_length != match_length)
-            suffix = m_desc.word_delims[0];
+            suffix = _desc.word_delims[0];
     }
 
     // If this match doesn't make a new partial word, close it off
@@ -461,20 +461,20 @@ void LineEditorImpl::accept_match(unsigned int index)
         // did not come from the match.
         if (needs_quote && !match_suffix)
         {
-            char quote[2] = { get_closing_quote(m_desc.quote_pair) };
-            m_buffer.insert(quote);
+            char quote[2] = { get_closing_quote(_desc.quote_pair) };
+            _buffer.insert(quote);
         }
 
         // Just move the cursor if the suffix will duplicate the character under
         // the cursor.
-        unsigned int cursor = m_buffer.get_cursor();
-        if (cursor >= m_buffer.get_length() || m_buffer.get_buffer()[cursor] != suffix)
+        unsigned int cursor = _buffer.get_cursor();
+        if (cursor >= _buffer.get_length() || _buffer.get_buffer()[cursor] != suffix)
         {
             char suffix_str[2] = { suffix };
-            m_buffer.insert(suffix_str);
+            _buffer.insert(suffix_str);
         }
         else
-            m_buffer.set_cursor(cursor + 1);
+            _buffer.set_cursor(cursor + 1);
     }
 }
 
@@ -482,55 +482,55 @@ void LineEditorImpl::accept_match(unsigned int index)
 void LineEditorImpl::append_match_lcd()
 {
     Str<288> lcd;
-    m_matches.get_match_lcd(lcd);
+    _matches.get_match_lcd(lcd);
 
     unsigned int lcd_length = lcd.length();
     if (!lcd_length)
         return;
 
-    unsigned int cursor = m_buffer.get_cursor();
+    unsigned int cursor = _buffer.get_cursor();
 
-    Word end_word = *(m_words.back());
+    Word end_word = *(_words.back());
     int word_end = end_word.offset;
-    if (!m_matches.is_prefix_included())
+    if (!_matches.is_prefix_included())
         word_end += end_word.length;
 
     int dx = lcd_length - (cursor - word_end);
     if (dx < 0)
     {
-        m_buffer.remove(cursor + dx, cursor);
-        m_buffer.set_cursor(cursor + dx);
+        _buffer.remove(cursor + dx, cursor);
+        _buffer.set_cursor(cursor + dx);
     }
     else if (dx > 0)
     {
         int start = end_word.offset;
-        if (!m_matches.is_prefix_included())
+        if (!_matches.is_prefix_included())
             start += end_word.length;
 
-        m_buffer.remove(start, cursor);
-        m_buffer.set_cursor(start);
-        m_buffer.insert(lcd.c_str());
+        _buffer.remove(start, cursor);
+        _buffer.set_cursor(start);
+        _buffer.insert(lcd.c_str());
     }
 
     // Prefix a quote if required.
     bool needs_quote = false;
     for (const char* c = lcd.c_str(); *c && !needs_quote; ++c)
-        needs_quote = (strchr(m_desc.word_delims, *c) != nullptr);
+        needs_quote = (strchr(_desc.word_delims, *c) != nullptr);
 
-    for (int i = 0, n = m_matches.get_match_count(); i < n && !needs_quote; ++i)
+    for (int i = 0, n = _matches.get_match_count(); i < n && !needs_quote; ++i)
     {
-        const char* match = m_matches.get_match(i) + lcd_length;
+        const char* match = _matches.get_match(i) + lcd_length;
         if (match[0])
-            needs_quote = (strchr(m_desc.word_delims, match[0]) != nullptr);
+            needs_quote = (strchr(_desc.word_delims, match[0]) != nullptr);
     }
 
     if (needs_quote && !end_word.quoted)
     {
-        char quote[2] = { m_desc.quote_pair[0] };
-        int cursor = m_buffer.get_cursor();
-        m_buffer.set_cursor(end_word.offset);
-        m_buffer.insert(quote);
-        m_buffer.set_cursor(cursor + 1);
+        char quote[2] = { _desc.quote_pair[0] };
+        int cursor = _buffer.get_cursor();
+        _buffer.set_cursor(end_word.offset);
+        _buffer.insert(quote);
+        _buffer.set_cursor(cursor + 1);
     }
 }
 
@@ -538,37 +538,37 @@ void LineEditorImpl::append_match_lcd()
 LineState LineEditorImpl::get_linestate() const
 {
     return {
-        m_buffer.get_buffer(),
-        m_buffer.get_cursor(),
-        m_command_offset,
-        m_words,
+        _buffer.get_buffer(),
+        _buffer.get_cursor(),
+        _command_offset,
+        _words,
     };
 }
 
 //------------------------------------------------------------------------------
 EditorModule::Context LineEditorImpl::get_context(const LineState& line) const
 {
-    auto& buffer = const_cast<RlBuffer&>(m_buffer);
-    auto& pter = const_cast<Printer&>(m_printer);
-    return { m_desc.prompt, pter, buffer, line, m_matches };
+    auto& buffer = const_cast<RlBuffer&>(_buffer);
+    auto& pter = const_cast<Printer&>(_printer);
+    return { _desc.prompt, pter, buffer, line, _matches };
 }
 
 //------------------------------------------------------------------------------
 void LineEditorImpl::set_flag(unsigned char flag)
 {
-    m_flags |= flag;
+    _flags |= flag;
 }
 
 //------------------------------------------------------------------------------
 void LineEditorImpl::clear_flag(unsigned char flag)
 {
-    m_flags &= ~flag;
+    _flags &= ~flag;
 }
 
 //------------------------------------------------------------------------------
 bool LineEditorImpl::check_flag(unsigned char flag) const
 {
-    return ((m_flags & flag) != 0);
+    return ((_flags & flag) != 0);
 }
 
 //------------------------------------------------------------------------------
@@ -576,7 +576,7 @@ void LineEditorImpl::update_internal()
 {
     collect_words();
 
-    const Word& end_word = *(m_words.back());
+    const Word& end_word = *(_words.back());
 
     union key_t {
         struct {
@@ -590,50 +590,50 @@ void LineEditorImpl::update_internal()
     key_t next_key = { end_word.offset, end_word.length };
 
     key_t prev_key;
-    prev_key.value = m_prev_key;
+    prev_key.value = _prev_key;
     prev_key.cursor_pos = 0;
 
     // Should we generate new matches?
     if (next_key.value != prev_key.value)
     {
         LineState line = get_linestate();
-        MatchPipeline pipeline(m_matches);
+        MatchPipeline pipeline(_matches);
         pipeline.reset();
-        pipeline.generate(line, m_generators);
+        pipeline.generate(line, _generators);
         pipeline.fill_info();
     }
 
-    next_key.cursor_pos = m_buffer.get_cursor();
-    prev_key.value = m_prev_key;
+    next_key.cursor_pos = _buffer.get_cursor();
+    prev_key.value = _prev_key;
 
     // Should we sort and select matches?
     if (next_key.value != prev_key.value)
     {
         Str<64> needle;
         int needle_start = end_word.offset;
-        if (!m_matches.is_prefix_included())
+        if (!_matches.is_prefix_included())
             needle_start += end_word.length;
 
-        const char* buf_ptr = m_buffer.get_buffer();
+        const char* buf_ptr = _buffer.get_buffer();
         needle.concat(buf_ptr + needle_start, next_key.cursor_pos - needle_start);
 
         if (!needle.empty() && end_word.quoted)
         {
             int i = needle.length();
-            if (needle[i - 1] == get_closing_quote(m_desc.quote_pair))
+            if (needle[i - 1] == get_closing_quote(_desc.quote_pair))
                 needle.truncate(i - 1);
         }
 
-        MatchPipeline pipeline(m_matches);
+        MatchPipeline pipeline(_matches);
         pipeline.select(needle.c_str());
         pipeline.sort();
 
-        m_prev_key = next_key.value;
+        _prev_key = next_key.value;
 
         // Tell all the modules that the matches changed.
         LineState line = get_linestate();
         EditorModule::Context context = get_context(line);
-        for (auto module : m_modules)
+        for (auto module : _modules)
             module->on_matches_changed(context);
     }
 }

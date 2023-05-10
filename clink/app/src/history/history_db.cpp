@@ -136,35 +136,35 @@ protected:
                     BankLock() = default;
                     BankLock(void* handle, bool exclusive);
                     ~BankLock();
-    void*           m_handle = nullptr;
+    void*           _handle = nullptr;
 };
 
 //------------------------------------------------------------------------------
 BankLock::BankLock(void* handle, bool exclusive)
-: m_handle(handle)
+: _handle(handle)
 {
-    if (m_handle == nullptr)
+    if (_handle == nullptr)
         return;
 
     OVERLAPPED overlapped = {};
     int flags = exclusive ? LOCKFILE_EXCLUSIVE_LOCK : 0;
-    LockFileEx(m_handle, flags, 0, ~0u, ~0u, &overlapped);
+    LockFileEx(_handle, flags, 0, ~0u, ~0u, &overlapped);
 }
 
 //------------------------------------------------------------------------------
 BankLock::~BankLock()
 {
-    if (m_handle != nullptr)
+    if (_handle != nullptr)
     {
         OVERLAPPED overlapped = {};
-        UnlockFileEx(m_handle, 0, ~0u, ~0u, &overlapped);
+        UnlockFileEx(_handle, 0, ~0u, ~0u, &overlapped);
     }
 }
 
 //------------------------------------------------------------------------------
 BankLock::operator bool () const
 {
-    return (m_handle != nullptr);
+    return (_handle != nullptr);
 }
 
 
@@ -181,17 +181,17 @@ public:
                             FileIter(const ReadLock& lock, char* buffer, int buffer_size);
         template <int S>    FileIter(const ReadLock& lock, char (&buffer)[S]);
         unsigned int        next(unsigned int rollback=0);
-        unsigned int        get_buffer_offset() const   { return m_buffer_offset; }
-        char*               get_buffer() const          { return m_buffer; }
-        unsigned int        get_buffer_size() const     { return m_buffer_size; }
-        unsigned int        get_remaining() const       { return m_remaining; }
+        unsigned int        get_buffer_offset() const   { return _buffer_offset; }
+        char*               get_buffer() const          { return _buffer; }
+        unsigned int        get_buffer_size() const     { return _buffer_size; }
+        unsigned int        get_remaining() const       { return _remaining; }
 
     private:
-        char*               m_buffer;
-        void*               m_handle;
-        unsigned int        m_buffer_size;
-        unsigned int        m_buffer_offset;
-        unsigned int        m_remaining;
+        char*               _buffer;
+        void*               _handle;
+        unsigned int        _buffer_size;
+        unsigned int        _buffer_offset;
+        unsigned int        _remaining;
     };
 
     class LineIter : public NoCopy
@@ -204,8 +204,8 @@ public:
 
     private:
         bool                provision();
-        FileIter            m_file_iter;
-        unsigned int        m_remaining = 0;
+        FileIter            _file_iter;
+        unsigned int        _remaining = 0;
     };
 
     explicit                ReadLock() = default;
@@ -235,9 +235,9 @@ template <class T> void ReadLock::find(const char* line, T&& callback) const
         if (line[read.length()] != '\0')
             continue;
 
-        unsigned int file_ptr = SetFilePointer(m_handle, 0, nullptr, FILE_CURRENT);
+        unsigned int file_ptr = SetFilePointer(_handle, 0, nullptr, FILE_CURRENT);
         bool abort = callback(id);
-        SetFilePointer(m_handle, file_ptr, nullptr, FILE_BEGIN);
+        SetFilePointer(_handle, file_ptr, nullptr, FILE_BEGIN);
 
         if (!abort)
             break;
@@ -265,37 +265,37 @@ template <int S> ReadLock::FileIter::FileIter(const ReadLock& lock, char (&buffe
 
 //------------------------------------------------------------------------------
 ReadLock::FileIter::FileIter(const ReadLock& lock, char* buffer, int buffer_size)
-: m_handle(lock.m_handle)
-, m_buffer(buffer)
-, m_buffer_size(buffer_size)
-, m_buffer_offset(-buffer_size)
-, m_remaining(GetFileSize(lock.m_handle, nullptr))
+: _handle(lock._handle)
+, _buffer(buffer)
+, _buffer_size(buffer_size)
+, _buffer_offset(-buffer_size)
+, _remaining(GetFileSize(lock._handle, nullptr))
 {
-    SetFilePointer(m_handle, 0, nullptr, FILE_BEGIN);
-    m_buffer[0] = '\0';
+    SetFilePointer(_handle, 0, nullptr, FILE_BEGIN);
+    _buffer[0] = '\0';
 }
 
 //------------------------------------------------------------------------------
 unsigned int ReadLock::FileIter::next(unsigned int rollback)
 {
-    if (!m_remaining)
-        return (m_buffer[0] = '\0');
+    if (!_remaining)
+        return (_buffer[0] = '\0');
 
-    rollback = min<unsigned>(rollback, m_buffer_size);
+    rollback = min<unsigned>(rollback, _buffer_size);
     if (rollback)
-        memmove(m_buffer, m_buffer + m_buffer_size - rollback, rollback);
+        memmove(_buffer, _buffer + _buffer_size - rollback, rollback);
 
-    m_buffer_offset += m_buffer_size - rollback;
+    _buffer_offset += _buffer_size - rollback;
 
-    char* target = m_buffer + rollback;
-    int needed = min(m_remaining, m_buffer_size - rollback);
+    char* target = _buffer + rollback;
+    int needed = min(_remaining, _buffer_size - rollback);
 
     DWORD read = 0;
-    ReadFile(m_handle, target, needed, &read, nullptr);
+    ReadFile(_handle, target, needed, &read, nullptr);
 
-    m_remaining -= read;
-    m_buffer_size = read + rollback;
-    return m_buffer_size;
+    _remaining -= read;
+    _buffer_size = read + rollback;
+    return _buffer_size;
 }
 
 
@@ -308,25 +308,25 @@ template <int S> ReadLock::LineIter::LineIter(const ReadLock& lock, char (&buffe
 
 //------------------------------------------------------------------------------
 ReadLock::LineIter::LineIter(const ReadLock& lock, char* buffer, int buffer_size)
-: m_file_iter(lock, buffer, buffer_size)
+: _file_iter(lock, buffer, buffer_size)
 {
 }
 
 //------------------------------------------------------------------------------
 bool ReadLock::LineIter::provision()
 {
-    return !!(m_remaining = m_file_iter.next(m_remaining));
+    return !!(_remaining = _file_iter.next(_remaining));
 }
 
 //------------------------------------------------------------------------------
 LineIdImpl ReadLock::LineIter::next(StrIter& out)
 {
-    while (m_remaining || provision())
+    while (_remaining || provision())
     {
-        const char* last = m_file_iter.get_buffer() + m_file_iter.get_buffer_size();
-        const char* start = last - m_remaining;
+        const char* last = _file_iter.get_buffer() + _file_iter.get_buffer_size();
+        const char* start = last - _remaining;
 
-        for (; start != last; ++start, --m_remaining)
+        for (; start != last; ++start, --_remaining)
             if (unsigned(*start) > 0x1f)
                 break;
 
@@ -335,22 +335,22 @@ LineIdImpl ReadLock::LineIter::next(StrIter& out)
             if (unsigned(*end) <= 0x1f)
                 break;
 
-        if (end == last && start != m_file_iter.get_buffer())
+        if (end == last && start != _file_iter.get_buffer())
         {
             provision();
             continue;
         }
 
         int bytes = int(end - start);
-        m_remaining -= bytes;
+        _remaining -= bytes;
 
         if (*start == '|')
             continue;
 
         new (&out) StrIter(start, int(end - start));
 
-        unsigned int offset = int(start - m_file_iter.get_buffer());
-        return LineIdImpl(m_file_iter.get_buffer_offset() + offset);
+        unsigned int offset = int(start - _file_iter.get_buffer());
+        return LineIdImpl(_file_iter.get_buffer_offset() + offset);
     }
 
     return LineIdImpl();
@@ -380,25 +380,25 @@ WriteLock::WriteLock(void* handle)
 //------------------------------------------------------------------------------
 void WriteLock::clear()
 {
-    SetFilePointer(m_handle, 0, nullptr, FILE_BEGIN);
-    SetEndOfFile(m_handle);
+    SetFilePointer(_handle, 0, nullptr, FILE_BEGIN);
+    SetEndOfFile(_handle);
 }
 
 //------------------------------------------------------------------------------
 void WriteLock::add(const char* line)
 {
     DWORD written;
-    SetFilePointer(m_handle, 0, nullptr, FILE_END);
-    WriteFile(m_handle, line, int(strlen(line)), &written, nullptr);
-    WriteFile(m_handle, "\n", 1, &written, nullptr);
+    SetFilePointer(_handle, 0, nullptr, FILE_END);
+    WriteFile(_handle, line, int(strlen(line)), &written, nullptr);
+    WriteFile(_handle, "\n", 1, &written, nullptr);
 }
 
 //------------------------------------------------------------------------------
 void WriteLock::remove(LineIdImpl id)
 {
     DWORD written;
-    SetFilePointer(m_handle, id.offset, nullptr, FILE_BEGIN);
-    WriteFile(m_handle, "|", 1, &written, nullptr);
+    SetFilePointer(_handle, id.offset, nullptr, FILE_BEGIN);
+    WriteFile(_handle, "|", 1, &written, nullptr);
 }
 
 //------------------------------------------------------------------------------
@@ -406,12 +406,12 @@ void WriteLock::append(const ReadLock& src)
 {
     DWORD written;
 
-    SetFilePointer(m_handle, 0, nullptr, FILE_END);
+    SetFilePointer(_handle, 0, nullptr, FILE_END);
 
     char buffer[HistoryDb::max_line_length];
     ReadLock::FileIter src_iter(src, buffer);
     while (int bytes_read = src_iter.next())
-        WriteFile(m_handle, buffer, bytes_read, &written, nullptr);
+        WriteFile(_handle, buffer, bytes_read, &written, nullptr);
 }
 
 
@@ -425,17 +425,17 @@ public:
 
 private:
     bool                    next_bank();
-    const HistoryDb&        m_db;
-    ReadLock                m_lock;
-    ReadLock::LineIter      m_line_iter;
-    unsigned int            m_buffer_size;
-    unsigned int            m_bank_index = 0;
+    const HistoryDb&        _db;
+    ReadLock                _lock;
+    ReadLock::LineIter      _line_iter;
+    unsigned int            _buffer_size;
+    unsigned int            _bank_index = 0;
 };
 
 //------------------------------------------------------------------------------
 ReadLineIter::ReadLineIter(const HistoryDb& db, unsigned int this_size)
-: m_db(db)
-, m_buffer_size(this_size - sizeof(*this))
+: _db(db)
+, _buffer_size(this_size - sizeof(*this))
 {
     next_bank();
 }
@@ -443,14 +443,14 @@ ReadLineIter::ReadLineIter(const HistoryDb& db, unsigned int this_size)
 //------------------------------------------------------------------------------
 bool ReadLineIter::next_bank()
 {
-    while (m_bank_index < m_db.get_bank_count())
+    while (_bank_index < _db.get_bank_count())
     {
-        if (void* bank_handle = m_db.m_bank_handles[m_bank_index++])
+        if (void* bank_handle = _db._bank_handles[_bank_index++])
         {
             char* buffer = (char*)(this + 1);
-            m_lock.~ReadLock();
-            new (&m_lock) ReadLock(bank_handle);
-            new (&m_line_iter) ReadLock::LineIter(m_lock, buffer, m_buffer_size);
+            _lock.~ReadLock();
+            new (&_lock) ReadLock(bank_handle);
+            new (&_line_iter) ReadLock::LineIter(_lock, buffer, _buffer_size);
             return true;
         }
     }
@@ -461,14 +461,14 @@ bool ReadLineIter::next_bank()
 //------------------------------------------------------------------------------
 HistoryDb::LineId ReadLineIter::next(StrIter& out)
 {
-    if (m_bank_index > m_db.get_bank_count())
+    if (_bank_index > _db.get_bank_count())
         return 0;
 
     do
     {
-        if (LineIdImpl ret = m_line_iter.next(out))
+        if (LineIdImpl ret = _line_iter.next(out))
         {
-            ret.bank_index = m_bank_index - 1;
+            ret.bank_index = _bank_index - 1;
             return ret.outer;
         }
     }
@@ -497,7 +497,7 @@ HistoryDb::LineId HistoryDb::Iter::next(StrIter& out)
 //------------------------------------------------------------------------------
 HistoryDb::HistoryDb()
 {
-    memset(m_bank_handles, 0, sizeof(m_bank_handles));
+    memset(_bank_handles, 0, sizeof(_bank_handles));
 
     // Create a self-deleting file to used to indicate this session's alive
     Str<280> path;
@@ -507,8 +507,8 @@ HistoryDb::HistoryDb()
     {
         Wstr<280> wpath(path.c_str());
         DWORD flags = FILE_FLAG_DELETE_ON_CLOSE|FILE_ATTRIBUTE_HIDDEN;
-        m_alive_file = CreateFileW(wpath.c_str(), 0, 0, nullptr, CREATE_ALWAYS, flags, nullptr);
-        m_alive_file = (m_alive_file == INVALID_HANDLE_VALUE) ? nullptr : m_alive_file;
+        _alive_file = CreateFileW(wpath.c_str(), 0, 0, nullptr, CREATE_ALWAYS, flags, nullptr);
+        _alive_file = (_alive_file == INVALID_HANDLE_VALUE) ? nullptr : _alive_file;
     }
 
     history_inhibit_expansion_function = history_expand_control;
@@ -520,15 +520,15 @@ HistoryDb::HistoryDb()
 HistoryDb::~HistoryDb()
 {
     // Close alive handle
-    CloseHandle(m_alive_file);
+    CloseHandle(_alive_file);
 
     // Close all but the master bank. We're going to append to the master one.
     for (int i = 1, n = get_bank_count(); i < n; ++i)
-        CloseHandle(m_bank_handles[i]);
+        CloseHandle(_bank_handles[i]);
 
     reap();
 
-    CloseHandle(m_bank_handles[bank_master]);
+    CloseHandle(_bank_handles[bank_master]);
 }
 
 //------------------------------------------------------------------------------
@@ -554,7 +554,7 @@ void HistoryDb::reap()
             void* src_handle = open_file(path.c_str());
             {
                 ReadLock src(src_handle);
-                WriteLock dest(m_bank_handles[bank_master]);
+                WriteLock dest(_bank_handles[bank_master]);
                 if (src && dest)
                     dest.append(src);
             }
@@ -568,18 +568,18 @@ void HistoryDb::reap()
 //------------------------------------------------------------------------------
 void HistoryDb::initialise()
 {
-    if (m_bank_handles[bank_master] != nullptr)
+    if (_bank_handles[bank_master] != nullptr)
         return;
 
     Str<280> path;
     get_file_path(path, false);
-    m_bank_handles[bank_master] = open_file(path.c_str());
+    _bank_handles[bank_master] = open_file(path.c_str());
 
     if (g_shared.get())
         return;
 
     get_file_path(path, true);
-    m_bank_handles[bank_session] = open_file(path.c_str());
+    _bank_handles[bank_session] = open_file(path.c_str());
 
     reap(); // collects orphaned history files.
 }
@@ -588,7 +588,7 @@ void HistoryDb::initialise()
 unsigned int HistoryDb::get_bank_count() const
 {
     int count = 0;
-    for (void* handle : m_bank_handles)
+    for (void* handle : _bank_handles)
         count += (handle != nullptr);
 
     return count;
@@ -600,7 +600,7 @@ void* HistoryDb::get_bank(unsigned int index) const
     if (index >= get_bank_count())
         return nullptr;
 
-    return m_bank_handles[index];
+    return _bank_handles[index];
 }
 
 //------------------------------------------------------------------------------

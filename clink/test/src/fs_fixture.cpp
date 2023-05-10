@@ -25,18 +25,18 @@ static const char* g_default_fs[] = {
 //------------------------------------------------------------------------------
 FsFixture::FsFixture(const char** fs)
 {
-    os::get_env("tmp", m_root);
-    REQUIRE(!m_root.empty());
+    os::get_env("tmp", _root);
+    REQUIRE(!_root.empty());
 
     Str<64> id;
     id.format("clink_test_%d", rand());
-    path::append(m_root, id.c_str());
+    path::append(_root, id.c_str());
 
-    bool existed = !os::make_dir(m_root.c_str());
-    os::set_current_dir(m_root.c_str());
+    bool existed = !os::make_dir(_root.c_str());
+    os::set_current_dir(_root.c_str());
 
     if (existed)
-        clean(m_root.c_str());
+        clean(_root.c_str());
 
     if (fs == nullptr)
         fs = g_default_fs;
@@ -52,16 +52,16 @@ FsFixture::FsFixture(const char** fs)
             fclose(f);
     }
 
-    m_fs = fs;
+    _fs = fs;
 }
 
 //------------------------------------------------------------------------------
 FsFixture::~FsFixture()
 {
-    os::set_current_dir(m_root.c_str());
+    os::set_current_dir(_root.c_str());
     os::set_current_dir("..");
 
-    clean(m_root.c_str());
+    clean(_root.c_str());
 }
 
 //------------------------------------------------------------------------------
@@ -86,5 +86,5 @@ void FsFixture::clean(const char* path)
 //------------------------------------------------------------------------------
 const char* FsFixture::get_root() const
 {
-    return m_root.c_str();
+    return _root.c_str();
 }

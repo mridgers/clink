@@ -23,5 +23,5 @@ private:
     void            lua_pushlinestate(const LineState& line);
     bool            load_script(const char* script);
     void            load_scripts(const char* path);
-    LuaState&       m_state;
+    LuaState&       _state;
 };

@@ -15,16 +15,16 @@ public:
 
                         Instruction() = default;
     explicit            operator bool () const  { return get_length() != 0; }
-    bool                is_relative() const     { return (m_value > 0xff); }
-    int                 get_rel_size() const    { return (m_value >> rel_size_shift) & 0xff; }
-    int                 get_rel_offset() const  { return (m_value >> rel_offset_shift) & 0xff; }
-    int                 get_length() const      { return m_value & 0xff; }
+    bool                is_relative() const     { return (_value > 0xff); }
+    int                 get_rel_size() const    { return (_value >> rel_size_shift) & 0xff; }
+    int                 get_rel_offset() const  { return (_value >> rel_offset_shift) & 0xff; }
+    int                 get_length() const      { return _value & 0xff; }
     void                copy(const unsigned char* from, unsigned char* to) const;
 
 private:
     friend Instruction  disassemble(const unsigned char* ptr);
-                        Instruction(int value) : m_value(value) {}
-    int                 m_value = 0;
+                        Instruction(int value) : _value(value) {}
+    int                 _value = 0;
 };
 
 //------------------------------------------------------------------------------
@@ -35,5 +35,5 @@ public:
     Instruction             next();
 
 private:
-    const unsigned char*    m_data;
+    const unsigned char*    _data;
 };

@@ -32,6 +32,6 @@ private:
     void                delete_chars(const Ecma48Code::CsiBase& csi);
     void                set_private_mode(const Ecma48Code::CsiBase& csi);
     void                reset_private_mode(const Ecma48Code::CsiBase& csi);
-    Ecma48State         m_state;
-    ScreenBuffer&       m_screen;
+    Ecma48State         _state;
+    ScreenBuffer&       _screen;
 };

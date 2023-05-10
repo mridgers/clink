@@ -30,11 +30,11 @@ SettingColour::SettingColour(
 {
     Str<64> inner_name;
     inner_name << name << ".fg";
-    m_fg.construct(inner_name.c_str(), short_desc, long_desc, colour_fg_values, default_fg);
+    _fg.construct(inner_name.c_str(), short_desc, long_desc, colour_fg_values, default_fg);
 
     inner_name.clear();
     inner_name << name << ".bg";
-    m_bg.construct(inner_name.c_str(), short_desc, long_desc, colour_bg_values, default_bg);
+    _bg.construct(inner_name.c_str(), short_desc, long_desc, colour_bg_values, default_bg);
 }
 
 //------------------------------------------------------------------------------
@@ -42,7 +42,7 @@ Attributes SettingColour::get() const
 {
     Attributes out = Attributes::defaults;
 
-    int fg = m_fg->get();
+    int fg = _fg->get();
     switch (fg)
     {
     case value_fg_normal:   out.set_bold(false);    break;
@@ -51,7 +51,7 @@ Attributes SettingColour::get() const
     default:                out.set_fg(fg);         break;
     }
 
-    int bg = m_bg->get();
+    int bg = _bg->get();
     switch (bg)
     {
     case value_bg_default:  out.reset_bg();         break;

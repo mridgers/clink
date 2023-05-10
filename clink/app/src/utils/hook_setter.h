@@ -37,8 +37,8 @@ private:
     HookDesc*                   add_desc(HookType Type, void* module, const char* name, funcptr_t hook);
     bool                        commit_iat(void* self, const HookDesc& desc);
     bool                        commit_jmp(void* self, const HookDesc& desc);
-    HookDesc                    m_descs[4];
-    int                         m_desc_count;
+    HookDesc                    _descs[4];
+    int                         _desc_count;
 };
 
 //------------------------------------------------------------------------------

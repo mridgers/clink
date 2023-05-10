@@ -26,7 +26,7 @@ static SettingStr g_clink_path(
 
 //------------------------------------------------------------------------------
 HostLua::HostLua()
-: m_generator(m_state)
+: _generator(_state)
 {
     Str<280> bin_path;
     AppContext::get()->get_binaries_dir(bin_path);
@@ -34,7 +34,7 @@ HostLua::HostLua()
     Str<280> exe_path;
     exe_path << bin_path << "\\" CLINK_EXE;
 
-    lua_State* state = m_state.get_state();
+    lua_State* state = _state.get_state();
     lua_pushstring(state, exe_path.c_str());
     lua_setglobal(state, "CLINK_EXE");
 }
@@ -42,13 +42,13 @@ HostLua::HostLua()
 //------------------------------------------------------------------------------
 HostLua::operator LuaState& ()
 {
-    return m_state;
+    return _state;
 }
 
 //------------------------------------------------------------------------------
 HostLua::operator MatchGenerator& ()
 {
-    return m_generator;
+    return _generator;
 }
 
 //------------------------------------------------------------------------------
@@ -84,5 +84,5 @@ void HostLua::load_script(const char* path)
     lua_globs.directories(false);
 
     while (lua_globs.next(buffer))
-        m_state.do_file(buffer.c_str());
+        _state.do_file(buffer.c_str());
 }

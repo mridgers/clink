@@ -11,8 +11,8 @@
 EnvFixture::EnvFixture(const char** env)
 {
     // Store the Process' current environment so it can be restored.
-    m_env_strings = GetEnvironmentStringsW();
-    convert_eq_to_null(m_env_strings);
+    _env_strings = GetEnvironmentStringsW();
+    convert_eq_to_null(_env_strings);
 
     clear();
 
@@ -30,7 +30,7 @@ EnvFixture::~EnvFixture()
     clear();
 
     // Restore previous environment.
-    wchar_t* env_string = m_env_strings;
+    wchar_t* env_string = _env_strings;
     while (*env_string)
     {
         wchar_t* value = env_string + (wcslen(env_string) + 1);
@@ -38,7 +38,7 @@ EnvFixture::~EnvFixture()
         env_string = value + wcslen(value) + 1;
     }
 
-    FreeEnvironmentStringsW(m_env_strings);
+    FreeEnvironmentStringsW(_env_strings);
 }
 
 //------------------------------------------------------------------------------

@@ -19,5 +19,5 @@ public:
     virtual void    on_terminal_resize(int columns, int rows, const Context& context) override;
 
 private:
-    const char*     m_host_name;
+    const char*     _host_name;
 };

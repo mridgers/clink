@@ -24,9 +24,9 @@ private:
     virtual void    on_input(const Input& Input, Result& result, const Context& context) override;
     virtual void    on_terminal_resize(int columns, int rows, const Context& context) override;
     void            done(const char* line);
-    char*           m_rl_buffer;
-    int             m_prev_group;
-    int             m_catch_group;
-    bool            m_done;
-    bool            m_eof;
+    char*           _rl_buffer;
+    int             _prev_group;
+    int             _catch_group;
+    bool            _done;
+    bool            _eof;
 };

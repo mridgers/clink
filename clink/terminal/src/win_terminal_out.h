@@ -18,7 +18,7 @@ public:
     virtual int     get_rows() const override;
 
 private:
-    void*           m_stdout = nullptr;
-    unsigned long   m_prev_mode = 0;
-    unsigned short  m_default_attr = 0x07;
+    void*           _stdout = nullptr;
+    unsigned long   _prev_mode = 0;
+    unsigned short  _default_attr = 0x07;
 };

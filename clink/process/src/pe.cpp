@@ -9,21 +9,21 @@
 
 //------------------------------------------------------------------------------
 PeInfo::PeInfo(void* base)
-: m_base(base)
+: _base(base)
 {
 }
 
 //------------------------------------------------------------------------------
 void* PeInfo::rva_to_addr(unsigned int rva) const
 {
-    return (char*)(uintptr_t)rva + (uintptr_t)m_base;
+    return (char*)(uintptr_t)rva + (uintptr_t)_base;
 }
 
 //------------------------------------------------------------------------------
 IMAGE_NT_HEADERS* PeInfo::get_nt_headers() const
 {
-    IMAGE_DOS_HEADER* dos_header = (IMAGE_DOS_HEADER*)m_base;
-    return (IMAGE_NT_HEADERS*)((char*)m_base + dos_header->e_lfanew);
+    IMAGE_DOS_HEADER* dos_header = (IMAGE_DOS_HEADER*)_base;
+    return (IMAGE_NT_HEADERS*)((char*)_base + dos_header->e_lfanew);
 }
 
 //------------------------------------------------------------------------------
@@ -101,13 +101,13 @@ PeInfo::funcptr_t* PeInfo::get_import_by_addr(const char* dll, funcptr_t func_ad
 //------------------------------------------------------------------------------
 PeInfo::funcptr_t PeInfo::get_export(const char* func_name) const
 {
-    if (m_base == nullptr)
+    if (_base == nullptr)
         return nullptr;
 
     IMAGE_EXPORT_DIRECTORY* ied = (IMAGE_EXPORT_DIRECTORY*)get_data_directory(0);
     if (ied == nullptr)
     {
-        LOG("No export directory found at base %p", m_base);
+        LOG("No export directory found at base %p", _base);
         return nullptr;
     }
 
@@ -138,7 +138,7 @@ PeInfo::funcptr_t* PeInfo::iterate_imports(
     iid = (IMAGE_IMPORT_DESCRIPTOR*)get_data_directory(1, nullptr);
     if (iid == nullptr)
     {
-        LOG("Failed to find import desc for base %p", m_base);
+        LOG("Failed to find import desc for base %p", _base);
         return 0;
     }
 

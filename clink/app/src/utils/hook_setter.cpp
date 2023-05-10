@@ -12,7 +12,7 @@
 
 //------------------------------------------------------------------------------
 HookSetter::HookSetter()
-: m_desc_count(0)
+: _desc_count(0)
 {
 }
 
@@ -26,9 +26,9 @@ int HookSetter::commit()
 
     // Apply all the hooks add to the setter.
     int success = 0;
-    for (int i = 0; i < m_desc_count; ++i)
+    for (int i = 0; i < _desc_count; ++i)
     {
-        const HookDesc& desc = m_descs[i];
+        const HookDesc& desc = _descs[i];
         switch (desc.type)
         {
         case hook_type_iat_by_name: success += !!commit_iat(self, desc);  break;
@@ -46,16 +46,16 @@ HookSetter::HookDesc* HookSetter::add_desc(
     const char* name,
     funcptr_t hook)
 {
-    if (m_desc_count >= sizeof_array(m_descs))
+    if (_desc_count >= sizeof_array(_descs))
         return nullptr;
 
-    HookDesc& desc = m_descs[m_desc_count];
+    HookDesc& desc = _descs[_desc_count];
     desc.type = type;
     desc.module = module;
     desc.hook = hook;
     desc.name = name;
 
-    ++m_desc_count;
+    ++_desc_count;
     return &desc;
 }
 

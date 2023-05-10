@@ -34,8 +34,8 @@ private:
         attr_mask_all       = attr_mask_fg|attr_mask_bg|attr_mask_underline,
     };
 
-    void*           m_handle = nullptr;
-    unsigned long   m_prev_mode = 0;
-    unsigned short  m_default_attr = 0x07;
-    bool            m_bold = false;
+    void*           _handle = nullptr;
+    unsigned long   _prev_mode = 0;
+    unsigned short  _default_attr = 0x07;
+    bool            _bold = false;
 };

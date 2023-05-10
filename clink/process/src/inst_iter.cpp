@@ -269,14 +269,14 @@ void Instruction::copy(const unsigned char* from, unsigned char* to) const
 
 //------------------------------------------------------------------------------
 InstructionIter::InstructionIter(const void* data)
-: m_data((const unsigned char*)data)
+: _data((const unsigned char*)data)
 {
 }
 
 //------------------------------------------------------------------------------
 Instruction InstructionIter::next()
 {
-    Instruction ret = disassemble(m_data);
-    m_data += ret.get_length();
+    Instruction ret = disassemble(_data);
+    _data += ret.get_length();
     return ret;
 }

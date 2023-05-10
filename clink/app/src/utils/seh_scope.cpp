@@ -96,11 +96,11 @@ static LONG WINAPI exception_filter(EXCEPTION_POINTERS* info)
 //------------------------------------------------------------------------------
 SehScope::SehScope()
 {
-    m_prev_filter = (void*)SetUnhandledExceptionFilter(exception_filter);
+    _prev_filter = (void*)SetUnhandledExceptionFilter(exception_filter);
 }
 
 //------------------------------------------------------------------------------
 SehScope::~SehScope()
 {
-    SetUnhandledExceptionFilter(LPTOP_LEVEL_EXCEPTION_FILTER(m_prev_filter));
+    SetUnhandledExceptionFilter(LPTOP_LEVEL_EXCEPTION_FILTER(_prev_filter));
 }

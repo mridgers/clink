@@ -24,11 +24,11 @@ public:
         friend class    BindResolver;
                         Binding() = default;
                         Binding(BindResolver* resolver, int node_index);
-        BindResolver*   m_outer = nullptr;
-        unsigned short  m_node_index;
-        unsigned char   m_module;
-        unsigned char   m_depth;
-        unsigned char   m_id;
+        BindResolver*   _outer = nullptr;
+        unsigned short  _node_index;
+        unsigned char   _module;
+        unsigned char   _depth;
+        unsigned char   _id;
     };
 
                         BindResolver(const Binder& binder);
@@ -41,11 +41,11 @@ public:
 private:
     void                claim(Binding& Binding);
     bool                step_impl(unsigned char key);
-    const Binder&       m_binder;
-    unsigned short      m_node_index = 1;
-    unsigned short      m_group = 1;
-    bool                m_pending_input = false;
-    unsigned char       m_tail = 0;
-    unsigned char       m_key_count = 0;
-    char                m_keys[8];
+    const Binder&       _binder;
+    unsigned short      _node_index = 1;
+    unsigned short      _group = 1;
+    bool                _pending_input = false;
+    unsigned char       _tail = 0;
+    unsigned char       _key_count = 0;
+    char                _keys[8];
 };

@@ -96,9 +96,9 @@ public:
 
 private:
                                     TrampolineAllocator(int prev_access);
-    unsigned int                    m_magic = magic;
-    unsigned int                    m_prev_access;
-    unsigned int                    m_used = 0;
+    unsigned int                    _magic = magic;
+    unsigned int                    _prev_access;
+    unsigned int                    _used = 0;
     static const unsigned int       magic = 0x4b4e4c43;
 };
 
@@ -123,7 +123,7 @@ TrampolineAllocator* TrampolineAllocator::get(funcptr_t to_hook)
 
     // Have we already set up an allocator at the end?
     auto* ret = (TrampolineAllocator*)(text_end - sizeof(TrampolineAllocator));
-    if (ret->m_magic == magic)
+    if (ret->_magic == magic)
     {
         make_writeable();
         return ret;
@@ -140,7 +140,7 @@ TrampolineAllocator* TrampolineAllocator::get(funcptr_t to_hook)
 
 //------------------------------------------------------------------------------
 TrampolineAllocator::TrampolineAllocator(int prev_access)
-: m_prev_access(prev_access)
+: _prev_access(prev_access)
 {
 }
 
@@ -150,14 +150,14 @@ void* TrampolineAllocator::alloc(int size)
     size += 15;
     size &= ~15;
 
-    int next_used = m_used + size;
+    int next_used = _used + size;
     auto* ptr = ((unsigned char*)this) - next_used;
 
     for (int i = 0; i < size; ++i)
         if (ptr[i] != 0)
             return nullptr;
 
-    m_used = next_used;
+    _used = next_used;
     return ptr;
 }
 
@@ -166,7 +166,7 @@ void TrampolineAllocator::reset_access()
 {
     Vm vm;
     Vm::Region last_page = { vm.get_page(this), 1 };
-    vm.set_access(last_page, m_prev_access);
+    vm.set_access(last_page, _prev_access);
     vm.flush_icache();
 }
 

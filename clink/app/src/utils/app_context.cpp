@@ -21,9 +21,9 @@ AppContext::Desc::Desc()
 
 //-----------------------------------------------------------------------------
 AppContext::AppContext(const Desc& desc)
-: m_desc(desc)
+: _desc(desc)
 {
-    StrBase state_dir(m_desc.state_dir);
+    StrBase state_dir(_desc.state_dir);
 
     // The environment variable 'clink_profile' overrides all other state
     // path mechanisms.
@@ -56,12 +56,12 @@ AppContext::AppContext(const Desc& desc)
         os::make_dir(state_dir.c_str());
     }
 
-    m_id = Process().get_pid();
+    _id = Process().get_pid();
     if (desc.inherit_id)
     {
         Str<16, false> env_id;
         if (os::get_env("=clink.id", env_id))
-            m_id = atoi(env_id.c_str());
+            _id = atoi(env_id.c_str());
     }
 
     update_env();
@@ -70,19 +70,19 @@ AppContext::AppContext(const Desc& desc)
 //-----------------------------------------------------------------------------
 int AppContext::get_id() const
 {
-    return m_id;
+    return _id;
 }
 
 //------------------------------------------------------------------------------
 bool AppContext::is_logging_enabled() const
 {
-    return m_desc.log;
+    return _desc.log;
 }
 
 //------------------------------------------------------------------------------
 bool AppContext::is_quiet() const
 {
-    return m_desc.quiet;
+    return _desc.quiet;
 }
 
 //------------------------------------------------------------------------------
@@ -125,7 +125,7 @@ void AppContext::get_binaries_dir(StrBase& out) const
 //------------------------------------------------------------------------------
 void AppContext::get_state_dir(StrBase& out) const
 {
-    out.copy(m_desc.state_dir);
+    out.copy(_desc.state_dir);
 }
 
 //------------------------------------------------------------------------------
@@ -153,7 +153,7 @@ void AppContext::get_history_path(StrBase& out) const
 void AppContext::update_env() const
 {
     Str<48> id_str;
-    id_str.format("%d", m_id);
+    id_str.format("%d", _id);
     os::set_env("=clink.id", id_str.c_str());
-    os::set_env("=clink.profile", m_desc.state_dir);
+    os::set_env("=clink.profile", _desc.state_dir);
 }

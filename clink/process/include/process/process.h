@@ -26,22 +26,22 @@ public:
 private:
     void*                       remote_call(void* function, const void* param, int param_size);
     void                        pause(bool suspend);
-    int                         m_pid;
+    int                         _pid;
 
     struct Handle
     {
-        Handle(HANDLE h) : m_handle(h)  {}
-        ~Handle()                       { CloseHandle(m_handle); }
-        explicit operator bool () const { return (m_handle != nullptr && m_handle != INVALID_HANDLE_VALUE); }
-        operator HANDLE () const        { return m_handle; }
-        HANDLE m_handle;
+        Handle(HANDLE h) : _handle(h)  {}
+        ~Handle()                       { CloseHandle(_handle); }
+        explicit operator bool () const { return (_handle != nullptr && _handle != INVALID_HANDLE_VALUE); }
+        operator HANDLE () const        { return _handle; }
+        HANDLE _handle;
     };
 };
 
 //------------------------------------------------------------------------------
 inline int Process::get_pid() const
 {
-    return m_pid;
+    return _pid;
 }
 
 //------------------------------------------------------------------------------

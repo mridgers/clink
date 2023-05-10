@@ -9,9 +9,9 @@
 
 //------------------------------------------------------------------------------
 Printer::Printer(TerminalOut& Terminal)
-: m_terminal(Terminal)
-, m_set_attr(Attributes::defaults)
-, m_next_attr(Attributes::defaults)
+: _terminal(Terminal)
+, _set_attr(Attributes::defaults)
+, _next_attr(Attributes::defaults)
 {
 }
 
@@ -21,10 +21,10 @@ void Printer::print(const char* data, int bytes)
     if (bytes <= 0)
         return;
 
-    if (m_next_attr != m_set_attr)
+    if (_next_attr != _set_attr)
         flush_attributes();
 
-    m_terminal.write(data, bytes);
+    _terminal.write(data, bytes);
 }
 
 //------------------------------------------------------------------------------
@@ -38,27 +38,27 @@ void Printer::print(const Attributes attr, const char* data, int bytes)
 //------------------------------------------------------------------------------
 unsigned int Printer::get_columns() const
 {
-    return m_terminal.get_columns();
+    return _terminal.get_columns();
 }
 
 //------------------------------------------------------------------------------
 unsigned int Printer::get_rows() const
 {
-    return m_terminal.get_rows();
+    return _terminal.get_rows();
 }
 
 //------------------------------------------------------------------------------
 Attributes Printer::set_attributes(const Attributes attr)
 {
-    Attributes prev_attr = m_next_attr;
-    m_next_attr = Attributes::merge(m_next_attr, attr);
+    Attributes prev_attr = _next_attr;
+    _next_attr = Attributes::merge(_next_attr, attr);
     return prev_attr;
 }
 
 //------------------------------------------------------------------------------
 void Printer::flush_attributes()
 {
-    Attributes diff = Attributes::diff(m_set_attr, m_next_attr);
+    Attributes diff = Attributes::diff(_set_attr, _next_attr);
 
     Str<64, false> params;
     auto add_param = [&] (const char* x) {
@@ -110,18 +110,18 @@ void Printer::flush_attributes()
 
     if (!params.empty())
     {
-        m_terminal.write("\x1b[");
-        m_terminal.write(params.c_str(), params.length());
-        m_terminal.write("m");
+        _terminal.write("\x1b[");
+        _terminal.write(params.c_str(), params.length());
+        _terminal.write("m");
     }
 
-    m_set_attr = m_next_attr;
+    _set_attr = _next_attr;
 }
 
 //------------------------------------------------------------------------------
 Attributes Printer::get_attributes() const
 {
-    return m_next_attr;
+    return _next_attr;
 }
 
 //------------------------------------------------------------------------------

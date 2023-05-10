@@ -134,7 +134,7 @@ static void tag_prompt()
 //------------------------------------------------------------------------------
 HostCmd::HostCmd()
 : Host("cmd.exe")
-, m_doskey("cmd.exe")
+, _doskey("cmd.exe")
 {
 }
 
@@ -183,8 +183,8 @@ bool HostCmd::initialise()
 //------------------------------------------------------------------------------
 void HostCmd::shutdown()
 {
-    m_doskey.remove_alias("history");
-    m_doskey.remove_alias("clink");
+    _doskey.remove_alias("history");
+    _doskey.remove_alias("clink");
 }
 
 //------------------------------------------------------------------------------
@@ -246,11 +246,11 @@ void HostCmd::edit_line(const wchar_t* prompt, wchar_t* chars, int max_chars)
     // in conhost.exe). Commands separated by a "$T" are returned one command
     // at a time through successive calls to ReadConsoleW().
     WstrBase out(chars, max_chars);
-    if (m_doskey_alias.next(out))
+    if (_doskey_alias.next(out))
         return;
 
     // Convert the prompt to Utf8 and parse backspaces in the string.
-    Str<128> utf8_prompt(m_prompt.get());
+    Str<128> utf8_prompt(_prompt.get());
 
     char* write = utf8_prompt.data();
     char* read = write;
@@ -283,8 +283,8 @@ void HostCmd::edit_line(const wchar_t* prompt, wchar_t* chars, int max_chars)
         WriteConsole(handle, L"\n", 1, &written, nullptr);
     }
 
-    m_doskey.resolve(chars, m_doskey_alias);
-    m_doskey_alias.next(out);
+    _doskey.resolve(chars, _doskey_alias);
+    _doskey_alias.next(out);
 }
 
 //------------------------------------------------------------------------------
@@ -308,7 +308,7 @@ BOOL WINAPI HostCmd::read_console(
         return single_char_read(input, chars, max_chars, read_in, control);
 
     // Sometimes cmd.exe wants line input for reasons other than command entry.
-    const wchar_t* prompt = HostCmd::get()->m_prompt.get();
+    const wchar_t* prompt = HostCmd::get()->_prompt.get();
     if (prompt == nullptr || *prompt == L'\0')
         return ReadConsoleW(input, chars, max_chars, read_in, control);
 
@@ -357,8 +357,8 @@ bool HostCmd::capture_prompt(const wchar_t* chars, int char_count)
     // Clink tags the prompt so that it can be detected when cmd.exe
     // writes it to the console.
 
-    m_prompt.set(chars, char_count);
-    return (m_prompt.get() != nullptr);
+    _prompt.set(chars, char_count);
+    return (_prompt.get() != nullptr);
 }
 
 //------------------------------------------------------------------------------
@@ -391,13 +391,13 @@ bool HostCmd::initialise_system()
         Str<560> buffer;
         buffer << "\"" << dll_path;
         buffer << "/" CLINK_EXE "\" $*";
-        m_doskey.add_alias("clink", buffer.c_str());
+        _doskey.add_alias("clink", buffer.c_str());
 
         // Add an alias to operate on the command history.
         buffer.clear();
         buffer << "\"" << dll_path;
         buffer << "/" CLINK_EXE "\" history $*";
-        m_doskey.add_alias("history", buffer.c_str());
+        _doskey.add_alias("history", buffer.c_str());
     }
 
     // Tag the prompt again just incase it got unset by by something like

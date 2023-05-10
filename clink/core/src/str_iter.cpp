@@ -13,7 +13,7 @@ int StrIterImpl<char>::next()
 
     int ax = 0;
     int encode_length = 0;
-    while (int c = *m_ptr++)
+    while (int c = *_ptr++)
     {
         ax = (ax << 6) | (c & 0x7f);
         if (encode_length)
@@ -45,7 +45,7 @@ int StrIterImpl<wchar_t>::next()
         return 0;
 
     int ax = 0;
-    while (int c = *m_ptr++)
+    while (int c = *_ptr++)
     {
         // Decode surrogate pairs.
         if ((c & 0xfc00) == 0xd800)
@@ -66,12 +66,12 @@ int StrIterImpl<wchar_t>::next()
 template <>
 unsigned int StrIterImpl<char>::length() const
 {
-    return (unsigned int)((m_ptr <= m_end) ? m_end - m_ptr : strlen(m_ptr));
+    return (unsigned int)((_ptr <= _end) ? _end - _ptr : strlen(_ptr));
 }
 
 //------------------------------------------------------------------------------
 template <>
 unsigned int StrIterImpl<wchar_t>::length() const
 {
-    return (unsigned int)((m_ptr <= m_end) ? m_end - m_ptr : wcslen(m_ptr));
+    return (unsigned int)((_ptr <= _end) ? _end - _ptr : wcslen(_ptr));
 }

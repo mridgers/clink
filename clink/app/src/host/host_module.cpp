@@ -254,7 +254,7 @@ enum
 
 //------------------------------------------------------------------------------
 HostModule::HostModule(const char* host_name)
-: m_host_name(host_name)
+: _host_name(host_name)
 {
 }
 
@@ -269,7 +269,7 @@ void HostModule::bind_input(Binder& binder)
     binder.bind(default_group, g_key_up_dir.get(), bind_id_up_dir);
     binder.bind(default_group, g_key_dotdot.get(), bind_id_dotdot);
 
-    if (stricmp(m_host_name, "cmd.exe") == 0)
+    if (stricmp(_host_name, "cmd.exe") == 0)
         binder.bind(default_group, g_key_expand_env.get(), bind_id_expand_env);
 }
 

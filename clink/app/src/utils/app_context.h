@@ -33,6 +33,6 @@ public:
     void        update_env() const;
 
 private:
-    Desc        m_desc;
-    int         m_id;
+    Desc        _desc;
+    int         _id;
 };

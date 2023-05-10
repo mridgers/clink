@@ -49,14 +49,14 @@ static void alpha_sorter(const MatchStore& Store, MatchInfo* infos, int count)
 
 //------------------------------------------------------------------------------
 MatchPipeline::MatchPipeline(MatchesImpl& matches)
-: m_matches(matches)
+: _matches(matches)
 {
 }
 
 //------------------------------------------------------------------------------
 void MatchPipeline::reset() const
 {
-    m_matches.reset();
+    _matches.reset();
 }
 
 //------------------------------------------------------------------------------
@@ -64,7 +64,7 @@ void MatchPipeline::generate(
     const LineState& state,
     const Array<MatchGenerator*>& generators) const
 {
-    MatchBuilder builder(m_matches);
+    MatchBuilder builder(_matches);
     for (auto* generator : generators)
         if (generator->generate(state, builder))
             break;
@@ -73,14 +73,14 @@ void MatchPipeline::generate(
 //------------------------------------------------------------------------------
 void MatchPipeline::fill_info() const
 {
-    int count = m_matches.get_info_count();
+    int count = _matches.get_info_count();
     if (!count)
         return;
 
-    MatchInfo* info = m_matches.get_infos();
+    MatchInfo* info = _matches.get_infos();
     for (int i = 0; i < count; ++i, ++info)
     {
-        const char* displayable = m_matches.get_displayable(i);
+        const char* displayable = _matches.get_displayable(i);
         info->cell_count = cell_count(displayable);
     }
 }
@@ -88,23 +88,23 @@ void MatchPipeline::fill_info() const
 //------------------------------------------------------------------------------
 void MatchPipeline::select(const char* needle) const
 {
-    int count = m_matches.get_info_count();
+    int count = _matches.get_info_count();
     if (!count)
         return;
 
     unsigned int selected_count = 0;
-    selected_count = normal_selector(needle, m_matches.get_store(),
-        m_matches.get_infos(), count);
+    selected_count = normal_selector(needle, _matches.get_store(),
+        _matches.get_infos(), count);
 
-    m_matches.coalesce(selected_count);
+    _matches.coalesce(selected_count);
 }
 
 //------------------------------------------------------------------------------
 void MatchPipeline::sort() const
 {
-    int count = m_matches.get_match_count();
+    int count = _matches.get_match_count();
     if (!count)
         return;
 
-    alpha_sorter(m_matches.get_store(), m_matches.get_infos(), count);
+    alpha_sorter(_matches.get_store(), _matches.get_infos(), count);
 }

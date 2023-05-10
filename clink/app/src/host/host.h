@@ -27,6 +27,6 @@ protected:
 
 private:
     void            filter_prompt(const char* in, StrBase& out);
-    const char*     m_name;
-    HistoryDb       m_history;
+    const char*     _name;
+    HistoryDb       _history;
 };

@@ -43,7 +43,7 @@ void string_lua_initialise(LuaState&);
 
 //------------------------------------------------------------------------------
 LuaState::LuaState()
-: m_state(nullptr)
+: _state(nullptr)
 {
     initialise();
 }
@@ -60,8 +60,8 @@ void LuaState::initialise()
     shutdown();
 
     // Create a new Lua state.
-    m_state = luaL_newstate();
-    luaL_openlibs(m_state);
+    _state = luaL_newstate();
+    luaL_openlibs(_state);
 
     // Set up the package.path value for require() statements.
     Str<280> path;
@@ -79,10 +79,10 @@ void LuaState::initialise()
 
     if (!path.empty())
     {
-        lua_getglobal(m_state, "package");
-        lua_pushstring(m_state, "path");
-        lua_pushstring(m_state, path.c_str());
-        lua_rawset(m_state, -3);
+        lua_getglobal(_state, "package");
+        lua_pushstring(_state, "path");
+        lua_pushstring(_state, path.c_str());
+        lua_rawset(_state, -3);
     }
 
     LuaState& self = *this;
@@ -101,11 +101,11 @@ void LuaState::initialise()
 //------------------------------------------------------------------------------
 void LuaState::shutdown()
 {
-    if (m_state == nullptr)
+    if (_state == nullptr)
         return;
 
-    lua_close(m_state);
-    m_state = nullptr;
+    lua_close(_state);
+    _state = nullptr;
 }
 
 //------------------------------------------------------------------------------
@@ -115,14 +115,14 @@ bool LuaState::do_string(const char* string, int length)
         length = int(strlen(string));
 
     bool ok;
-    if (ok = !luaL_loadbuffer(m_state, string, length, string))
-        ok = !lua_pcall(m_state, 0, LUA_MULTRET, 0);
+    if (ok = !luaL_loadbuffer(_state, string, length, string))
+        ok = !lua_pcall(_state, 0, LUA_MULTRET, 0);
 
     if (!ok)
-        if (const char* error = lua_tostring(m_state, -1))
+        if (const char* error = lua_tostring(_state, -1))
             puts(error);
 
-    lua_settop(m_state, 0);
+    lua_settop(_state, 0);
     return ok;
 }
 
@@ -166,21 +166,21 @@ bool LuaState::do_file(const char* path)
         Str<280> at_path;
         at_path << "@";
         at_path << path;
-        ok = lua_load(m_state, read_file_func, &io, at_path.c_str(), nullptr);
+        ok = lua_load(_state, read_file_func, &io, at_path.c_str(), nullptr);
         if (ok != LUA_OK)
-            if (const char* error = lua_tostring(m_state, -1))
+            if (const char* error = lua_tostring(_state, -1))
                 puts(error);
     }
 
     if (ok == LUA_OK)
     {
-        ok = lua_pcall(m_state, 0, LUA_MULTRET, 0);
+        ok = lua_pcall(_state, 0, LUA_MULTRET, 0);
         if (ok != LUA_OK)
-            if (const char* error = lua_tostring(m_state, -1))
+            if (const char* error = lua_tostring(_state, -1))
                 puts(error);
     }
 
-    lua_settop(m_state, 0);
+    lua_settop(_state, 0);
     CloseHandle(handle);
     return (ok == LUA_OK);
 }

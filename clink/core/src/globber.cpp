@@ -8,12 +8,12 @@
 
 //------------------------------------------------------------------------------
 Globber::Globber(const char* pattern)
-: m_files(true)
-, m_directories(true)
-, m_dir_suffix(true)
-, m_hidden(false)
-, m_system(false)
-, m_dots(false)
+: _files(true)
+, _directories(true)
+, _dir_suffix(true)
+, _hidden(false)
+, _system(false)
+, _dots(false)
 {
     // Windows: Expand if the path to complete is drive relative (e.g. 'c:foobar')
     // Drive X's current path is stored in the environment variable "=X:"
@@ -30,38 +30,38 @@ Globber::Globber(const char* pattern)
     }
 
     Wstr<280> wglob(pattern);
-    m_handle = FindFirstFileW(wglob.c_str(), &m_data);
-    if (m_handle == INVALID_HANDLE_VALUE)
-        m_handle = nullptr;
+    _handle = FindFirstFileW(wglob.c_str(), &_data);
+    if (_handle == INVALID_HANDLE_VALUE)
+        _handle = nullptr;
 
-    path::get_directory(pattern, m_root);
+    path::get_directory(pattern, _root);
 }
 
 //------------------------------------------------------------------------------
 Globber::~Globber()
 {
-    if (m_handle != nullptr)
-        FindClose(m_handle);
+    if (_handle != nullptr)
+        FindClose(_handle);
 }
 
 //------------------------------------------------------------------------------
 bool Globber::next(StrBase& out, bool rooted)
 {
-    if (m_handle == nullptr)
+    if (_handle == nullptr)
         return false;
 
-    Str<280> file_name(m_data.cFileName);
+    Str<280> file_name(_data.cFileName);
 
     bool skip = false;
 
-    const wchar_t* c = m_data.cFileName;
-    skip |= (c[0] == '.' && (!c[1] || (c[1] == '.' && !c[2])) && !m_dots);
+    const wchar_t* c = _data.cFileName;
+    skip |= (c[0] == '.' && (!c[1] || (c[1] == '.' && !c[2])) && !_dots);
 
-    int attr = m_data.dwFileAttributes;
-    skip |= (attr & FILE_ATTRIBUTE_SYSTEM) && !m_system;
-    skip |= (attr & FILE_ATTRIBUTE_HIDDEN) && !m_hidden;
-    skip |= (attr & FILE_ATTRIBUTE_DIRECTORY) && !m_directories;
-    skip |= !(attr & FILE_ATTRIBUTE_DIRECTORY) && !m_files;
+    int attr = _data.dwFileAttributes;
+    skip |= (attr & FILE_ATTRIBUTE_SYSTEM) && !_system;
+    skip |= (attr & FILE_ATTRIBUTE_HIDDEN) && !_hidden;
+    skip |= (attr & FILE_ATTRIBUTE_DIRECTORY) && !_directories;
+    skip |= !(attr & FILE_ATTRIBUTE_DIRECTORY) && !_files;
 
     next_file();
 
@@ -70,11 +70,11 @@ bool Globber::next(StrBase& out, bool rooted)
 
     out.clear();
     if (rooted)
-        out << m_root;
+        out << _root;
 
     path::append(out, file_name.c_str());
 
-    if (attr & FILE_ATTRIBUTE_DIRECTORY && m_dir_suffix)
+    if (attr & FILE_ATTRIBUTE_DIRECTORY && _dir_suffix)
         out << "\\";
 
     return true;
@@ -83,9 +83,9 @@ bool Globber::next(StrBase& out, bool rooted)
 //------------------------------------------------------------------------------
 void Globber::next_file()
 {
-    if (FindNextFileW(m_handle, &m_data))
+    if (FindNextFileW(_handle, &_data))
         return;
 
-    FindClose(m_handle);
-    m_handle = nullptr;
+    FindClose(_handle);
+    _handle = nullptr;
 }

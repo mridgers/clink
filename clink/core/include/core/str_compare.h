@@ -24,7 +24,7 @@ public:
     static int  current();
 
 private:
-    int         m_prev_mode;
+    int         _prev_mode;
     threadlocal static int ts_mode;
 };
 

@@ -84,7 +84,7 @@ StrToken StrTokeniserImpl<wchar_t>::next(StrIterImpl<wchar_t>& out)
 template <typename T>
 int StrTokeniserImpl<T>::get_right_quote(int left) const
 {
-    for (const Quote& iter : m_quotes)
+    for (const Quote& iter : _quotes)
         if (iter.left == left)
             return iter.right;
 
@@ -97,37 +97,37 @@ StrToken StrTokeniserImpl<T>::next_impl(const T*& out_start, int& out_length)
 {
     // Skip initial delimiters.
     char delim = 0;
-    while (int c = m_iter.peek())
+    while (int c = _iter.peek())
     {
-        const char* candidate = strchr(m_delims, c);
+        const char* candidate = strchr(_delims, c);
         if (candidate == nullptr)
             break;
 
         delim = *candidate;
-        m_iter.next();
+        _iter.next();
     }
 
     // Extract the delimited string.
-    const T* start = m_iter.get_pointer();
+    const T* start = _iter.get_pointer();
 
     int quote_close = 0;
-    while (int c = m_iter.peek())
+    while (int c = _iter.peek())
     {
         if (quote_close)
         {
             quote_close = (quote_close == c) ? 0 : quote_close;
-            m_iter.next();
+            _iter.next();
             continue;
         }
 
-        if (strchr(m_delims, c))
+        if (strchr(_delims, c))
             break;
 
         quote_close = get_right_quote(c);
-        m_iter.next();
+        _iter.next();
     }
 
-    const T* end = m_iter.get_pointer();
+    const T* end = _iter.get_pointer();
 
     // Empty string? Must be the end of the Input. We're done here.
     if (start == end)

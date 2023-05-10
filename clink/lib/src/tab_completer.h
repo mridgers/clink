@@ -28,10 +28,10 @@ private:
     virtual void    on_terminal_resize(int columns, int rows, const Context& context) override;
     State           begin_print(const Context& context);
     State           print(const Context& context, bool single_row);
-    int             m_longest = 0;
-    int             m_row = 0;
-    int             m_prompt_bind_group = -1;
-    int             m_pager_bind_group = -1;
-    int             m_prev_group = -1;
-    bool            m_waiting = false;
+    int             _longest = 0;
+    int             _row = 0;
+    int             _prompt_bind_group = -1;
+    int             _pager_bind_group = -1;
+    int             _prev_group = -1;
+    bool            _waiting = false;
 };

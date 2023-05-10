@@ -28,15 +28,15 @@ const wchar_t* g_prompt_tags[]       = { g_prompt_tag_hidden, g_prompt_tag };
 
 //------------------------------------------------------------------------------
 Prompt::Prompt()
-: m_data(nullptr)
+: _data(nullptr)
 {
 }
 
 //------------------------------------------------------------------------------
 Prompt::Prompt(Prompt&& rhs)
-: m_data(nullptr)
+: _data(nullptr)
 {
-    std::swap(m_data, rhs.m_data);
+    std::swap(_data, rhs._data);
 }
 
 //------------------------------------------------------------------------------
@@ -49,23 +49,23 @@ Prompt::~Prompt()
 Prompt& Prompt::operator = (Prompt&& rhs)
 {
     clear();
-    std::swap(m_data, rhs.m_data);
+    std::swap(_data, rhs._data);
     return *this;
 }
 
 //------------------------------------------------------------------------------
 void Prompt::clear()
 {
-    if (m_data != nullptr)
-        free(m_data);
+    if (_data != nullptr)
+        free(_data);
 
-    m_data = nullptr;
+    _data = nullptr;
 }
 
 //------------------------------------------------------------------------------
 const wchar_t* Prompt::get() const
 {
-    return m_data;
+    return _data;
 }
 
 //------------------------------------------------------------------------------
@@ -79,15 +79,15 @@ void Prompt::set(const wchar_t* chars, int char_count)
     if (char_count <= 0)
         char_count = int(wcslen(chars));
 
-    m_data = (wchar_t*)malloc(sizeof(*m_data) * (char_count + 1));
-    wcsncpy(m_data, chars, char_count);
-    m_data[char_count] = '\0';
+    _data = (wchar_t*)malloc(sizeof(*_data) * (char_count + 1));
+    wcsncpy(_data, chars, char_count);
+    _data[char_count] = '\0';
 }
 
 //------------------------------------------------------------------------------
 bool Prompt::is_set() const
 {
-    return (m_data != nullptr);
+    return (_data != nullptr);
 }
 
 
@@ -116,9 +116,9 @@ void TaggedPrompt::tag(const wchar_t* value)
     int length = int(wcslen(value));
     length += int(wcslen(g_prompt_tag_hidden));
 
-    m_data = (wchar_t*)malloc(sizeof(*m_data) * (length + 1));
-    wcscpy(m_data, g_prompt_tag_hidden);
-    wcscat(m_data, value);
+    _data = (wchar_t*)malloc(sizeof(*_data) * (length + 1));
+    wcscpy(_data, g_prompt_tag_hidden);
+    wcscat(_data, value);
 }
 
 //------------------------------------------------------------------------------
@@ -148,7 +148,7 @@ int TaggedPrompt::is_tagged(const wchar_t* chars, int char_count)
 
 //------------------------------------------------------------------------------
 PromptFilter::PromptFilter(LuaState& lua)
-: m_lua(lua)
+: _lua(lua)
 {
     lua_load_script(lua, app, prompt);
 }
@@ -156,7 +156,7 @@ PromptFilter::PromptFilter(LuaState& lua)
 //------------------------------------------------------------------------------
 void PromptFilter::filter(const char* in, StrBase& out)
 {
-    lua_State* state = m_lua.get_state();
+    lua_State* state = _lua.get_state();
 
     // Call Lua to filter prompt
     lua_getglobal(state, "clink");

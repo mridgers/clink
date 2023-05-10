@@ -26,7 +26,7 @@ void Attributes::Colour::as_888(unsigned char (&out)[3]) const
 
 //------------------------------------------------------------------------------
 Attributes::Attributes()
-: m_state(0)
+: _state(0)
 {
 }
 
@@ -44,7 +44,7 @@ Attributes::Attributes(Default)
 bool Attributes::operator == (const Attributes rhs)
 {
     int cmp = 1;
-    #define CMP_IMPL(x) (m_flags.x & rhs.m_flags.x) ? (m_##x == rhs.m_##x) : 1;
+    #define CMP_IMPL(x) (_flags.x & rhs._flags.x) ? (_##x == rhs._##x) : 1;
     cmp &= CMP_IMPL(fg);
     cmp &= CMP_IMPL(bg);
     cmp &= CMP_IMPL(bold);
@@ -57,16 +57,16 @@ bool Attributes::operator == (const Attributes rhs)
 Attributes Attributes::merge(const Attributes first, const Attributes second)
 {
     Attributes mask;
-    mask.m_flags.all = ~0;
-    mask.m_fg.value = second.m_flags.fg ? ~0 : 0;
-    mask.m_bg.value = second.m_flags.bg ? ~0 : 0;
-    mask.m_bold = second.m_flags.bold;
-    mask.m_underline = second.m_flags.underline;
+    mask._flags.all = ~0;
+    mask._fg.value = second._flags.fg ? ~0 : 0;
+    mask._bg.value = second._flags.bg ? ~0 : 0;
+    mask._bold = second._flags.bold;
+    mask._underline = second._flags.underline;
 
     Attributes out;
-    out.m_state = first.m_state & ~mask.m_state;
-    out.m_state |= second.m_state & mask.m_state;
-    out.m_flags.all |= first.m_flags.all;
+    out._state = first._state & ~mask._state;
+    out._state |= second._state & mask._state;
+    out._flags.all |= first._flags.all;
 
     return out;
 }
@@ -75,28 +75,28 @@ Attributes Attributes::merge(const Attributes first, const Attributes second)
 Attributes Attributes::diff(const Attributes from, const Attributes to)
 {
     Flags changed;
-    changed.fg = !(to.m_fg == from.m_fg);
-    changed.bg = !(to.m_bg == from.m_bg);
-    changed.bold = (to.m_bold != from.m_bold);
-    changed.underline = (to.m_underline != from.m_underline);
+    changed.fg = !(to._fg == from._fg);
+    changed.bg = !(to._bg == from._bg);
+    changed.bold = (to._bold != from._bold);
+    changed.underline = (to._underline != from._underline);
 
     Attributes out = to;
-    out.m_flags.all &= changed.all;
+    out._flags.all &= changed.all;
     return out;
 }
 
 //------------------------------------------------------------------------------
 void Attributes::reset_fg()
 {
-    m_flags.fg = 1;
-    m_fg.value = default_code;
+    _flags.fg = 1;
+    _fg.value = default_code;
 }
 
 //------------------------------------------------------------------------------
 void Attributes::reset_bg()
 {
-    m_flags.bg = 1;
-    m_bg.value = default_code;
+    _flags.bg = 1;
+    _bg.value = default_code;
 }
 
 //------------------------------------------------------------------------------
@@ -105,8 +105,8 @@ void Attributes::set_fg(unsigned char value)
     if (value == default_code)
         value = 15;
 
-    m_flags.fg = 1;
-    m_fg.value = value;
+    _flags.fg = 1;
+    _fg.value = value;
 }
 
 //------------------------------------------------------------------------------
@@ -115,64 +115,64 @@ void Attributes::set_bg(unsigned char value)
     if (value == default_code)
         value = 15;
 
-    m_flags.bg = 1;
-    m_bg.value = value;
+    _flags.bg = 1;
+    _bg.value = value;
 }
 
 //------------------------------------------------------------------------------
 void Attributes::set_fg(unsigned char r, unsigned char g, unsigned char b)
 {
-    m_flags.fg = 1;
-    m_fg.r = r >> 3;
-    m_fg.g = g >> 3;
-    m_fg.b = b >> 3;
-    m_fg.is_rgb = 1;
+    _flags.fg = 1;
+    _fg.r = r >> 3;
+    _fg.g = g >> 3;
+    _fg.b = b >> 3;
+    _fg.is_rgb = 1;
 }
 
 //------------------------------------------------------------------------------
 void Attributes::set_bg(unsigned char r, unsigned char g, unsigned char b)
 {
-    m_flags.bg = 1;
-    m_bg.r = r >> 3;
-    m_bg.g = g >> 3;
-    m_bg.b = b >> 3;
-    m_bg.is_rgb = 1;
+    _flags.bg = 1;
+    _bg.r = r >> 3;
+    _bg.g = g >> 3;
+    _bg.b = b >> 3;
+    _bg.is_rgb = 1;
 }
 
 //------------------------------------------------------------------------------
 void Attributes::set_bold(bool state)
 {
-    m_flags.bold = 1;
-    m_bold = !!state;
+    _flags.bold = 1;
+    _bold = !!state;
 }
 
 //------------------------------------------------------------------------------
 void Attributes::set_underline(bool state)
 {
-    m_flags.underline = 1;
-    m_underline = !!state;
+    _flags.underline = 1;
+    _underline = !!state;
 }
 
 //------------------------------------------------------------------------------
 Attributes::Attribute<Attributes::Colour> Attributes::get_fg() const
 {
-    return { m_fg, m_flags.fg, (m_fg.value == default_code) };
+    return { _fg, _flags.fg, (_fg.value == default_code) };
 }
 
 //------------------------------------------------------------------------------
 Attributes::Attribute<Attributes::Colour> Attributes::get_bg() const
 {
-    return { m_bg, m_flags.bg, (m_bg.value == default_code) };
+    return { _bg, _flags.bg, (_bg.value == default_code) };
 }
 
 //------------------------------------------------------------------------------
 Attributes::Attribute<bool> Attributes::get_bold() const
 {
-    return { bool(m_bold), bool(m_flags.bold) };
+    return { bool(_bold), bool(_flags.bold) };
 }
 
 //------------------------------------------------------------------------------
 Attributes::Attribute<bool> Attributes::get_underline() const
 {
-    return { bool(m_underline), bool(m_flags.underline) };
+    return { bool(_underline), bool(_flags.underline) };
 }

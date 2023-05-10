@@ -13,5 +13,5 @@ public:
 protected:
     void            convert_eq_to_null(wchar_t* env_strings);
     void            clear();
-    wchar_t*        m_env_strings;
+    wchar_t*        _env_strings;
 };

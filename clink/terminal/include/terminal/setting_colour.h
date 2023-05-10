@@ -45,6 +45,6 @@ private:
         align_to(8)     char buffer[sizeof(T)];
     };
 
-    Late<SettingEnum>   m_fg;
-    Late<SettingEnum>   m_bg;
+    Late<SettingEnum>   _fg;
+    Late<SettingEnum>   _bg;
 };

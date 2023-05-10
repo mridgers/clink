@@ -22,22 +22,22 @@ class HistoryScope
 {
 public:
                     HistoryScope();
-    HistoryDb*      operator -> ()      { return &m_history; }
-    HistoryDb&      operator * ()       { return m_history; }
+    HistoryDb*      operator -> ()      { return &_history; }
+    HistoryDb&      operator * ()       { return _history; }
 
 private:
-    Str<280>        m_path;
-    HistoryDb       m_history;
+    Str<280>        _path;
+    HistoryDb       _history;
 };
 
 //------------------------------------------------------------------------------
 HistoryScope::HistoryScope()
 {
     // Load settings.
-    AppContext::get()->get_settings_path(m_path);
-    settings::load(m_path.c_str());
+    AppContext::get()->get_settings_path(_path);
+    settings::load(_path.c_str());
 
-    m_history.initialise();
+    _history.initialise();
 }
 
 

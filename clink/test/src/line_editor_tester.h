@@ -18,16 +18,16 @@ class TestTerminalIn
     : public TerminalIn
 {
 public:
-    bool                    has_input() const { return (m_read == nullptr) ? false : (*m_read != '\0'); }
-    void                    set_input(const char* input) { m_input = m_read = input; }
+    bool                    has_input() const { return (_read == nullptr) ? false : (*_read != '\0'); }
+    void                    set_input(const char* input) { _input = _read = input; }
     virtual void            begin() override {}
     virtual void            end() override {}
     virtual void            select() override {}
-    virtual int             read() override { return *(unsigned char*)m_read++; }
+    virtual int             read() override { return *(unsigned char*)_read++; }
 
 private:
-    const char*             m_input = nullptr;
-    const char*             m_read = nullptr;
+    const char*             _input = nullptr;
+    const char*             _read = nullptr;
 };
 
 //------------------------------------------------------------------------------
@@ -62,13 +62,13 @@ public:
 private:
     void                        create_line_editor(const LineEditor::Desc* desc=nullptr);
     void                        expected_matches_impl(int dummy, ...);
-    TestTerminalIn              m_terminal_in;
-    TestTerminalOut             m_terminal_out;
-    std::vector<const char*>    m_expected_matches;
-    const char*                 m_input = nullptr;
-    const char*                 m_expected_output = nullptr;
-    LineEditor*                 m_editor = nullptr;
-    bool                        m_has_matches = false;
+    TestTerminalIn              _terminal_in;
+    TestTerminalOut             _terminal_out;
+    std::vector<const char*>    _expected_matches;
+    const char*                 _input = nullptr;
+    const char*                 _expected_output = nullptr;
+    LineEditor*                 _editor = nullptr;
+    bool                        _has_matches = false;
 };
 
 //------------------------------------------------------------------------------

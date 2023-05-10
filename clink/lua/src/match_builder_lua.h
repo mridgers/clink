@@ -21,5 +21,5 @@ public:
 
 private:
     bool            add_match_impl(lua_State* state, int stack_index);
-    MatchBuilder&   m_builder;
+    MatchBuilder&   _builder;
 };

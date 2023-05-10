@@ -16,10 +16,10 @@
 
 //------------------------------------------------------------------------------
 Process::Process(int pid)
-: m_pid(pid)
+: _pid(pid)
 {
-    if (m_pid == -1)
-        m_pid = GetCurrentProcessId();
+    if (_pid == -1)
+        _pid = GetCurrentProcessId();
 }
 
 //------------------------------------------------------------------------------
@@ -34,7 +34,7 @@ int Process::get_parent_pid() const
 
     if (NtQueryInformationProcess != nullptr)
     {
-        Handle handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, m_pid);
+        Handle handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, _pid);
         ULONG size = 0;
         ULONG_PTR pbi[6];
         LONG ret = NtQueryInformationProcess(handle, 0, &pbi, sizeof(pbi), &size);
@@ -48,7 +48,7 @@ int Process::get_parent_pid() const
 //------------------------------------------------------------------------------
 bool Process::get_file_name(StrBase& out) const
 {
-    Handle handle = OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_VM_READ, FALSE, m_pid);
+    Handle handle = OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_VM_READ, FALSE, _pid);
     if (!handle)
         return false;
 
@@ -81,7 +81,7 @@ Process::Arch Process::get_arch() const
 
     if (is_x64_os)
     {
-        Handle handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, m_pid);
+        Handle handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, _pid);
         if (!handle)
             return arch_unknown;
 
@@ -98,7 +98,7 @@ Process::Arch Process::get_arch() const
 //------------------------------------------------------------------------------
 void Process::pause(bool suspend)
 {
-    Handle th32 = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, m_pid);
+    Handle th32 = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, _pid);
     if (!th32)
         return;
 
@@ -106,7 +106,7 @@ void Process::pause(bool suspend)
     BOOL ok = Thread32First(th32, &te);
     while (ok != FALSE)
     {
-        if (te.th32OwnerProcessID == m_pid)
+        if (te.th32OwnerProcessID == _pid)
         {
             Handle thread = OpenThread(THREAD_ALL_ACCESS, FALSE, te.th32ThreadID);
             suspend ? SuspendThread(thread) : ResumeThread(thread);
@@ -139,7 +139,7 @@ void* Process::remote_call(void* function, const void* param, int param_size)
 {
     // Open the Process so we can operate on it.
     unsigned int Flags = PROCESS_QUERY_INFORMATION|PROCESS_CREATE_THREAD;
-    Handle process_handle = OpenProcess(Flags, FALSE, m_pid);
+    Handle process_handle = OpenProcess(Flags, FALSE, _pid);
     if (!process_handle)
         return nullptr;
 
@@ -194,7 +194,7 @@ void* Process::remote_call(void* function, const void* param, int param_size)
     if (!thunk_size)
         for (const auto* c = (unsigned char*)thunk; ++thunk_size, *c++ != 0xc3;);
 
-    Vm vm(m_pid);
+    Vm vm(_pid);
     Vm::Region Region = vm.alloc(1, Vm::access_write);
     if (Region.base == nullptr)
         return nullptr;

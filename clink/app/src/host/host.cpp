@@ -46,7 +46,7 @@ static SettingBool g_add_history_cmd(
 
 //------------------------------------------------------------------------------
 Host::Host(const char* name)
-: m_name(name)
+: _name(name)
 {
 }
 
@@ -63,9 +63,9 @@ bool Host::edit_line(const char* prompt, StrBase& out)
 
     struct CwdRestorer
     {
-        CwdRestorer()   { os::get_current_dir(m_path); }
-        ~CwdRestorer() { os::set_current_dir(m_path.c_str()); }
-        Str<288>        m_path;
+        CwdRestorer()   { os::get_current_dir(_path); }
+        ~CwdRestorer() { os::set_current_dir(_path.c_str()); }
+        Str<288>        _path;
     } cwd;
 
     // Load Clink's settings.
@@ -116,14 +116,14 @@ bool Host::edit_line(const char* prompt, StrBase& out)
     ScrollerModule scroller;
     editor->add_module(scroller);
 
-    HostModule host_module(m_name);
+    HostModule host_module(_name);
     editor->add_module(host_module);
 
     editor->add_generator(lua);
     editor->add_generator(file_match_generator());
 
-    m_history.initialise();
-    m_history.load_rl_history();
+    _history.initialise();
+    _history.load_rl_history();
 
     bool ret = false;
     while (1)
@@ -131,7 +131,7 @@ bool Host::edit_line(const char* prompt, StrBase& out)
         if (ret = editor->edit(out.data(), out.size()))
         {
             // Handle history event expansion.
-            if (m_history.expand(out.c_str(), out) == HistoryDb::expand_print)
+            if (_history.expand(out.c_str(), out) == HistoryDb::expand_print)
             {
                 puts(out.c_str());
                 continue;
@@ -149,7 +149,7 @@ bool Host::edit_line(const char* prompt, StrBase& out)
             }
 
             // Add the line to the history.
-            m_history.add(out.c_str());
+            _history.add(out.c_str());
         }
         break;
     }

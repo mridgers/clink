@@ -20,5 +20,5 @@ public:
     void                sort() const;
 
 private:
-    MatchesImpl&        m_matches;
+    MatchesImpl&        _matches;
 };

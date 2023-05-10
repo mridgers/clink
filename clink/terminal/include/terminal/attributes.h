@@ -100,13 +100,13 @@ private:
     {
         struct
         {
-            Colour              m_fg;
-            Colour              m_bg;
-            unsigned short      m_bold : 1;
-            unsigned short      m_underline : 1;
-            Flags               m_flags;
-            unsigned char       m_unused;
+            Colour              _fg;
+            Colour              _bg;
+            unsigned short      _bold : 1;
+            unsigned short      _underline : 1;
+            Flags               _flags;
+            unsigned char       _unused;
         };
-        unsigned long long      m_state;
+        unsigned long long      _state;
     };
 };

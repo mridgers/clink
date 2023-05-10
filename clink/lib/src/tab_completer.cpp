@@ -103,27 +103,27 @@ void TabCompleter::bind_input(Binder& binder)
     int default_group = binder.get_group();
     binder.bind(default_group, "\t", state_none);
 
-    m_prompt_bind_group = binder.create_group("tab_complete_prompt");
-    binder.bind(m_prompt_bind_group, "y", bind_id_prompt_yes);
-    binder.bind(m_prompt_bind_group, "Y", bind_id_prompt_yes);
-    binder.bind(m_prompt_bind_group, " ", bind_id_prompt_yes);
-    binder.bind(m_prompt_bind_group, "\t", bind_id_prompt_yes);
-    binder.bind(m_prompt_bind_group, "\r", bind_id_prompt_yes);
-    binder.bind(m_prompt_bind_group, "n", bind_id_prompt_no);
-    binder.bind(m_prompt_bind_group, "N", bind_id_prompt_no);
-    binder.bind(m_prompt_bind_group, "^C", bind_id_prompt_no); // ctrl-c
-    binder.bind(m_prompt_bind_group, "^D", bind_id_prompt_no); // ctrl-d
-    binder.bind(m_prompt_bind_group, "^[", bind_id_prompt_no); // esc
+    _prompt_bind_group = binder.create_group("tab_complete_prompt");
+    binder.bind(_prompt_bind_group, "y", bind_id_prompt_yes);
+    binder.bind(_prompt_bind_group, "Y", bind_id_prompt_yes);
+    binder.bind(_prompt_bind_group, " ", bind_id_prompt_yes);
+    binder.bind(_prompt_bind_group, "\t", bind_id_prompt_yes);
+    binder.bind(_prompt_bind_group, "\r", bind_id_prompt_yes);
+    binder.bind(_prompt_bind_group, "n", bind_id_prompt_no);
+    binder.bind(_prompt_bind_group, "N", bind_id_prompt_no);
+    binder.bind(_prompt_bind_group, "^C", bind_id_prompt_no); // ctrl-c
+    binder.bind(_prompt_bind_group, "^D", bind_id_prompt_no); // ctrl-d
+    binder.bind(_prompt_bind_group, "^[", bind_id_prompt_no); // esc
 
-    m_pager_bind_group = binder.create_group("tab_complete_pager");
-    binder.bind(m_pager_bind_group, " ", bind_id_pager_page);
-    binder.bind(m_pager_bind_group, "\t", bind_id_pager_page);
-    binder.bind(m_pager_bind_group, "\r", bind_id_pager_line);
-    binder.bind(m_pager_bind_group, "q", bind_id_pager_stop);
-    binder.bind(m_pager_bind_group, "Q", bind_id_pager_stop);
-    binder.bind(m_pager_bind_group, "^C", bind_id_pager_stop); // ctrl-c
-    binder.bind(m_pager_bind_group, "^D", bind_id_pager_stop); // ctrl-d
-    binder.bind(m_pager_bind_group, "^[", bind_id_pager_stop); // esc
+    _pager_bind_group = binder.create_group("tab_complete_pager");
+    binder.bind(_pager_bind_group, " ", bind_id_pager_page);
+    binder.bind(_pager_bind_group, "\t", bind_id_pager_page);
+    binder.bind(_pager_bind_group, "\r", bind_id_pager_line);
+    binder.bind(_pager_bind_group, "q", bind_id_pager_stop);
+    binder.bind(_pager_bind_group, "Q", bind_id_pager_stop);
+    binder.bind(_pager_bind_group, "^C", bind_id_pager_stop); // ctrl-c
+    binder.bind(_pager_bind_group, "^D", bind_id_pager_stop); // ctrl-d
+    binder.bind(_pager_bind_group, "^[", bind_id_pager_stop); // esc
 }
 
 //------------------------------------------------------------------------------
@@ -139,7 +139,7 @@ void TabCompleter::on_end_line()
 //------------------------------------------------------------------------------
 void TabCompleter::on_matches_changed(const Context& context)
 {
-    m_waiting = false;
+    _waiting = false;
 }
 
 //------------------------------------------------------------------------------
@@ -149,7 +149,7 @@ void TabCompleter::on_input(const Input& input, Result& result, const Context& c
     if (matches.get_match_count() == 0)
         return;
 
-    if (!m_waiting)
+    if (!_waiting)
     {
         // One match? Accept it.
         if (matches.get_match_count() == 1)
@@ -160,7 +160,7 @@ void TabCompleter::on_input(const Input& input, Result& result, const Context& c
 
         // Append as much of the lowest common denominator of matches as we can. If
         // there is an LCD then on_matches_changed() gets called.
-        m_waiting = true;
+        _waiting = true;
         result.append_match_lcd();
         return;
     }
@@ -181,22 +181,22 @@ void TabCompleter::on_input(const Input& input, Result& result, const Context& c
     if (next_state > state_print)
         next_state = print(context, next_state == state_print_one);
 
-    // 'm_prev_group' is >= 0 if tab completer has set a bind group. As the bind
+    // '_prev_group' is >= 0 if tab completer has set a bind group. As the bind
     // groups are one-shot we restore the original back each time.
-    if (m_prev_group != -1)
+    if (_prev_group != -1)
     {
-        result.set_bind_group(m_prev_group);
-        m_prev_group = -1;
+        result.set_bind_group(_prev_group);
+        _prev_group = -1;
     }
 
     switch (next_state)
     {
     case state_query:
-        m_prev_group = result.set_bind_group(m_prompt_bind_group);
+        _prev_group = result.set_bind_group(_prompt_bind_group);
         return;
 
     case state_pager:
-        m_prev_group = result.set_bind_group(m_pager_bind_group);
+        _prev_group = result.set_bind_group(_pager_bind_group);
         return;
     }
 
@@ -210,14 +210,14 @@ TabCompleter::State TabCompleter::begin_print(const Context& context)
     const Matches& matches = context.matches;
     int match_count = matches.get_match_count();
 
-    m_longest = 0;
-    m_row = 0;
+    _longest = 0;
+    _row = 0;
 
     // Get the longest match length.
     for (int i = 0, n = matches.get_match_count(); i < n; ++i)
-        m_longest = max<int>(matches.get_cell_count(i), m_longest);
+        _longest = max<int>(matches.get_cell_count(i), _longest);
 
-    if (!m_longest)
+    if (!_longest)
         return state_none;
 
     context.printer.print("\n");
@@ -257,17 +257,17 @@ TabCompleter::State TabCompleter::print(const Context& context, bool single_row)
     // Calculate the number of columns of matches per row.
     int column_pad = g_column_pad.get();
     int cell_columns = min<int>(g_max_width.get(), printer.get_columns());
-    int columns = max(1, (cell_columns + column_pad) / (m_longest + column_pad));
+    int columns = max(1, (cell_columns + column_pad) / (_longest + column_pad));
     int total_rows = (match_count + columns - 1) / columns;
 
     bool vertical = g_vertical.get();
     int index_step = vertical ? total_rows : 1;
 
-    int max_rows = single_row ? 1 : (total_rows - m_row - 1);
-    max_rows = min<int>(printer.get_rows() - 2 - (m_row != 0), max_rows);
-    for (; max_rows >= 0; --max_rows, ++m_row)
+    int max_rows = single_row ? 1 : (total_rows - _row - 1);
+    max_rows = min<int>(printer.get_rows() - 2 - (_row != 0), max_rows);
+    for (; max_rows >= 0; --max_rows, ++_row)
     {
-        int index = vertical ? m_row : (m_row * columns);
+        int index = vertical ? _row : (_row * columns);
         for (int x = columns - 1; x >= 0; --x)
         {
             if (index >= match_count)
@@ -292,7 +292,7 @@ TabCompleter::State TabCompleter::print(const Context& context, bool single_row)
                 if (total_rows > 1)
                 {
                     int visible_chars = matches.get_cell_count(index);
-                    spaces_needed = m_longest - visible_chars + column_pad;
+                    spaces_needed = _longest - visible_chars + column_pad;
                 }
 
                 for (int i = spaces_needed; i >= 0;)
@@ -309,7 +309,7 @@ TabCompleter::State TabCompleter::print(const Context& context, bool single_row)
         printer.print("\n");
     }
 
-    if (m_row == total_rows)
+    if (_row == total_rows)
         return state_none;
 
     printer.print(g_colour_interact.get(), "-- More --");

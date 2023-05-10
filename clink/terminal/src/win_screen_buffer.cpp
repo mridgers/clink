@@ -12,21 +12,21 @@
 //------------------------------------------------------------------------------
 void WinScreenBuffer::begin()
 {
-    m_handle = GetStdHandle(STD_OUTPUT_HANDLE);
-    GetConsoleMode(m_handle, &m_prev_mode);
+    _handle = GetStdHandle(STD_OUTPUT_HANDLE);
+    GetConsoleMode(_handle, &_prev_mode);
 
     CONSOLE_SCREEN_BUFFER_INFO csbi;
-    GetConsoleScreenBufferInfo(m_handle, &csbi);
-    m_default_attr = csbi.wAttributes & attr_mask_all;
-    m_bold = !!(m_default_attr & attr_mask_bold);
+    GetConsoleScreenBufferInfo(_handle, &csbi);
+    _default_attr = csbi.wAttributes & attr_mask_all;
+    _bold = !!(_default_attr & attr_mask_bold);
 }
 
 //------------------------------------------------------------------------------
 void WinScreenBuffer::end()
 {
-    SetConsoleTextAttribute(m_handle, m_default_attr);
-    SetConsoleMode(m_handle, m_prev_mode);
-    m_handle = nullptr;
+    SetConsoleTextAttribute(_handle, _default_attr);
+    SetConsoleMode(_handle, _prev_mode);
+    _handle = nullptr;
 }
 
 //------------------------------------------------------------------------------
@@ -40,7 +40,7 @@ void WinScreenBuffer::write(const char* data, int length)
         n = to_utf16(wbuf, n, iter);
 
         DWORD written;
-        WriteConsoleW(m_handle, wbuf, n, &written, nullptr);
+        WriteConsoleW(_handle, wbuf, n, &written, nullptr);
 
         n = int(iter.get_pointer() - data);
         length -= n;
@@ -55,15 +55,15 @@ void WinScreenBuffer::flush()
     // timer and hide it which can be disorientating, especially when moving
     // around a line. The below will make sure it stays visible.
     CONSOLE_SCREEN_BUFFER_INFO csbi;
-    GetConsoleScreenBufferInfo(m_handle, &csbi);
-    SetConsoleCursorPosition(m_handle, csbi.dwCursorPosition);
+    GetConsoleScreenBufferInfo(_handle, &csbi);
+    SetConsoleCursorPosition(_handle, csbi.dwCursorPosition);
 }
 
 //------------------------------------------------------------------------------
 int WinScreenBuffer::get_columns() const
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
-    GetConsoleScreenBufferInfo(m_handle, &csbi);
+    GetConsoleScreenBufferInfo(_handle, &csbi);
     return csbi.dwSize.X;
 }
 
@@ -71,7 +71,7 @@ int WinScreenBuffer::get_columns() const
 int WinScreenBuffer::get_rows() const
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
-    GetConsoleScreenBufferInfo(m_handle, &csbi);
+    GetConsoleScreenBufferInfo(_handle, &csbi);
     return (csbi.srWindow.Bottom - csbi.srWindow.Top) + 1;
 }
 
@@ -79,7 +79,7 @@ int WinScreenBuffer::get_rows() const
 void WinScreenBuffer::clear(ClearType Type)
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
-    GetConsoleScreenBufferInfo(m_handle, &csbi);
+    GetConsoleScreenBufferInfo(_handle, &csbi);
 
     int width, height, count = 0;
     COORD xy;
@@ -110,15 +110,15 @@ void WinScreenBuffer::clear(ClearType Type)
     count += width * height;
 
     DWORD written;
-    FillConsoleOutputCharacterW(m_handle, ' ', count, xy, &written);
-    FillConsoleOutputAttribute(m_handle, csbi.wAttributes, count, xy, &written);
+    FillConsoleOutputCharacterW(_handle, ' ', count, xy, &written);
+    FillConsoleOutputAttribute(_handle, csbi.wAttributes, count, xy, &written);
 }
 
 //------------------------------------------------------------------------------
 void WinScreenBuffer::clear_line(ClearType Type)
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
-    GetConsoleScreenBufferInfo(m_handle, &csbi);
+    GetConsoleScreenBufferInfo(_handle, &csbi);
 
     int width;
     COORD xy;
@@ -141,15 +141,15 @@ void WinScreenBuffer::clear_line(ClearType Type)
     }
 
     DWORD written;
-    FillConsoleOutputCharacterW(m_handle, ' ', width, xy, &written);
-    FillConsoleOutputAttribute(m_handle, csbi.wAttributes, width, xy, &written);
+    FillConsoleOutputCharacterW(_handle, ' ', width, xy, &written);
+    FillConsoleOutputAttribute(_handle, csbi.wAttributes, width, xy, &written);
 }
 
 //------------------------------------------------------------------------------
 void WinScreenBuffer::set_cursor(int column, int row)
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
-    GetConsoleScreenBufferInfo(m_handle, &csbi);
+    GetConsoleScreenBufferInfo(_handle, &csbi);
 
     const SMALL_RECT& window = csbi.srWindow;
     int width = (window.Right - window.Left) + 1;
@@ -159,20 +159,20 @@ void WinScreenBuffer::set_cursor(int column, int row)
     row = clamp(row, 0, height);
 
     COORD xy = { short(window.Left + column), short(window.Top + row) };
-    SetConsoleCursorPosition(m_handle, xy);
+    SetConsoleCursorPosition(_handle, xy);
 }
 
 //------------------------------------------------------------------------------
 void WinScreenBuffer::move_cursor(int dx, int dy)
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
-    GetConsoleScreenBufferInfo(m_handle, &csbi);
+    GetConsoleScreenBufferInfo(_handle, &csbi);
 
     COORD xy = {
         short(clamp(csbi.dwCursorPosition.X + dx, 0, csbi.dwSize.X - 1)),
         short(clamp(csbi.dwCursorPosition.Y + dy, 0, csbi.dwSize.Y - 1)),
     };
-    SetConsoleCursorPosition(m_handle, xy);
+    SetConsoleCursorPosition(_handle, xy);
 }
 
 //------------------------------------------------------------------------------
@@ -182,7 +182,7 @@ void WinScreenBuffer::insert_chars(int count)
         return;
 
     CONSOLE_SCREEN_BUFFER_INFO csbi;
-    GetConsoleScreenBufferInfo(m_handle, &csbi);
+    GetConsoleScreenBufferInfo(_handle, &csbi);
 
     SMALL_RECT rect;
     rect.Left = csbi.dwCursorPosition.X;
@@ -195,7 +195,7 @@ void WinScreenBuffer::insert_chars(int count)
 
     csbi.dwCursorPosition.X += count;
 
-    ScrollConsoleScreenBuffer(m_handle, &rect, NULL, csbi.dwCursorPosition, &fill);
+    ScrollConsoleScreenBuffer(_handle, &rect, NULL, csbi.dwCursorPosition, &fill);
 }
 
 //------------------------------------------------------------------------------
@@ -205,7 +205,7 @@ void WinScreenBuffer::delete_chars(int count)
         return;
 
     CONSOLE_SCREEN_BUFFER_INFO csbi;
-    GetConsoleScreenBufferInfo(m_handle, &csbi);
+    GetConsoleScreenBufferInfo(_handle, &csbi);
 
     SMALL_RECT rect;
     rect.Left = csbi.dwCursorPosition.X + count;
@@ -216,7 +216,7 @@ void WinScreenBuffer::delete_chars(int count)
     fill.Char.AsciiChar = ' ';
     fill.Attributes = csbi.wAttributes;
 
-    ScrollConsoleScreenBuffer(m_handle, &rect, NULL, csbi.dwCursorPosition, &fill);
+    ScrollConsoleScreenBuffer(_handle, &rect, NULL, csbi.dwCursorPosition, &fill);
 
     int chars_moved = rect.Right - rect.Left + 1;
     if (chars_moved < count)
@@ -227,8 +227,8 @@ void WinScreenBuffer::delete_chars(int count)
         count -= chars_moved;
 
         DWORD written;
-        FillConsoleOutputCharacterW(m_handle, ' ', count, xy, &written);
-        FillConsoleOutputAttribute(m_handle, csbi.wAttributes, count, xy, &written);
+        FillConsoleOutputCharacterW(_handle, ' ', count, xy, &written);
+        FillConsoleOutputAttribute(_handle, csbi.wAttributes, count, xy, &written);
     }
 }
 
@@ -236,7 +236,7 @@ void WinScreenBuffer::delete_chars(int count)
 void WinScreenBuffer::set_attributes(const Attributes attr)
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
-    GetConsoleScreenBufferInfo(m_handle, &csbi);
+    GetConsoleScreenBufferInfo(_handle, &csbi);
 
     int out_attr = csbi.wAttributes & attr_mask_all;
 
@@ -248,7 +248,7 @@ void WinScreenBuffer::set_attributes(const Attributes attr)
 
     // Bold
     if (auto bold_attr = attr.get_bold())
-        m_bold = !!(bold_attr.value);
+        _bold = !!(bold_attr.value);
 
     // Underline
     if (auto underline = attr.get_underline())
@@ -260,10 +260,10 @@ void WinScreenBuffer::set_attributes(const Attributes attr)
     }
 
     // Foreground Colour
-    bool bold = m_bold;
+    bool bold = _bold;
     if (auto fg = attr.get_fg())
     {
-        int value = fg.is_default ? m_default_attr : swizzle(fg->value);
+        int value = fg.is_default ? _default_attr : swizzle(fg->value);
         value &= attr_mask_fg;
         out_attr = (out_attr & attr_mask_bg) | value;
         bold |= (value > 7);
@@ -279,12 +279,12 @@ void WinScreenBuffer::set_attributes(const Attributes attr)
     // Background Colour
     if (auto bg = attr.get_bg())
     {
-        int value = bg.is_default ? m_default_attr : (swizzle(bg->value) << 4);
+        int value = bg.is_default ? _default_attr : (swizzle(bg->value) << 4);
         out_attr = (out_attr & attr_mask_fg) | (value & attr_mask_bg);
     }
 
     // TODO: add rgb/xterm256 support back.
 
     out_attr |= csbi.wAttributes & ~attr_mask_all;
-    SetConsoleTextAttribute(m_handle, short(out_attr));
+    SetConsoleTextAttribute(_handle, short(out_attr));
 }

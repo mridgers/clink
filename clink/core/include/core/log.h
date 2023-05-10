@@ -32,5 +32,5 @@ public:
     virtual void    emit(const char* function, int line, const char* fmt, va_list args) override;
 
 private:
-    Str<256>        m_log_path;
+    Str<256>        _log_path;
 };

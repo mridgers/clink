@@ -6,36 +6,36 @@
 
 //------------------------------------------------------------------------------
 Scroller::Scroller()
-: m_handle(0)
+: _handle(0)
 {
-    m_cursor_position.X = 0;
-    m_cursor_position.Y = 0;
+    _cursor_position.X = 0;
+    _cursor_position.Y = 0;
 }
 
 //------------------------------------------------------------------------------
 void Scroller::begin()
 {
-    m_handle = GetStdHandle(STD_OUTPUT_HANDLE);
+    _handle = GetStdHandle(STD_OUTPUT_HANDLE);
 
     CONSOLE_SCREEN_BUFFER_INFO csbi;
-    GetConsoleScreenBufferInfo(m_handle, &csbi);
-    m_cursor_position = csbi.dwCursorPosition;
+    GetConsoleScreenBufferInfo(_handle, &csbi);
+    _cursor_position = csbi.dwCursorPosition;
 }
 
 //------------------------------------------------------------------------------
 void Scroller::end()
 {
-    SetConsoleCursorPosition(m_handle, m_cursor_position);
-    m_handle = 0;
-    m_cursor_position.X = 0;
-    m_cursor_position.Y = 0;
+    SetConsoleCursorPosition(_handle, _cursor_position);
+    _handle = 0;
+    _cursor_position.X = 0;
+    _cursor_position.Y = 0;
 }
 
 //------------------------------------------------------------------------------
 void Scroller::page_up()
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
-    GetConsoleScreenBufferInfo(m_handle, &csbi);
+    GetConsoleScreenBufferInfo(_handle, &csbi);
     SMALL_RECT* wnd = &csbi.srWindow;
 
     int rows_per_page = wnd->Bottom - wnd->Top - 1;
@@ -44,24 +44,24 @@ void Scroller::page_up()
 
     csbi.dwCursorPosition.X = 0;
     csbi.dwCursorPosition.Y = wnd->Top - rows_per_page;
-    SetConsoleCursorPosition(m_handle, csbi.dwCursorPosition);
+    SetConsoleCursorPosition(_handle, csbi.dwCursorPosition);
 }
 
 //------------------------------------------------------------------------------
 void Scroller::page_down()
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
-    GetConsoleScreenBufferInfo(m_handle, &csbi);
+    GetConsoleScreenBufferInfo(_handle, &csbi);
     SMALL_RECT* wnd = &csbi.srWindow;
 
     int rows_per_page = wnd->Bottom - wnd->Top - 1;
 
     csbi.dwCursorPosition.X = 0;
     csbi.dwCursorPosition.Y = wnd->Bottom + rows_per_page;
-    if (csbi.dwCursorPosition.Y > m_cursor_position.Y)
-        csbi.dwCursorPosition.Y = m_cursor_position.Y;
+    if (csbi.dwCursorPosition.Y > _cursor_position.Y)
+        csbi.dwCursorPosition.Y = _cursor_position.Y;
 
-    SetConsoleCursorPosition(m_handle, csbi.dwCursorPosition);
+    SetConsoleCursorPosition(_handle, csbi.dwCursorPosition);
 }
 
 
@@ -69,15 +69,15 @@ void Scroller::page_down()
 //------------------------------------------------------------------------------
 void ScrollerModule::bind_input(Binder& binder)
 {
-    m_bind_group = binder.create_group("Scroller");
-    if (m_bind_group >= 0)
+    _bind_group = binder.create_group("Scroller");
+    if (_bind_group >= 0)
     {
         int default_group = binder.get_group();
         binder.bind(default_group, "\\e[5;2~", bind_id_start);
 
-        binder.bind(m_bind_group, "\\e[5;2~", bind_id_pgup);
-        binder.bind(m_bind_group, "\\e[6;2~", bind_id_pgdown);
-        binder.bind(m_bind_group, "", bind_id_catchall);
+        binder.bind(_bind_group, "\\e[5;2~", bind_id_pgup);
+        binder.bind(_bind_group, "\\e[6;2~", bind_id_pgdown);
+        binder.bind(_bind_group, "", bind_id_catchall);
     }
 }
 
@@ -105,22 +105,22 @@ void ScrollerModule::on_input(
     switch (input.id)
     {
     case bind_id_start:
-        m_scroller.begin();
-        m_scroller.page_up();
-        m_prev_group = result.set_bind_group(m_bind_group);
+        _scroller.begin();
+        _scroller.page_up();
+        _prev_group = result.set_bind_group(_bind_group);
         return;
 
     case bind_id_pgup:
-        m_scroller.page_up();
+        _scroller.page_up();
         return;
 
     case bind_id_pgdown:
-        m_scroller.page_down();
+        _scroller.page_down();
         return;
 
     case bind_id_catchall:
-        m_scroller.end();
-        result.set_bind_group(m_prev_group);
+        _scroller.end();
+        result.set_bind_group(_prev_group);
         result.pass();
         return;
     }

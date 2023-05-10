@@ -19,43 +19,43 @@ public:
     unsigned int    length() const;
 
 private:
-    const T*        m_ptr;
-    const T*        m_end;
+    const T*        _ptr;
+    const T*        _end;
 };
 
 //------------------------------------------------------------------------------
 template <typename T> StrIterImpl<T>::StrIterImpl(const T* s, int len)
-: m_ptr(s)
-, m_end(m_ptr + len)
+: _ptr(s)
+, _end(_ptr + len)
 {
 }
 
 //------------------------------------------------------------------------------
 template <typename T> StrIterImpl<T>::StrIterImpl(const StrImpl<T>& s, int len)
-: m_ptr(s.c_str())
-, m_end(m_ptr + len)
+: _ptr(s.c_str())
+, _end(_ptr + len)
 {
 }
 
 //------------------------------------------------------------------------------
 template <typename T> const T* StrIterImpl<T>::get_pointer() const
 {
-    return m_ptr;
+    return _ptr;
 };
 
 //------------------------------------------------------------------------------
 template <typename T> int StrIterImpl<T>::peek()
 {
-    const T* ptr = m_ptr;
+    const T* ptr = _ptr;
     int ret = next();
-    m_ptr = ptr;
+    _ptr = ptr;
     return ret;
 }
 
 //------------------------------------------------------------------------------
 template <typename T> bool StrIterImpl<T>::more() const
 {
-    return (m_ptr != m_end && *m_ptr != '\0');
+    return (_ptr != _end && *_ptr != '\0');
 }
 
 

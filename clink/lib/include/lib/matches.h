@@ -40,5 +40,5 @@ public:
     void                    set_prefix_included(bool included=true);
 
 private:
-    Matches&                m_matches;
+    Matches&                _matches;
 };

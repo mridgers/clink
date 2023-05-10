@@ -59,10 +59,10 @@ public:
     };
 
     explicit                operator bool () const { return !!get_length(); }
-    const char*             get_pointer() const    { return m_str; }
-    unsigned int            get_length() const     { return m_length; }
-    Type                    get_type() const       { return m_type; }
-    unsigned int            get_code() const       { return m_code; }
+    const char*             get_pointer() const    { return _str; }
+    unsigned int            get_length() const     { return _length; }
+    Type                    get_type() const       { return _type; }
+    unsigned int            get_code() const       { return _code; }
     template <int S> bool   decode_csi(Csi<S>& out) const;
     bool                    get_c1_str(StrBase& out) const;
 
@@ -74,10 +74,10 @@ private:
                             Ecma48Code(Ecma48Code&&) = delete;
     void                    operator = (Ecma48Code&) = delete;
     bool                    decode_csi(CsiBase& base, int* params, unsigned int max_params) const;
-    const char*             m_str;
-    unsigned short          m_length;
-    Type                    m_type;
-    unsigned char           m_code;
+    const char*             _str;
+    unsigned short          _length;
+    Type                    _type;
+    unsigned char           _code;
 };
 
 //------------------------------------------------------------------------------
@@ -132,7 +132,7 @@ private:
     bool                next_esc(int c);
     bool                next_esc_st(int c);
     bool                next_unknown(int c);
-    StrIter             m_iter;
-    Ecma48Code&         m_code;
-    Ecma48State&        m_state;
+    StrIter             _iter;
+    Ecma48Code&         _code;
+    Ecma48State&        _state;
 };

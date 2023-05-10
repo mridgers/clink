@@ -21,7 +21,7 @@ void RlBuffer::reset()
 //------------------------------------------------------------------------------
 void RlBuffer::begin_line()
 {
-    m_need_draw = true;
+    _need_draw = true;
 }
 
 //------------------------------------------------------------------------------
@@ -56,25 +56,25 @@ unsigned int RlBuffer::set_cursor(unsigned int pos)
 //------------------------------------------------------------------------------
 bool RlBuffer::insert(const char* text)
 {
-    return (m_need_draw = (text[rl_insert_text(text)] == '\0'));
+    return (_need_draw = (text[rl_insert_text(text)] == '\0'));
 }
 
 //------------------------------------------------------------------------------
 bool RlBuffer::remove(unsigned int from, unsigned int to)
 {
     to = min(to, get_length());
-    m_need_draw = !!rl_delete_text(from, to);
+    _need_draw = !!rl_delete_text(from, to);
     set_cursor(get_cursor());
-    return m_need_draw;
+    return _need_draw;
 }
 
 //------------------------------------------------------------------------------
 void RlBuffer::draw()
 {
-    if (m_need_draw)
+    if (_need_draw)
     {
         rl_redisplay();
-        m_need_draw = false;
+        _need_draw = false;
     }
 }
 

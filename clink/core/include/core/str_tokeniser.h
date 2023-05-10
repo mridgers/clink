@@ -44,24 +44,24 @@ private:
 
     int                 get_right_quote(int left) const;
     StrToken            next_impl(const T*& out_start, int& out_length);
-    quotes              m_quotes;
-    StrIterImpl<T>      m_iter;
-    const char*         m_delims;
+    quotes              _quotes;
+    StrIterImpl<T>      _iter;
+    const char*         _delims;
 };
 
 //------------------------------------------------------------------------------
 template <typename T>
 StrTokeniserImpl<T>::StrTokeniserImpl(const T* in, const char* delims)
-: m_iter(in)
-, m_delims(delims)
+: _iter(in)
+, _delims(delims)
 {
 }
 
 //------------------------------------------------------------------------------
 template <typename T>
 StrTokeniserImpl<T>::StrTokeniserImpl(const StrIterImpl<T>& in, const char* delims)
-: m_iter(in)
-, m_delims(delims)
+: _iter(in)
+, _delims(delims)
 {
 }
 
@@ -72,7 +72,7 @@ bool StrTokeniserImpl<T>::add_quote_pair(const char* pair)
     if (pair == nullptr || !pair[0])
         return false;
 
-    Quote* q = m_quotes.push_back();
+    Quote* q = _quotes.push_back();
     if (q == nullptr)
         return false;
 

@@ -32,7 +32,7 @@ private:
     void                edit_line(const wchar_t* prompt, wchar_t* chars, int max_chars);
     bool                capture_prompt(const wchar_t* chars, int char_count);
     bool                is_interactive() const;
-    TaggedPrompt        m_prompt;
-    Doskey              m_doskey;
-    DoskeyAlias         m_doskey_alias;
+    TaggedPrompt        _prompt;
+    Doskey              _doskey;
+    DoskeyAlias         _doskey_alias;
 };

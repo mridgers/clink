@@ -42,36 +42,36 @@ public:
 
 private:
     void                    grow(unsigned int hint=128);
-    wchar_t* __restrict     m_start;
-    wchar_t* __restrict     m_end;
-    wchar_t* __restrict     m_cursor;
+    wchar_t* __restrict     _start;
+    wchar_t* __restrict     _end;
+    wchar_t* __restrict     _cursor;
 };
 
 //------------------------------------------------------------------------------
 WstrStream::WstrStream()
-: m_start(nullptr)
-, m_end(nullptr)
-, m_cursor(nullptr)
+: _start(nullptr)
+, _end(nullptr)
+, _cursor(nullptr)
 {
 }
 
 //------------------------------------------------------------------------------
 void WstrStream::operator << (TYPE c)
 {
-    if (m_cursor >= m_end)
+    if (_cursor >= _end)
         grow();
 
-    *m_cursor++ = c;
+    *_cursor++ = c;
 }
 
 //------------------------------------------------------------------------------
 void WstrStream::operator << (const RangeDesc desc)
 {
-    if (m_cursor + desc.count >= m_end)
+    if (_cursor + desc.count >= _end)
         grow(desc.count);
 
-    for (unsigned int i = 0; i < desc.count; ++i, ++m_cursor)
-        *m_cursor = desc.ptr[i];
+    for (unsigned int i = 0; i < desc.count; ++i, ++_cursor)
+        *_cursor = desc.ptr[i];
 }
 
 //------------------------------------------------------------------------------
@@ -89,19 +89,19 @@ WstrStream::RangeDesc WstrStream::range(const StrIterImpl<TYPE>& iter)
 //------------------------------------------------------------------------------
 void WstrStream::collect(StrImpl<TYPE>& out)
 {
-    out.attach(m_start, int(m_cursor - m_start));
-    m_start = m_end = m_cursor = nullptr;
+    out.attach(_start, int(_cursor - _start));
+    _start = _end = _cursor = nullptr;
 }
 
 //------------------------------------------------------------------------------
 void WstrStream::grow(unsigned int hint)
 {
     hint = (hint + 127) & ~127;
-    unsigned int size = int(m_end - m_start) + hint;
-    TYPE* next = (TYPE*)realloc(m_start, size * sizeof(TYPE));
-    m_cursor = next + (m_cursor - m_start);
-    m_end = next + size;
-    m_start = next;
+    unsigned int size = int(_end - _start) + hint;
+    TYPE* next = (TYPE*)realloc(_start, size * sizeof(TYPE));
+    _cursor = next + (_cursor - _start);
+    _end = next + size;
+    _start = next;
 }
 
 
@@ -109,39 +109,39 @@ void WstrStream::grow(unsigned int hint)
 //------------------------------------------------------------------------------
 DoskeyAlias::DoskeyAlias()
 {
-    m_cursor = m_buffer.c_str();
+    _cursor = _buffer.c_str();
 }
 
 //------------------------------------------------------------------------------
 void DoskeyAlias::reset()
 {
-    m_buffer.clear();
-    m_cursor = m_buffer.c_str();
+    _buffer.clear();
+    _cursor = _buffer.c_str();
 }
 
 //------------------------------------------------------------------------------
 bool DoskeyAlias::next(WstrBase& out)
 {
-    if (!*m_cursor)
+    if (!*_cursor)
         return false;
 
-    out.copy(m_cursor);
+    out.copy(_cursor);
 
-    while (*m_cursor++);
+    while (*_cursor++);
     return true;
 }
 
 //------------------------------------------------------------------------------
 DoskeyAlias::operator bool () const
 {
-    return (*m_cursor != 0);
+    return (*_cursor != 0);
 }
 
 
 
 //------------------------------------------------------------------------------
 Doskey::Doskey(const char* shell_name)
-: m_shell_name(shell_name)
+: _shell_name(shell_name)
 {
 }
 
@@ -150,7 +150,7 @@ bool Doskey::add_alias(const char* alias, const char* text)
 {
     Wstr<64> walias(alias);
     Wstr<> wtext(text);
-    Wstr<64> wshell(m_shell_name);
+    Wstr<64> wshell(_shell_name);
     return (AddConsoleAliasW(walias.data(), wtext.data(), wshell.data()) == TRUE);
 }
 
@@ -158,7 +158,7 @@ bool Doskey::add_alias(const char* alias, const char* text)
 bool Doskey::remove_alias(const char* alias)
 {
     Wstr<64> walias(alias);
-    Wstr<64> wshell(m_shell_name);
+    Wstr<64> wshell(_shell_name);
     return (AddConsoleAliasW(walias.data(), nullptr, wshell.data()) == TRUE);
 }
 
@@ -182,7 +182,7 @@ bool Doskey::resolve_impl(const WstrIter& in, WstrStream* out)
 
     // Find the alias' text. First check it exists.
     wchar_t unused;
-    Wstr<32> wshell(m_shell_name);
+    Wstr<32> wshell(_shell_name);
     if (!GetConsoleAliasW(alias.data(), &unused, sizeof(unused), wshell.data()))
         if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
             return false;
@@ -317,6 +317,6 @@ void Doskey::resolve(const wchar_t* chars, DoskeyAlias& out)
     stream << '\0';
 
     // Collect the resolve result
-    stream.collect(out.m_buffer);
-    out.m_cursor = out.m_buffer.c_str();
+    stream.collect(out._buffer);
+    out._cursor = out._buffer.c_str();
 }

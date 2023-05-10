@@ -30,9 +30,9 @@ private: /* TODO: unimplemented API */
 
 private:
     void                    flush_attributes();
-    TerminalOut&            m_terminal;
-    Attributes              m_set_attr;
-    Attributes              m_next_attr;
+    TerminalOut&            _terminal;
+    Attributes              _set_attr;
+    Attributes              _next_attr;
 };
 
 //------------------------------------------------------------------------------

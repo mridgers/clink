@@ -56,7 +56,7 @@ private:
     int                 alloc_nodes(unsigned int count=1);
     int                 add_module(EditorModule& module);
     EditorModule*       get_module(unsigned int index) const;
-    Modules             m_modules;
-    Node                m_nodes[1 << link_bits];
-    unsigned int        m_next_node;
+    Modules             _modules;
+    Node                _nodes[1 << link_bits];
+    unsigned int        _next_node;
 };

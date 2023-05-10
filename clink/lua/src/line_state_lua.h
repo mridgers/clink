@@ -23,5 +23,5 @@ public:
     int                 get_end_word(lua_State* state);
 
 private:
-    const LineState&    m_line;
+    const LineState&    _line;
 };

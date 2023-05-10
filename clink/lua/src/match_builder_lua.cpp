@@ -21,7 +21,7 @@ static MatchBuilderLua::Method g_methods[] = {
 //------------------------------------------------------------------------------
 MatchBuilderLua::MatchBuilderLua(MatchBuilder& Builder)
 : LuaBindable<MatchBuilderLua>("MatchBuilderLua", g_methods)
-, m_builder(Builder)
+, _builder(Builder)
 {
 }
 
@@ -53,7 +53,7 @@ int MatchBuilderLua::set_prefix_included(lua_State* state)
     if (lua_gettop(state) > 0)
         included = (lua_toboolean(state, 1) != 0);
 
-    m_builder.set_prefix_included(included);
+    _builder.set_prefix_included(included);
 
     return 0;
 }
@@ -110,7 +110,7 @@ bool MatchBuilderLua::add_match_impl(lua_State* state, int stack_index)
     if (lua_isstring(state, stack_index))
     {
         const char* match = lua_tostring(state, stack_index);
-        return m_builder.add_match(match);
+        return _builder.add_match(match);
     }
     else if (lua_istable(state, stack_index))
     {
@@ -144,7 +144,7 @@ bool MatchBuilderLua::add_match_impl(lua_State* state, int stack_index)
         lua_pop(state, 1);
 
         if (desc.match != nullptr)
-            return m_builder.add_match(desc);
+            return _builder.add_match(desc);
     }
 
     return false;

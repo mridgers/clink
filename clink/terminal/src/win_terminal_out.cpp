@@ -12,20 +12,20 @@
 //------------------------------------------------------------------------------
 void WinTerminalOut::begin()
 {
-    m_stdout = GetStdHandle(STD_OUTPUT_HANDLE);
-    GetConsoleMode(m_stdout, &m_prev_mode);
+    _stdout = GetStdHandle(STD_OUTPUT_HANDLE);
+    GetConsoleMode(_stdout, &_prev_mode);
 
     CONSOLE_SCREEN_BUFFER_INFO csbi;
-    GetConsoleScreenBufferInfo(m_stdout, &csbi);
-    m_default_attr = csbi.wAttributes;
+    GetConsoleScreenBufferInfo(_stdout, &csbi);
+    _default_attr = csbi.wAttributes;
 }
 
 //------------------------------------------------------------------------------
 void WinTerminalOut::end()
 {
-    SetConsoleTextAttribute(m_stdout, m_default_attr);
-    SetConsoleMode(m_stdout, m_prev_mode);
-    m_stdout = nullptr;
+    SetConsoleTextAttribute(_stdout, _default_attr);
+    SetConsoleMode(_stdout, _prev_mode);
+    _stdout = nullptr;
 }
 
 //------------------------------------------------------------------------------
@@ -39,7 +39,7 @@ void WinTerminalOut::write(const char* chars, int length)
         n = to_utf16(wbuf, n, iter);
 
         DWORD written;
-        WriteConsoleW(m_stdout, wbuf, n, &written, nullptr);
+        WriteConsoleW(_stdout, wbuf, n, &written, nullptr);
 
         n = int(iter.get_pointer() - chars);
         length -= n;
@@ -54,15 +54,15 @@ void WinTerminalOut::flush()
     // timer and hide it which can be disorientating, especially when moving
     // around a line. The below will make sure it stays visible.
     CONSOLE_SCREEN_BUFFER_INFO csbi;
-    GetConsoleScreenBufferInfo(m_stdout, &csbi);
-    SetConsoleCursorPosition(m_stdout, csbi.dwCursorPosition);
+    GetConsoleScreenBufferInfo(_stdout, &csbi);
+    SetConsoleCursorPosition(_stdout, csbi.dwCursorPosition);
 }
 
 //------------------------------------------------------------------------------
 int WinTerminalOut::get_columns() const
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
-    GetConsoleScreenBufferInfo(m_stdout, &csbi);
+    GetConsoleScreenBufferInfo(_stdout, &csbi);
     return csbi.dwSize.X;
 }
 
@@ -70,6 +70,6 @@ int WinTerminalOut::get_columns() const
 int WinTerminalOut::get_rows() const
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
-    GetConsoleScreenBufferInfo(m_stdout, &csbi);
+    GetConsoleScreenBufferInfo(_stdout, &csbi);
     return (csbi.srWindow.Bottom - csbi.srWindow.Top) + 1;
 }

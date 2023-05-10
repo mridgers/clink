@@ -32,8 +32,8 @@ public:
     StrIter             get_end_word() const;
 
 private:
-    const Array<Word>&  m_words;
-    const char*         m_line;
-    unsigned int        m_cursor;
-    unsigned int        m_command_offset;
+    const Array<Word>&  _words;
+    const char*         _line;
+    unsigned int        _cursor;
+    unsigned int        _command_offset;
 };

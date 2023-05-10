@@ -37,39 +37,39 @@ public:
     void            press_keys(const char* keys);
 
 private:
-    Terminal        m_terminal;
-    LineEditor*     m_editor;
-    Handle          m_thread;
+    Terminal        _terminal;
+    LineEditor*     _editor;
+    Handle          _thread;
 };
 
 //------------------------------------------------------------------------------
 void TestEditor::start(const char* prompt)
 {
-    m_terminal = terminal_create();
+    _terminal = terminal_create();
 
     LineEditor::Desc desc = {};
-    desc.input = m_terminal.in;
-    desc.output = m_terminal.out;
+    desc.input = _terminal.in;
+    desc.output = _terminal.out;
     desc.prompt = prompt;
-    m_editor = line_editor_create(desc);
+    _editor = line_editor_create(desc);
 
     auto thread = [] (void* param) -> DWORD {
         auto* self = (TestEditor*)param;
         char c;
-        self->m_editor->edit(&c, sizeof(c));
+        self->_editor->edit(&c, sizeof(c));
         return 0;
     };
 
-    m_thread = CreateThread(nullptr, 0, thread, this, 0, nullptr);
+    _thread = CreateThread(nullptr, 0, thread, this, 0, nullptr);
 }
 
 //------------------------------------------------------------------------------
 void TestEditor::end()
 {
     press_keys("\n");
-    WaitForSingleObject(m_thread, INFINITE);
-    line_editor_destroy(m_editor);
-    terminal_destroy(m_terminal);
+    WaitForSingleObject(_thread, INFINITE);
+    line_editor_destroy(_editor);
+    terminal_destroy(_terminal);
 }
 
 //------------------------------------------------------------------------------
@@ -96,41 +96,41 @@ class TestConsole
 public:
             TestConsole();
             ~TestConsole();
-    void    resize(int columns) { resize(columns, m_rows); }
+    void    resize(int columns) { resize(columns, _rows); }
     void    resize(int columns, int rows);
-    int     get_columns() const { return m_columns; }
-    int     get_rows() const    { return m_rows; }
+    int     get_columns() const { return _columns; }
+    int     get_rows() const    { return _rows; }
 
 private:
-    Handle  m_handle;
-    HANDLE  m_prev_handle;
-    int     m_columns;
-    int     m_rows;
+    Handle  _handle;
+    HANDLE  _prev_handle;
+    int     _columns;
+    int     _rows;
 };
 
 //------------------------------------------------------------------------------
 TestConsole::TestConsole()
-: m_prev_handle(GetStdHandle(STD_OUTPUT_HANDLE))
+: _prev_handle(GetStdHandle(STD_OUTPUT_HANDLE))
 {
-    m_handle = CreateConsoleScreenBuffer(GENERIC_WRITE|GENERIC_READ, 3, nullptr,
+    _handle = CreateConsoleScreenBuffer(GENERIC_WRITE|GENERIC_READ, 3, nullptr,
         CONSOLE_TEXTMODE_BUFFER, nullptr);
 
     COORD cursor_pos = { 0, 0 };
-    SetConsoleCursorPosition(m_handle, cursor_pos);
+    SetConsoleCursorPosition(_handle, cursor_pos);
 
     CONSOLE_SCREEN_BUFFER_INFO csbi;
-    GetConsoleScreenBufferInfo(m_handle , &csbi);
-    m_columns = csbi.dwSize.X;
-    m_rows = csbi.dwSize.Y;
+    GetConsoleScreenBufferInfo(_handle , &csbi);
+    _columns = csbi.dwSize.X;
+    _rows = csbi.dwSize.Y;
 
-    SetConsoleActiveScreenBuffer(m_handle);
-    SetStdHandle(STD_OUTPUT_HANDLE, m_handle);
+    SetConsoleActiveScreenBuffer(_handle);
+    SetStdHandle(STD_OUTPUT_HANDLE, _handle);
 }
 
 //------------------------------------------------------------------------------
 TestConsole::~TestConsole()
 {
-    SetStdHandle(STD_OUTPUT_HANDLE, m_prev_handle);
+    SetStdHandle(STD_OUTPUT_HANDLE, _prev_handle);
 }
 
 //------------------------------------------------------------------------------
@@ -139,12 +139,12 @@ void TestConsole::resize(int columns, int rows)
     SMALL_RECT rect = { 0, 0, short(columns - 1), short(rows - 1) };
     COORD size = { short(columns), short(rows) };
 
-    SetConsoleWindowInfo(m_handle, TRUE, &rect);
-    SetConsoleScreenBufferSize(m_handle, size);
-    SetConsoleWindowInfo(m_handle, TRUE, &rect);
+    SetConsoleWindowInfo(_handle, TRUE, &rect);
+    SetConsoleScreenBufferSize(_handle, size);
+    SetConsoleWindowInfo(_handle, TRUE, &rect);
 
-    m_columns = columns;
-    m_rows = rows;
+    _columns = columns;
+    _rows = rows;
 }
 
 
@@ -167,15 +167,15 @@ private:
     };
 
     void            run_input_thread();
-    Handle          m_input_thread;
-    volatile State  m_state;
-    int             m_timeout_ms;
+    Handle          _input_thread;
+    volatile State  _state;
+    int             _timeout_ms;
 };
 
 //------------------------------------------------------------------------------
 Stepper::Stepper(int timeout_ms)
-: m_state(state_running)
-, m_timeout_ms(timeout_ms)
+: _state(state_running)
+, _timeout_ms(timeout_ms)
 {
     auto thunk = [] (void* param) -> DWORD {
         auto* self = (Stepper*)param;
@@ -183,13 +183,13 @@ Stepper::Stepper(int timeout_ms)
         return 0;
     };
 
-    m_input_thread = CreateThread(nullptr, 0, thunk, this, 0, nullptr);
+    _input_thread = CreateThread(nullptr, 0, thunk, this, 0, nullptr);
 }
 
 //------------------------------------------------------------------------------
 Stepper::~Stepper()
 {
-    TerminateThread(m_input_thread, 0);
+    TerminateThread(_input_thread, 0);
 }
 
 //------------------------------------------------------------------------------
@@ -203,7 +203,7 @@ void Stepper::run_input_thread()
         INPUT_RECORD record;
         if (!ReadConsoleInputW(stdin_handle, &record, 1, &count))
         {
-            m_state = state_quit;
+            _state = state_quit;
             break;
         }
 
@@ -216,8 +216,8 @@ void Stepper::run_input_thread()
 
         switch (key_event.wVirtualKeyCode)
         {
-        case VK_ESCAPE: m_state = state_quit; break;
-        case VK_SPACE:  m_state = state_step; break;
+        case VK_ESCAPE: _state = state_quit; break;
+        case VK_SPACE:  _state = state_step; break;
         }
     }
 */
@@ -226,14 +226,14 @@ void Stepper::run_input_thread()
 //------------------------------------------------------------------------------
 bool Stepper::step()
 {
-    switch (m_state)
+    switch (_state)
     {
-    case state_paused:  while (m_state == state_paused) Sleep(10); break;
-    case state_running: Sleep(m_timeout_ms); break;
-    case state_step:    m_state = state_paused; break;
+    case state_paused:  while (_state == state_paused) Sleep(10); break;
+    case state_running: Sleep(_timeout_ms); break;
+    case state_step:    _state = state_paused; break;
     }
 
-    return (m_state != state_quit);
+    return (_state != state_quit);
 }
 
 
@@ -249,16 +249,16 @@ private:
     bool                step();
     void                ecma48_test();
     void                line_test();
-    TestConsole         m_console;
-    Stepper             m_stepper;
+    TestConsole         _console;
+    Stepper             _stepper;
 };
 
 //------------------------------------------------------------------------------
 Runner::Runner()
-: m_stepper(200)
+: _stepper(200)
 {
     srand(0xa9e);
-    m_console.resize(80, 25);
+    _console.resize(80, 25);
 }
 
 //------------------------------------------------------------------------------
@@ -271,7 +271,7 @@ void Runner::go()
 //------------------------------------------------------------------------------
 bool Runner::step()
 {
-    return m_stepper.step();
+    return _stepper.step();
 }
 
 //------------------------------------------------------------------------------
@@ -337,12 +337,12 @@ void Runner::line_test()
         i += sizeof(word) - j;
     }
 
-    int columns = m_console.get_columns();
+    int columns = _console.get_columns();
     for (; columns > 16 && step(); --columns)
-        m_console.resize(columns);
+        _console.resize(columns);
 
     for (; columns < 60 && step(); ++columns)
-        m_console.resize(columns);
+        _console.resize(columns);
 
     step();
     editor.end();

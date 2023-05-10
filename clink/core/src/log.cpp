@@ -48,7 +48,7 @@ void Logger::error(const char* function, int line, const char* fmt, ...)
 //------------------------------------------------------------------------------
 FileLogger::FileLogger(const char* log_path)
 {
-    m_log_path << log_path;
+    _log_path << log_path;
 }
 
 //------------------------------------------------------------------------------
@@ -56,7 +56,7 @@ void FileLogger::emit(const char* function, int line, const char* fmt, va_list a
 {
     FILE* file;
 
-    file = fopen(m_log_path.c_str(), "at");
+    file = fopen(_log_path.c_str(), "at");
     if (file == nullptr)
         return;
 

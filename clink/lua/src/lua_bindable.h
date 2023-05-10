@@ -31,19 +31,19 @@ private:
     static int          call(lua_State* state);
     void                bind();
     void                unbind();
-    const char*         m_name;
-    const Method*       m_methods;
-    lua_State*          m_state;
-    int                 m_registry_ref;
+    const char*         _name;
+    const Method*       _methods;
+    lua_State*          _state;
+    int                 _registry_ref;
 };
 
 //------------------------------------------------------------------------------
 template <class T>
 LuaBindable<T>::LuaBindable(const char* name, const Method* methods)
-: m_name(name)
-, m_methods(methods)
-, m_state(nullptr)
-, m_registry_ref(LUA_NOREF)
+: _name(name)
+, _methods(methods)
+, _state(nullptr)
+, _registry_ref(LUA_NOREF)
 {
 }
 
@@ -58,68 +58,68 @@ LuaBindable<T>::~LuaBindable()
 template <class T>
 void LuaBindable<T>::bind()
 {
-    void* self = lua_newuserdata(m_state, sizeof(void*));
+    void* self = lua_newuserdata(_state, sizeof(void*));
     *(void**)self = this;
 
     Str<48> mt_name;
-    mt_name << m_name << "_mt";
-    if (luaL_newmetatable(m_state, mt_name.c_str()))
+    mt_name << _name << "_mt";
+    if (luaL_newmetatable(_state, mt_name.c_str()))
     {
-        lua_createtable(m_state, 0, 0);
+        lua_createtable(_state, 0, 0);
 
-        auto* methods = m_methods;
+        auto* methods = _methods;
         while (methods != nullptr && methods->name != nullptr)
         {
-            auto* ptr = (method_t*)lua_newuserdata(m_state, sizeof(method_t));
+            auto* ptr = (method_t*)lua_newuserdata(_state, sizeof(method_t));
             *ptr = methods->ptr;
 
-            if (luaL_newmetatable(m_state, "LuaBindable"))
+            if (luaL_newmetatable(_state, "LuaBindable"))
             {
-                lua_pushliteral(m_state, "__call");
-                lua_pushcfunction(m_state, &LuaBindable<T>::call);
-                lua_rawset(m_state, -3);
+                lua_pushliteral(_state, "__call");
+                lua_pushcfunction(_state, &LuaBindable<T>::call);
+                lua_rawset(_state, -3);
             }
 
-            lua_setmetatable(m_state, -2);
-            lua_setfield(m_state, -2, methods->name);
+            lua_setmetatable(_state, -2);
+            lua_setfield(_state, -2, methods->name);
 
             ++methods;
         }
 
-        lua_setfield(m_state, -2, "__index");
+        lua_setfield(_state, -2, "__index");
     }
 
-    lua_setmetatable(m_state, -2);
-    m_registry_ref = luaL_ref(m_state, LUA_REGISTRYINDEX);
+    lua_setmetatable(_state, -2);
+    _registry_ref = luaL_ref(_state, LUA_REGISTRYINDEX);
 }
 
 //------------------------------------------------------------------------------
 template <class T>
 void LuaBindable<T>::unbind()
 {
-    if (m_state == nullptr || m_registry_ref == LUA_NOREF)
+    if (_state == nullptr || _registry_ref == LUA_NOREF)
         return;
 
-    lua_rawgeti(m_state, LUA_REGISTRYINDEX, m_registry_ref);
-    if (void* self = lua_touserdata(m_state, -1))
+    lua_rawgeti(_state, LUA_REGISTRYINDEX, _registry_ref);
+    if (void* self = lua_touserdata(_state, -1))
         *(void**)self = nullptr;
-    lua_pop(m_state, 1);
+    lua_pop(_state, 1);
 
-    luaL_unref(m_state, LUA_REGISTRYINDEX, m_registry_ref);
-    m_registry_ref = LUA_NOREF;
-    m_state = nullptr;
+    luaL_unref(_state, LUA_REGISTRYINDEX, _registry_ref);
+    _registry_ref = LUA_NOREF;
+    _state = nullptr;
 }
 
 //------------------------------------------------------------------------------
 template <class T>
 void LuaBindable<T>::push(lua_State* state)
 {
-    m_state = state;
+    _state = state;
 
-    if (m_registry_ref == LUA_NOREF)
+    if (_registry_ref == LUA_NOREF)
         bind();
 
-    lua_rawgeti(m_state, LUA_REGISTRYINDEX, m_registry_ref);
+    lua_rawgeti(_state, LUA_REGISTRYINDEX, _registry_ref);
 }
 
 //------------------------------------------------------------------------------

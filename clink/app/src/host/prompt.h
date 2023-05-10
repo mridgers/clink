@@ -22,7 +22,7 @@ public:
     bool            is_set() const;
 
 protected:
-    wchar_t*        m_data;
+    wchar_t*        _data;
 };
 
 //------------------------------------------------------------------------------
@@ -45,7 +45,7 @@ public:
     void            filter(const char* in, StrBase& out);
 
 private:
-    LuaState&       m_lua;
+    LuaState&       _lua;
 };
 
 //------------------------------------------------------------------------------

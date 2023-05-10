@@ -40,5 +40,5 @@ public:
     void                flush_icache(const Region& Region={});
 
 private:
-    void*               m_handle;
+    void*               _handle;
 };

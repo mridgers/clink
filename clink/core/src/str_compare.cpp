@@ -9,14 +9,14 @@ threadlocal int StrCompareScope::ts_mode = StrCompareScope::exact;
 //------------------------------------------------------------------------------
 StrCompareScope::StrCompareScope(int mode)
 {
-    m_prev_mode = ts_mode;
+    _prev_mode = ts_mode;
     ts_mode = mode;
 }
 
 //------------------------------------------------------------------------------
 StrCompareScope::~StrCompareScope()
 {
-    ts_mode = m_prev_mode;
+    ts_mode = _prev_mode;
 }
 
 //------------------------------------------------------------------------------
