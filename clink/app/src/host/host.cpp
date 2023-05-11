@@ -77,7 +77,7 @@ bool Host::edit_line(const char* prompt, StrBase& out)
     int32 cmp_mode;
     switch (g_ignore_case.get())
     {
-    case 1:     cmp_mode = StrCompareScope::caseless; break;
+    case 1:     cmp_mode = StrCompareScope::caseless;   break;
     case 2:     cmp_mode = StrCompareScope::relaxed;    break;
     default:    cmp_mode = StrCompareScope::exact;      break;
     }
