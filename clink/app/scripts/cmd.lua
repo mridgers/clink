@@ -1,4 +1,4 @@
--- Copyright (c) 2016 Martin Ridgers
+-- Copyright (c) Martin Ridgers
 -- License: http://opensource.org/licenses/MIT
 
 local cmd_generator = clink.generator(40)
