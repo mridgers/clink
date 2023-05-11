@@ -242,11 +242,11 @@ void RlModule::on_input(const Input& Input, Result& result, const Context& conte
     // Setup the terminal.
     struct : public TerminalIn
     {
-        virtual void begin() override   {}
-        virtual void end() override     {}
-        virtual void select() override  {}
-        virtual int32  read() override    { return *(uint8*)(data++); }
-        const char*  data;
+        virtual void    begin() override   {}
+        virtual void    end() override     {}
+        virtual void    select() override  {}
+        virtual int32   read() override    { return *(uint8*)(data++); }
+        const char*     data;
     } term_in;
 
     term_in.data = Input.keys;
