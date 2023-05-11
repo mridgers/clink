@@ -239,7 +239,7 @@ void RlModule::on_input(const Input& Input, Result& result, const Context& conte
         return;
     }
 
-    // Setup the Terminal.
+    // Setup the terminal.
     struct : public TerminalIn
     {
         virtual void begin() override   {}

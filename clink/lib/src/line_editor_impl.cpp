@@ -26,7 +26,7 @@ inline char get_closing_quote(const char* quote_pair)
 //------------------------------------------------------------------------------
 LineEditor* line_editor_create(const LineEditor::Desc& desc)
 {
-    // Check there's at least a Terminal.
+    // Check there's at least a terminal.
     if (desc.input == nullptr)
         return nullptr;
 

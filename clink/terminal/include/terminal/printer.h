@@ -11,7 +11,7 @@ class TerminalOut;
 class Printer
 {
 public:
-                            Printer(TerminalOut& Terminal);
+                            Printer(TerminalOut& terminal);
     void                    print(const char* data, int32 bytes);
     void                    print(const Attributes attr, const char* data, int32 bytes);
     template <int32 S> void   print(const char (&data)[S]);

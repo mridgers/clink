@@ -8,8 +8,8 @@
 #include <core/str.h>
 
 //------------------------------------------------------------------------------
-Printer::Printer(TerminalOut& Terminal)
-: _terminal(Terminal)
+Printer::Printer(TerminalOut& terminal)
+: _terminal(terminal)
 , _set_attr(Attributes::defaults)
 , _next_attr(Attributes::defaults)
 {

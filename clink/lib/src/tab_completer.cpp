@@ -52,7 +52,7 @@ static SettingInt g_column_pad(
 SettingInt g_max_width(
     "match.max_width",
     "Maximum display width",
-    "The maximum number of Terminal columns to use when displaying matches.",
+    "The maximum number of terminal columns to use when displaying matches.",
     106);
 
 SettingColour g_colour_interact(

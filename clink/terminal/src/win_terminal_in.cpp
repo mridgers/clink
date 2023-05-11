@@ -199,7 +199,7 @@ void WinTerminalIn::read_console()
     GetConsoleScreenBufferInfo(stdout_handle, &csbi);
     SetConsoleCursorPosition(stdout_handle, csbi.dwCursorPosition);
 
-    // Read input records sent from the Terminal (aka conhost) until some
+    // Read input records sent from the terminal (aka conhost) until some
     // input has beeen buffered.
     uint32 buffer_count = _buffer_count;
     while (buffer_count == _buffer_count)

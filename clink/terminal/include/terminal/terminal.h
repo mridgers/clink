@@ -16,4 +16,4 @@ struct Terminal
 
 //------------------------------------------------------------------------------
 Terminal            terminal_create(ScreenBuffer* screen=nullptr);
-void                terminal_destroy(const Terminal& Terminal);
+void                terminal_destroy(const Terminal& terminal);

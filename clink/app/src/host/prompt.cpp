@@ -199,7 +199,7 @@ Prompt PromptUtils::extract_from_console()
     if (length >= sizeof_array(buffer))
         return Prompt();
 
-    // Get the prompt from the Terminal.
+    // Get the prompt from the terminal.
     DWORD chars_in;
     if (!ReadConsoleOutputCharacterW(handle, buffer, length, cursorXy, &chars_in))
         return Prompt();

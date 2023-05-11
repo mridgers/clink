@@ -11,7 +11,7 @@
 //------------------------------------------------------------------------------
 /// -name:  clink.getscreeninfo
 /// -ret:   table
-/// Returns dimensions of the Terminal's buffer (buf*) and visible window (win*).
+/// Returns dimensions of the terminal's buffer (buf*) and visible window (win*).
 /// The returned table has the following scheme; { bufwidth:int32, bufheight:int32,
 /// winwidth:int32, winheight:int32 }.
 static int32 get_screen_info(lua_State* state)

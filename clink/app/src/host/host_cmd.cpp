@@ -119,7 +119,7 @@ static BOOL WINAPI single_char_read(
 //------------------------------------------------------------------------------
 static void tag_prompt()
 {
-    // Tag the prompt so we can detect when cmd.exe writes to the Terminal.
+    // Tag the prompt so we can detect when cmd.exe writes to the terminal.
     wchar_t buffer[256];
     buffer[0] = '\0';
     GetEnvironmentVariableW(L"prompt", buffer, sizeof_array(buffer));
