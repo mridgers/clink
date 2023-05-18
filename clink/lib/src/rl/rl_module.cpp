@@ -157,7 +157,7 @@ RlModule::RlModule(const char* shell_name)
         { "\\e[6~",   "history-search-forward" },  // pgdn
         { "\\e[M",    "revert-line" },             // esc
         { "\\C-z",    "undo" },
-        { "\\C-w",    "backward-kill-word" },
+        { "\\C-w",    "unix-filename-rubout" },
     };
 
     for (int32 i = 0; i < sizeof_array(ext_key_binds); ++i)
