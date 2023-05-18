@@ -362,13 +362,21 @@ rl_unix_filename_rubout (count, key)
       while (count--)
 	{
 	  c = rl_line_buffer[rl_point - 1];
-	  while (rl_point && (whitespace (c) || c == '/'))
+/* begin_clink_change
+ * Treat forward-slashes as path separators too
+ */
+	  while (rl_point && (whitespace (c) || c == '/' || c == '\\'))
+/* end_clink_change */
 	    {
 	      rl_point--;
 	      c = rl_line_buffer[rl_point - 1];
 	    }
 
-	  while (rl_point && (whitespace (c) == 0) && c != '/')
+/* begin_clink_change
+ * Treat forward-slashes as path separators too
+ */
+	  while (rl_point && (whitespace (c) == 0) && c != '/' && c != '\\')
+/* end_clink_change */
 	    {
 	      rl_point--;
 	      c = rl_line_buffer[rl_point - 1];
