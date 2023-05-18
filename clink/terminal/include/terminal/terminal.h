@@ -12,6 +12,7 @@ struct Terminal
 {
     TerminalIn*     in;
     TerminalOut*    out;
+    uintptr_t       impl;
 };
 
 //------------------------------------------------------------------------------
