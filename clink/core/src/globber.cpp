@@ -47,36 +47,35 @@ Globber::~Globber()
 //------------------------------------------------------------------------------
 bool Globber::next(StrBase& out, bool rooted)
 {
-    if (_handle == nullptr)
-        return false;
+    for (;; next_file())
+    {
+        if (_handle == nullptr)
+            return false;
 
-    Str<280> file_name(_data.cFileName);
+        const wchar_t* c = _data.cFileName;
+        bool skip = (c[0] == '.' && (!c[1] || (c[1] == '.' && !c[2])) && !_dots);
 
-    bool skip = false;
+        int32 attr = _data.dwFileAttributes;
+        skip |= (attr & FILE_ATTRIBUTE_SYSTEM) && !_system;
+        skip |= (attr & FILE_ATTRIBUTE_HIDDEN) && !_hidden;
+        skip |= (attr & FILE_ATTRIBUTE_DIRECTORY) && !_directories;
+        skip |= !(attr & FILE_ATTRIBUTE_DIRECTORY) && !_files;
 
-    const wchar_t* c = _data.cFileName;
-    skip |= (c[0] == '.' && (!c[1] || (c[1] == '.' && !c[2])) && !_dots);
-
-    int32 attr = _data.dwFileAttributes;
-    skip |= (attr & FILE_ATTRIBUTE_SYSTEM) && !_system;
-    skip |= (attr & FILE_ATTRIBUTE_HIDDEN) && !_hidden;
-    skip |= (attr & FILE_ATTRIBUTE_DIRECTORY) && !_directories;
-    skip |= !(attr & FILE_ATTRIBUTE_DIRECTORY) && !_files;
-
-    next_file();
-
-    if (skip)
-        return next(out, rooted);
+        if (!skip)
+            break;
+    }
 
     out.clear();
     if (rooted)
         out << _root;
 
+    Str<280> file_name(_data.cFileName);
     path::append(out, file_name.c_str());
 
-    if (attr & FILE_ATTRIBUTE_DIRECTORY && _dir_suffix)
+    if ((_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && _dir_suffix)
         out << "\\";
 
+    next_file();
     return true;
 }
 
