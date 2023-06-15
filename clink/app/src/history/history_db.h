@@ -43,7 +43,7 @@ public:
     bool                        remove(LineId id);
     LineId                      find(const char* line) const;
     ExpandResult                expand(const char* line, StrBase& out) const;
-    template <int32 S> Iter       read_lines(char (&buffer)[S]);
+    template <int32 S> Iter     read_lines(char (&buffer)[S]);
     Iter                        read_lines(char* buffer, uint32 buffer_size);
 
 private:

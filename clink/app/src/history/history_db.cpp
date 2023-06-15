@@ -179,7 +179,7 @@ public:
     public:
                             FileIter() = default;
                             FileIter(const ReadLock& lock, char* buffer, int32 buffer_size);
-        template <int32 S>    FileIter(const ReadLock& lock, char (&buffer)[S]);
+        template <int32 S>  FileIter(const ReadLock& lock, char (&buffer)[S]);
         uint32              next(uint32 rollback=0);
         uint32              get_buffer_offset() const   { return _buffer_offset; }
         char*               get_buffer() const          { return _buffer; }
@@ -199,7 +199,7 @@ public:
     public:
                             LineIter() = default;
                             LineIter(const ReadLock& lock, char* buffer, int32 buffer_size);
-        template <int32 S>    LineIter(const ReadLock& lock, char (&buffer)[S]);
+        template <int32 S>  LineIter(const ReadLock& lock, char (&buffer)[S]);
         LineIdImpl          next(StrIter& out);
 
     private:

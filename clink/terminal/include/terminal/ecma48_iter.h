@@ -63,7 +63,7 @@ public:
     uint32                  get_length() const     { return _length; }
     Type                    get_type() const       { return _type; }
     uint32                  get_code() const       { return _code; }
-    template <int32 S> bool   decode_csi(Csi<S>& out) const;
+    template <int32 S> bool decode_csi(Csi<S>& out) const;
     bool                    get_c1_str(StrBase& out) const;
 
 private:
