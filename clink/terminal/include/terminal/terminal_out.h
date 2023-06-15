@@ -22,5 +22,5 @@ public:
 //------------------------------------------------------------------------------
 template <int32 S> void TerminalOut::write(const char (&chars)[S])
 {
-    write(chars, S);
+    write(chars, S - 1);
 }

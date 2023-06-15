@@ -44,5 +44,5 @@ template <int32 S> void Printer::print(const char (&data)[S])
 //------------------------------------------------------------------------------
 template <int32 S> void Printer::print(const Attributes attr, const char (&data)[S])
 {
-    print(attr, data, S);
+    print(attr, data, S - 1);
 }

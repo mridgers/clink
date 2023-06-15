@@ -324,7 +324,7 @@ StrImpl<TYPE>& StrImpl<TYPE>::operator << (const TYPE* rhs)
 template <typename TYPE> template <int32 I>
 StrImpl<TYPE>& StrImpl<TYPE>::operator << (const TYPE (&rhs)[I])
 {
-    concat(rhs, I);
+    concat(rhs, I - 1);
     return *this;
 }
 
@@ -357,7 +357,7 @@ int32 to_utf16(wchar_t* out, int32 max_count, StrIterImpl<char>& iter);
 class StrBase : public StrImpl<char>
 {
 public:
-    template <int32 I> StrBase(char (&data)[I]) : StrImpl<char>(data, I) {}
+    template <int32 I>  StrBase(char (&data)[I]) : StrImpl<char>(data, I - 1) {}
                      StrBase(char* data, int32 size) : StrImpl<char>(data, size) {}
                      StrBase(const StrBase&)          = delete;
                      StrBase(const StrBase&&)         = delete;
@@ -370,7 +370,7 @@ public:
 class WstrBase : public StrImpl<wchar_t>
 {
 public:
-    template <int32 I> WstrBase(char (&data)[I]) : StrImpl<wchar_t>(data, I) {}
+    template <int32 I>  WstrBase(char (&data)[I]) : StrImpl<wchar_t>(data, I - 1) {}
                      WstrBase(wchar_t* data, int32 size) : StrImpl<wchar_t>(data, size) {}
                      WstrBase(const WstrBase&)         = delete;
                      WstrBase(const WstrBase&&)        = delete;
