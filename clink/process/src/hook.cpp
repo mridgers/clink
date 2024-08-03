@@ -250,7 +250,7 @@ static funcptr_t hook_jmp_impl(funcptr_t to_hook, funcptr_t hook)
     }
 
     // Allocate some executable memory for storing trampolines and hook address
-    auto* allocator = TrampolineAllocator::get(to_hook);
+    auto* allocator = TrampolineAllocator::get(funcptr_t(target));
     if (allocator == nullptr)
     {
         /* unable to create an TrampolineAllocator */
